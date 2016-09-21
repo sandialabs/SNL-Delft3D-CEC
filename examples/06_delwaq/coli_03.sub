@@ -1,0 +1,60 @@
+substance 'Salinity' active
+   description        'Salinity'
+   concentration-unit '(g/kg)'
+   waste-load-unit    '-'
+end-substance
+substance 'IM1' active
+   description        'inorganic matter (IM1)'
+   concentration-unit '(gDM/m3)'
+   waste-load-unit    '-'
+end-substance
+substance 'EColi' active
+   description        'E. Coli bacteria'
+   concentration-unit '(MPN/m3)'
+   waste-load-unit    '-'
+end-substance
+parameter 'RcMrtEColi'
+   description   'first-order mortality rate EColi'
+   unit          '(1/d)'
+   value          0.8000E+00
+end-parameter
+parameter 'Temp'
+   description   'ambient water temperature'
+   unit          '(oC)'
+   value          0.1500E+02
+end-parameter
+parameter 'DayL'
+   description   'daylength <0-1>'
+   unit          '(d)'
+   value          0.5800E+00
+end-parameter
+parameter 'RadSurf'
+   description   'irradiation at the water surface'
+   unit          '(W/m2)'
+   value         -0.9990E+03
+end-parameter
+parameter 'ExtUvIM1'
+   description   'UV specific extinction coefficent IM1'
+   unit          '(m2/gDM)'
+   value          0.1000E-01
+end-parameter
+parameter 'ExtUvBak'
+   description   'background extinction UV light'
+   unit          '(1/m)'
+   value          0.8000E-01
+end-parameter
+output 'ExtUv'
+   description   'total extinction coefficient UV light'
+end-output
+output 'MrtToEColi'
+   description   'overall mortality rate EColi'
+end-output
+active-processes
+   name  'Secchi' 'Secchi depth for visible-light (370-680nm)'
+   name  'EColiMrt' 'Mortality EColi bacteria'
+   name  'Extinc_VLG' 'Extinction of visible-light (370-680nm) DLWQ-G'
+   name  'Salinchlor' 'onversion of salinity into chloride or vv'
+   name  'CalcRadUV' 'UV-Radiation at segment upper and lower boundaries'
+   name  'Extinc_UVG' 'Extinction of ultraviolet-light (350-480nm) DLWQ-G'
+   name  'DynDepth' 'dynamic calculation of the depth'
+end-active-processes

@@ -1,0 +1,16 @@
+Geosci. Model Dev., 6, 1367-1388, 2013
+www.geosci-model-dev.net/6/1367/2013/
+doi:10.5194/gmd-6-1367-2013
+© Author(s) 2013. This work is distributed
+under the Creative Commons Attribution 3.0 License.
+Article Metrics Related Articles
+Mathematics of the total alkalinity–pH equation – pathway to robust and universal solution algorithms: the SolveSAPHE package v1.0.1
+
+G. Munhoven
+Département d'Astrophysique, Géophysique et Océanographie, Université de Liège, 4000 Liège, Belgium
+
+Abstract. The total alkalinity–pH equation, which relates total alkalinity and pH for a given set of total concentrations of the acid–base systems that contribute to total alkalinity in a given water sample, is reviewed and its mathematical properties established. We prove that the equation function is strictly monotone and always has exactly one positive root. Different commonly used approximations are discussed and compared. An original method to derive appropriate initial values for the iterative solution of the cubic polynomial equation based upon carbonate-borate-alkalinity is presented. We then review different methods that have been used to solve the total alkalinity–pH equation, with a main focus on biogeochemical models. The shortcomings and limitations of these methods are made out and discussed. We then present two variants of a new, robust and universally convergent algorithm to solve the total alkalinity–pH equation. This algorithm does not require any a priori knowledge of the solution. SolveSAPHE (Solver Suite for Alkalinity-PH Equations) provides reference implementations of several variants of the new algorithm in Fortran 90, together with new implementations of other, previously published solvers. The new iterative procedure is shown to converge from any starting value to the physical solution. The extra computational cost for the convergence security is only 10–15% compared to the fastest algorithm in our test series.
+
+Citation: Munhoven, G.: Mathematics of the total alkalinity–pH equation – pathway to robust and universal solution algorithms: the SolveSAPHE package v1.0.1, Geosci. Model Dev., 6, 1367-1388, doi:10.5194/gmd-6-1367-2013, 2013.
+
+Supplemental material downloaded from: http://www.geosci-model-dev.net/6/1367/2013/gmd-6-1367-2013-supplement.zip

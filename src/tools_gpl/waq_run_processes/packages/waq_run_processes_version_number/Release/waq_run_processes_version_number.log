@@ -1,0 +1,18 @@
+﻿  Generating version number in '.\include\version_number.h' ...
+  svn: E155036: The working copy at 'C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\waq_run_processes'
+  is too old (format 10) to work with client version '1.8.3 (r1516576)' (expects format 31). You need to upgrade the working copy first.
+  
+  svn: E155036: Working copy 'C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\waq_run_processes' is too old (format 10, created by Subversion 1.6)
+  ..\..\..\..\scripts_lgpl\win32\update_version.cmd: 000000
+  ..\..\..\..\scripts_lgpl\win32\update_version.cmd: Regenerating existing file '.\include\version_number.h'.
+  Generating version number in '.\include\version_number.rc' ...
+  svn: E155036: The working copy at 'C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\waq_run_processes'
+  is too old (format 10) to work with client version '1.8.3 (r1516576)' (expects format 31). You need to upgrade the working copy first.
+  
+  svn: E155036: Working copy 'C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\waq_run_processes' is too old (format 10, created by Subversion 1.6)
+  ..\..\..\..\scripts_lgpl\win32\update_version.cmd: 000000
+  ..\..\..\..\scripts_lgpl\win32\update_version.cmd: Regenerating existing file '.\include\version_number.rc'.
+  c2c.c
+  f2c.c
+  version.c
+  waq_run_processes_version_number.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\waq_run_processes\packages\waq_run_processes_version_number\bin\Release\waq_run_processes_version_number.lib

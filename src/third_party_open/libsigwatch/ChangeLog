@@ -1,0 +1,17 @@
+2005-08-24  Norman Gray  <norman@astro.gla.ac.uk>
+
+	* Makefile.am: created webpage-tarball.tar and sigwatch.html targets
+	* configure.ac: added RELEASE_DATE substitution
+	* sigwatch.html.in: Created
+	* all: version 0.2
+
+2003-07-25  Norman Gray  <norman@astro.gla.ac.uk>
+
+	* sigwatch.c, README, etc: Added GPL apparatus.  Modified
+	watchsignal and watchsignalname so that they return -1 on error,
+	and +1 as a warning, if a preexisting non-default signal handler
+	was replaced.
+
+	* sigwatch.3: Clarified slightly, and added notes about
+	re-throwing signals, and the problems associated with this.
+

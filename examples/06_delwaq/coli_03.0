@@ -1,0 +1,333 @@
+configuration 'WAQ' serial 2012032801
+substance_group 'General' 
+    substance 'Salinity' 
+    name      'Salinity' 
+    unit      '(g/kg)' 
+    active     1  
+    selected_processes
+            abbrev  'HDisperVel'  name  'Horizontal dispersion velocity dependent' active  0  
+            abbrev  'TraSe2_Sal'  name  'Total of transport in sediment for Salinity' active  0  
+            abbrev  'VertDisp'  name  'Vertical dispersion (segment -> exchange)' active  0  
+            abbrev  'HorzDisper'  name  'Horizontal dispersion in a 1D model' active  0  
+    end-selected_processes 
+    end-substance
+end-substance_group
+substance_group 'Suspended matter' 
+    substance 'IM1' 
+    name      'inorganic matter (IM1)' 
+    unit      '(gDM/m3)' 
+    active     1  
+    selected_processes
+            abbrev  'Compos'  name  'Composition' active  0  
+            abbrev  'Sed_IM1'  name  'Sedimentation IM1' active  0  
+            abbrev  'S12TraIM1'  name  'Transport in S1-S2: IM1' active  0  
+            abbrev  'AtmDep_IM1'  name  'Atmospheric deposition IM1' active  0  
+            abbrev  'Dfwast_IM1'  name  'Diffusive waste IM1' active  0  
+            abbrev  'Secchi'  name  'Secchi depth for visible-light (370-680nm)' active  1  
+            abbrev  'TraSe2_IM1'  name  'Total of transport in sediment for IM1' active  0  
+            abbrev  'VertDisp'  name  'Vertical dispersion (segment -> exchange)' active  0  
+            abbrev  'HorzDisper'  name  'Horizontal dispersion in a 1D model' active  0  
+            abbrev  'HDisperVel'  name  'Horizontal dispersion velocity dependent' active  0  
+    end-selected_processes 
+    end-substance
+end-substance_group
+substance_group 'Coli-Bacteria' 
+    substance 'EColi' 
+    name      'E. Coli bacteria' 
+    unit      '(MPN/m3)' 
+    active     1  
+    selected_processes
+            abbrev  'EColiMrt'  name  'Mortality EColi bacteria' active  1  
+            abbrev  'Prod_TEWOR'  name  'Production fluxes for TEWOR+' active  0  
+            abbrev  'VertDisp'  name  'Vertical dispersion (segment -> exchange)' active  0  
+            abbrev  'HorzDisper'  name  'Horizontal dispersion in a 1D model' active  0  
+            abbrev  'HDisperVel'  name  'Horizontal dispersion velocity dependent' active  0  
+    end-selected_processes 
+    end-substance
+end-substance_group
+process_parameter 'Salinity'   
+    name          'Salinity'   
+    unit          '(g/kg)'   
+    modelled       1    
+    default        3.500e+001
+    internal       0    
+    specification  0    
+    input_process  'Salinchlor'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'Cl'   
+    name          'Chloride'   
+    unit          '(g/m3)'   
+    modelled       0    
+    default        2.000e+004
+    internal       0    
+    specification  1    
+    input_process  'Salinchlor'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'IM1'   
+    name          'inorganic matter (IM1)'   
+    unit          '(gDM/m3)'   
+    modelled       1    
+    default        0.000e+000
+    internal       0    
+    specification  0    
+    input_process  '  '  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'EColi'   
+    name          'E. Coli bacteria'   
+    unit          '(MPN/m3)'   
+    modelled       1    
+    default        -9.990e+002
+    internal       0    
+    specification  0    
+    input_process  '  '  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'Depth'   
+    name          'depth of segment'   
+    unit          '(m)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'DynDepth'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'RadSurf'   
+    name          'irradiation at the water surface'   
+    unit          '(W/m2)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  0    
+    input_process  '  '  
+    delft3d_par    1    
+    output_par     0    
+end-process_parameter
+process_parameter 'Temp'   
+    name          'ambient water temperature'   
+    unit          '(oC)'   
+    modelled       0    
+    default        1.500e+001
+    internal       0    
+    specification  0    
+    input_process  'Temperatur'  
+    delft3d_par    1    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtUvIM1'   
+    name          'UV specific extinction coefficent IM1'   
+    unit          '(m2/gDM)'   
+    modelled       0    
+    default        1.000e-002
+    internal       0    
+    specification  0    
+    input_process  '  '  
+    delft3d_par    1    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtUvBak'   
+    name          'background extinction UV light'   
+    unit          '(1/m)'   
+    modelled       0    
+    default        8.000e-002
+    internal       0    
+    specification  0    
+    input_process  '  '  
+    delft3d_par    1    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtVl'   
+    name          'total extinction coefficient visible light'   
+    unit          '(1/m)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Extinc_VLG'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtUv'   
+    name          'total extinction coefficient UV light'   
+    unit          '(1/m)'   
+    modelled       0    
+    default        3.000e+000
+    internal       0    
+    specification  1    
+    input_process  'Extinc_UVG'  
+    delft3d_par    0    
+    output_par     1    
+end-process_parameter
+process_parameter 'RadBot_uv'   
+    name          'UV-irradiation at the segment lower-boundary'   
+    unit          '(W/m2)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'CalcRadUV'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'DayL'   
+    name          'daylength <0-1>'   
+    unit          '(d)'   
+    modelled       0    
+    default        5.800e-001
+    internal       0    
+    specification  0    
+    input_process  'Daylength'  
+    delft3d_par    1    
+    output_par     0    
+end-process_parameter
+process_parameter 'RcMrtEColi'   
+    name          'first-order mortality rate EColi'   
+    unit          '(1/d)'   
+    modelled       0    
+    default        8.000e-001
+    internal       0    
+    specification  0    
+    input_process  '  '  
+    delft3d_par    1    
+    output_par     0    
+end-process_parameter
+process_parameter 'Rad_uv'   
+    name          'UV-irradiation at the segment upper-boundary'   
+    unit          '(W/m2)'   
+    modelled       0    
+    default        1.600e+002
+    internal       0    
+    specification  1    
+    input_process  'CalcRadUV'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'RhoWater'   
+    name          'density of water'   
+    unit          '(kg/m3)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Salinchlor'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtVlISS'   
+    name          'VL extinction by inorganic suspended matter'   
+    unit          '(1/m)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Extinc_VLG'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtVlFresh'   
+    name          'VL extinction related to freshwater'   
+    unit          '(1/m)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Extinc_VLG'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtUvISS'   
+    name          'UV extinction by inorganic suspended matter'   
+    unit          '(1/m)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Extinc_UVG'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtUVODS'   
+    name          'UV extinction by DOC'   
+    unit          '(1/m)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Extinc_UVG'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'ExtUVFresh'   
+    name          'UV extinction related to freshwater'   
+    unit          '(1/m)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Extinc_UVG'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'MrtToEColi'   
+    name          'overall mortality rate EColi'   
+    unit          '(1/d)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'EColiMrt'  
+    delft3d_par    0    
+    output_par     1    
+end-process_parameter
+process_parameter 'MrtRaEColi'   
+    name          'mortality rate due to by radiation EColi'   
+    unit          '(1/d)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'EColiMrt'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'SecchiDept'   
+    name          'Secchi depth'   
+    unit          '(m)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Secchi'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'dMrtEColi'   
+    name          'mortality flux EColi'   
+    unit          '(MPN/m3/d)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'EColiMrt'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter
+process_parameter 'dDumSecchi'   
+    name          'dummy flux to access Secchi'   
+    unit          '(-)'   
+    modelled       0    
+    default        -9.990e+002
+    internal       0    
+    specification  1    
+    input_process  'Secchi'  
+    delft3d_par    0    
+    output_par     0    
+end-process_parameter

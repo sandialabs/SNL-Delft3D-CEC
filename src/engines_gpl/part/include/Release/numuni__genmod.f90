@@ -1,0 +1,8 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 27 17:35:23 2016
+        MODULE NUMUNI__genmod
+          INTERFACE 
+            FUNCTION NUMUNI
+              INTEGER(KIND=4) :: NUMUNI
+            END FUNCTION NUMUNI
+          END INTERFACE 
+        END MODULE NUMUNI__genmod

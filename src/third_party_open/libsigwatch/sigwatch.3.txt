@@ -1,0 +1,162 @@
+sigwatch(3)                                                        sigwatch(3)
+
+
+
+NNAAMMEE
+       libsigwatch.a ‐ simple signal watching for Fortran programs
+
+SSYYNNOOPPSSIISS
+       iinntteeggeerr ffuunnccttiioonn wwaattcchhssiiggnnaall ((ssiiggnnuumm))
+       iinntteeggeerr ssiiggnnuumm
+
+       iinntteeggeerr ffuunnccttiioonn wwaattcchhssiiggnnaallnnaammee ((ssiiggnnaammee,, rreessppoonnssee))
+       cchhaarraacctteerr((**))** ssiiggnnaammee
+       iinntteeggeerr rreessppoonnssee
+
+       iinntteeggeerr ffuunnccttiioonn ggeettllaassttssiiggnnaall
+
+       iinntteeggeerr ffuunnccttiioonn ssiiggwwaattcchhvveerrssiioonn
+
+DDEESSCCRRIIPPTTIIOONN
+       lliibbssiiggwwaattcchh..aa  is a library of routines to provide simple signal watch‐
+       ing for Fortran programs.  This allows a minimal level of control of  a
+       running  program  from outside it, for example to tell it to checkpoint
+       itself on receipt of a signal.  Signal handling  is  rather  tricky  in
+       Fortran (because the function that is registered as a signal handler is
+       later called by value rather than by reference), so this  library  pro‐
+       vides functions to make it easier.
+
+       On Unix, there is a smallish set of signals which may be sent to a run‐
+       ning process, which the process can either _c_a_t_c_h or _i_g_n_o_r_e_.  For  exam‐
+       ple,  the  INT  signal  is  sent to a process by pressing the interrupt
+       character (usually _^_C ), HUP is sent when a controlling  terminal  logs
+       out,  and  KILL  can be sent either by hand or by the system when it is
+       forcing processes to die.  The default action of the INT signal  is  to
+       terminate  a  process,  and  by default the HUP signal is ignored.  The
+       KILL signal is one of those which cannot  be  caught  or  ignored,  but
+       always  has  its  effect.   There are also two signals, called USR1 and
+       USR2 which are ignored by default, have no  default  meaning,  and  are
+       provided for user convenience.
+
+       Each  signal  has a numeric value ‐‐ for example HUP is 1 and KILL is 9
+       ‐‐ and after finding a process’s PID with the ps(1)  command,  you  can
+       send signals to it with the kill(1) command:
+           kill ‐HUP _<_p_i_d_>
+       or
+           kill ‐1 _<_p_i_d_>
+
+       Signals  thus provide a limited mechanism for communicating with a run‐
+       ning program.  A useful way to use this is to have  the  program  watch
+       for  signal USR1, say, and examine this by calling function ggeettllaassttssiigg‐‐
+       nnaall at the end of a loop.  If this returns  a  non‐zero  response,  you
+       might  make  your program checkpoint itself ‐‐ save its state for later
+       restart ‐‐ in case the program crashes or has to be  stopped  for  some
+       reason.
+
+       For more details about signals, see the man pages for signal(3) or sig‐
+       nal(7), depending on your platform.
+
+       A program prepares to receive signals by calling one of  the  wwaattcchhssiigg‐‐
+       nnaallnnaammee  or wwaattcchhssiiggnnaall functions, and calls ggeettllaassttssiiggnnaall at any point
+       to retrieve the last signal which was sent to the process.
+
+       The arguments to wwaattcchhssiiggnnaallnnaammee are _s_i_g_n_a_m_e , a character string  con‐
+       taining  the name of the signal to watch for, and _r_e_s_p_o_n_s_e , an integer
+       which will be returned by ggeettllaassttssiiggnnaall after the specified signal  has
+       been  caught.  The signal names which the function recognises are those
+       most likely to be useful, namely HUP, INT, USR1 and USR2.
+
+       The integer _r_e_s_p_o_n_s_e is the number which will subsequently be  returned
+       by  ggeettllaassttssiiggnnaall  ,  after this signal is caught.  If this response is
+       passed as ‐1, the signal number associated with this name is what  will
+       be returned.  Note that, although both HUP and INT have generally fixed
+       numbers, the numbers associated with signals USR1 and USR2 are  differ‐
+       ent on different unix variants.
+
+       If  you  need  to  catch  another signal for some reason (make sure you
+       understand the default behavour of the given signal first, however) you
+       can give that signal as a number to the wwaattcchhssiiggnnaall function; when that
+       signal is later caught,  the  corresponding  number  is  what  will  be
+       returned by ggeettllaassttssiiggnnaall..
+
+       The  ggeettllaassttssiiggnnaall  function  returns  the response associated with the
+       last signal which was caught, or zero if no signal has been  caught  so
+       far, or since the last call to ggeettllaassttssiiggnnaall..  That is, any caught sig‐
+       nal is returned only once.
+
+       The installed signal handler does _n_o_t re‐throw the signal after it  has
+       caught it; this would defeat the purpose of this library for those sig‐
+       nals, such as HUP and INT, for which the default action is to kill  the
+       process.   Also,  there is no way to tell if the signal was received by
+       being re‐thrown by another handler, installed after this one.   If  all
+       of  this  matters to you, then this library cannot reasonably help you,
+       and you have no hope but to learn to love the sigaction(2) manpage.
+
+       When installing the handler, these functions _r_e_p_l_a_c_e any previous  sig‐
+       nal handler.  If that was a non‐default one (for example, one put there
+       by an MPI environment) this could potentially change the  behaviour  of
+       your program in an unhelpful fashion.  To warn you of this, these func‐
+       tions return +1 in this case; this is a success return value, but  also
+       a  warning that you should understand what that previous signal handler
+       was doing there.
+
+       The ssiiggwwaattcchhvveerrssiioonn function returns the version number of the library,
+       as an integer formed from the version number by:
+           major_version * 1000 + minor_version
+       So that the version number 1.2, for example, would be returned as inte‐
+       ger 1002.
+
+EEXXAAMMPPLLEE
+       The following Fortran program shows the library in use.
+             program sigs
+
+             implicit none
+
+             integer i
+             integer status
+
+             integer watchsignal
+             integer watchsignalname
+             integer getlastsignal
+
+             status = watchsignal(10)
+             write(*,’("watchsignal 10:",i2)’) status
+             status = watchsignalname("HUP", 99)
+             write(*,’("watchsignal HUP:",i2)’) status
+
+             do i=1,10
+                call sleep(1)
+                write (*,’("lastsig=", i2)’) getlastsignal()
+             enddo
+
+             end
+
+SSIIGGNNAALLSS IINN CC PPRROOGGRRAAMMSS
+       The library is intended to be callable from Fortran;  there  is  little
+       need  for it in C programs, since the ssiiggnnaall function, and its function
+       argument, are straightforwardly usable from C.
+
+RREETTUURRNN VVAALLUUEESS
+       Both wwaattcchhssiiggnnaallnnaammee and wwaattcchhssiiggnnaall return 0 if  the  signal  watching
+       was installed successfully, and ‐1 if there was an error.  If there was
+       a non‐default signal handler already installed, it is replaced, but the
+       routine returns 1 to warn you of this.
+
+       The  function  ggeettllaassttssiiggnnaall  returns  the response associated with the
+       last signal caught, or zero if there has been no  signal  caught  since
+       the last time this function was invoked.
+
+BBUUGGSS
+       None known
+
+SSEEEE AALLSSOO
+       sigaction(2), kill(2), signal(3), signal(7)
+
+AAUUTTHHOORR
+       Norman Gray
+       http://www.astro.gla.ac.uk/users/norman/
+       norman@astro.gla.ac.uk
+
+
+
+                                   July 2003                       sigwatch(3)

@@ -1,0 +1,120 @@
+version 3 minor 32
+
+scenario
+   'Example Delft3D-DELWAQ-PART coupled'
+   'Extra settings: fti_delwaq-part.inp'
+   'See 2.3.1 of D-WAQ Input File manual'
+end-scenario
+
+timers
+   calculation 1990/08/05-12:30:00 1990/08/06-20:30:00 0000/00/00-00:15:00
+   monitor     1990/08/05-12:30:00 1990/08/06-20:30:00 0000/00/00-00:15:00
+   history     1990/08/05-12:30:00 1990/08/06-20:30:00 0000/00/00-00:15:00
+   map         1990/08/05-12:30:00 1990/08/06-20:30:00 0000/00/00-00:15:00
+end-timers
+
+integration
+   integration-method    10016
+   option-zero-flow      yes
+   option-open-boundary  yes
+   option-first-order    yes
+   output-balances       no
+   aggregation           no
+   use-forester          no
+   use-anticreep         yes
+   maximum-iterations    100
+   output-local-theta    no
+   lump-processes        no
+   lump-boundary-waste   yes
+   lump-internal-transport yes
+   suppress-space        no
+   suppress-time         no
+   output-unit           total
+end-integration
+
+output-files
+   binary-history-file yes
+   binary-map-file     yes
+   nefis-history-file  yes
+   nefis-map-file      yes
+end-output-files
+
+dispersion
+   first-direction    1
+   second-direction   1
+   interface-depth    0
+   vertical-diffusion-values 1e-007 0 0
+   vertical-diffusion from-hydrodynamics
+   vertical-diffusion-scale-factor 1
+   dispersion-array-info
+      use-dispersion-arrays no
+      dispersion-array-file ''
+   end-dispersion-array-info
+end-dispersion
+
+input-files
+   substances-file    'tracer.sub'
+   statistical-output-file 'none'
+   hydrodynamics-file 'com-tut_fti_part.hyd'
+   boundary-data-file 'none'   binary no # Boundary data file
+   monitoring-areas-file 'none'
+end-input-files
+
+substances
+   substance 'tracer'
+      monitor yes
+      history yes
+      matrix  yes
+      map     yes
+      data-type constant
+      data      0
+   end-substance
+end-substances
+
+output-parameters
+end-output-parameters
+
+process-parameters
+end-process-parameters
+
+observation-points
+end-observation-points
+
+continuous-releases
+   point 'Outfall'
+      grid-indices               2    14
+      grid-coordinates       213619 608954
+      geographic-coordinates 0 0
+      layer                  0
+      time-property timeseries
+      release-data concentrations
+      release-time absolute
+      table
+         function-type block
+         number-series 2
+         row 1990/08/05-12:30:00
+          1.0000e-020  0.0000e+000 
+         row 1990/08/06-01:00:00
+          1.0000e-020  0.0000e+000 
+      end-table
+   end-point
+end-continuous-releases
+
+boundary-sections
+   section 'Left-right 1'
+      indices-begin    22     2
+      indices-end      22    14
+      time-property constant
+      depth-property constant
+      along-section constant
+      timelag '00000000000000'
+      section-constant
+      table
+         function-type linear
+         number-series 1
+         row -4713/11/24-12:00:00
+          0.0000e+000 
+      end-table
+   end-section
+end-boundary-sections
+

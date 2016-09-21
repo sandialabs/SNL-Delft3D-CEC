@@ -1,0 +1,74 @@
+task      full-coupling
+geometry  curvilinear-grid
+horizontal-aggregation       automatic
+minimum-vert-diffusion-used  no
+vertical-diffusion           calculated
+description
+   'Tutorial                                                    '
+   'Friesian Tidal Inlet                                        '
+   'Deltares march 2013                                         '
+end-description
+reference-time           '19900805000000'
+hydrodynamic-start-time  '19900805123000'
+hydrodynamic-stop-time   '19900806010000'
+hydrodynamic-timestep    '00000000001500'
+conversion-ref-time      '19900805000000'
+conversion-start-time    '19900805123000'
+conversion-stop-time     '19900806010000'
+conversion-timestep      '00000000001500'
+grid-cells-first-direction      15
+grid-cells-second-direction     22
+number-hydrodynamic-layers      10
+number-water-quality-layers      5
+hydrodynamic-file        'com-tut_fti_waq.dat'
+aggregation-file         none
+grid-indices-file        'com-tut_fti_waq.lga'
+grid-coordinates-file    'com-tut_fti_waq.cco'
+volumes-file             'com-tut_fti_waq.vol'
+areas-file               'com-tut_fti_waq.are'
+flows-file               'com-tut_fti_waq.flo'
+pointers-file            'com-tut_fti_waq.poi'
+lengths-file             'com-tut_fti_waq.len'
+salinity-file            'com-tut_fti_waq.sal'
+temperature-file         none
+vert-diffusion-file      'com-tut_fti_waq.vdf'
+surfaces-file            'com-tut_fti_waq.srf'
+total-grid-file          'com-tut_fti_waq.lgt'
+discharges-file          'com-tut_fti_waq.src'
+chezy-coefficients-file  'com-tut_fti_waq.chz'
+shear-stresses-file      'com-tut_fti_waq.tau'
+walking-discharges-file  'com-tut_fti_waq.wlk'
+attributes-file          'com-tut_fti_waq.atr'
+depths-file              'com-tut_fti_waq.dps'
+minimum-vert-diffusion
+   upper-layer       0.0000E+00
+   lower-layer       0.0000E+00
+   interface-depth   0.0000E+00
+end-minimum-vert-diffusion
+constant-dispersion
+   first-direction    0.1000E+01
+   second-direction   0.1000E+01
+   third-direction    0.1000E-06
+end-constant-dispersion
+hydrodynamic-layers
+      0.10000
+      0.10000
+      0.10000
+      0.10000
+      0.10000
+      0.10000
+      0.10000
+      0.10000
+      0.10000
+      0.10000
+end-hydrodynamic-layers
+water-quality-layers
+      2.00000
+      2.00000
+      2.00000
+      2.00000
+      2.00000
+end-water-quality-layers
+discharges
+    2   14    1   'outfall' walking             
+end-discharges

@@ -1,0 +1,22 @@
+
+libsigwatch library
+-------------------
+
+libsigwatch.a is a library of routines to provide simple signal
+watching for Fortran programs.  This allows a minimal level of control
+of a running program from outside it, for example to tell it to
+checkpoint itself on receipt of a signal.  Signal handling is rather
+tricky in Fortran (because the function that is registered as a signal
+handler is later called by value rather than by reference), so this
+library provides functions to make it easier.
+
+See INSTALL for installation instructions (basically the usual
+`./configure; make; make install').   See the manual page sigwatch.3
+for more detailed documentation (a formatted version is included in
+the distribution as sigwatch.3.txt).
+
+Released under the terms of the GNU General Public Licence, a copy of
+which is distributed in the file COPYING
+
+Copyright 2003-2005, 2011, Norman Gray
+http://nxg.me.uk

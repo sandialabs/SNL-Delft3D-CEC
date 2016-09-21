@@ -1,0 +1,9 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 27 17:35:57 2016
+        MODULE MORE_DATA__genmod
+          INTERFACE 
+            FUNCTION MORE_DATA(LUN)
+              INTEGER(KIND=4) :: LUN
+              LOGICAL(KIND=4) :: MORE_DATA
+            END FUNCTION MORE_DATA
+          END INTERFACE 
+        END MODULE MORE_DATA__genmod

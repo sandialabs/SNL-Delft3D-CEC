@@ -1,0 +1,14 @@
+﻿  smalltest.cpp
+smalltest.cpp(66): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(211) : see declaration of 'fopen'
+smalltest.cpp(74): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'sprintf'
+smalltest.cpp(77): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'sprintf'
+smalltest.cpp(80): warning C4244: 'argument' : conversion from 'double' to 'DWORD', possible loss of data
+smalltest.cpp(83): warning C4244: 'argument' : conversion from 'double' to 'DWORD', possible loss of data
+smalltest.cpp(99): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(211) : see declaration of 'fopen'
+  Generating code
+  Finished generating code
+  01-smalltest.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\utils_lgpl\deltares_common\tests\02_streams_smalltest\bin/Release\01-smalltest.exe

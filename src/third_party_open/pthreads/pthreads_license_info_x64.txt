@@ -1,0 +1,5 @@
+ftp://sourceware.org/pub/pthreads-win32/dll-latest
+
+http://sourceware.org/pthreads-win32/.
+
+This Win64 version is the current release: 2.9.1 (2012-05-27).

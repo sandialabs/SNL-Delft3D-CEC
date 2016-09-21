@@ -1,0 +1,260 @@
+body {
+  color: #333;
+  background: white;
+  margin-left: +30%;
+  width: 50%;            /* body is 50% of screen width */
+  padding: 0.5em;        /* this will make a difference if I decide to
+  			    have the background a different colour */
+  /* I can't decide on font: Optima's always nice, but Gill looks
+     agreeably intense.  Helvetica's a decent fallback. */
+  font-family: "Helvetica Neue", Helvetica, "Gill Sans", gill, sans-serif;
+  /* font-family: Optima, "Gill Sans", gill, Helvetica, sans-serif; */
+  /* font-family: "Gill Sans", gill, Helvetica, sans-serif; */
+  /* I seem to have used 11pt at some point in the past, but this
+     is far too big -- did I ever have a reason for that, or is it
+     just due to browser changes? */
+  font-size: 10pt;
+  line-height: 150%;
+}
+
+/* adapt to wider screens */
+@media screen and (min-width: 700pt) {
+    body {
+        margin-left: 210pt;
+        width: 350pt;
+    }
+}
+
+/* The following appears not to work in Safari or Chrome
+   -- don't know why, yet.
+@media print {
+    @page :right {
+        size: auto;
+        body {
+            margin-top: 2cm;
+            margin-bottom: 3cm;
+            margin-left: 10%;
+            width: 60%;
+            margin-right: 30%;
+            color: #d33;
+        }
+    }
+    @page :left {
+        size: auto;
+        body {
+            margin-top: 2cm;
+            margin-bottom: 3cm;
+            margin-left: 30%;
+            width: 60%;
+            margin-right: 10%;
+            color: #33d;
+        }
+    }
+}
+*/
+
+div.topsidebar {
+    float: right;
+    width: 50%;                 /* ...of the body width (ie, 50% x 50% of screen) */
+    font-size: smaller;
+    margin-left: 1em;
+    padding-left: 1em;
+    border-left: solid thin #AAA;
+}
+
+/* On wider screens, move the sidebar out to the right hand side */
+/* This uses CSS3 media queries: http://www.w3.org/TR/css3-mediaqueries/ */
+@media screen and (min-width: 700pt) and (max-width: 850pt) {
+    body {
+        margin-left: 210pt;
+        width: 350pt;           /* 50% of 700pt */
+        margin-right: auto;
+    }
+    div.topsidebar {
+        position: absolute;
+        /* I feel this size should be 595pt (350 + 210 + 0.05*700),
+           but that's clearly not right -- I don't think I understand what the -5%
+           in the h1 spec below is actually 5% of! */
+        left: 570pt;
+        width: auto;
+        margin-left: 0pt;
+        padding-left: 0pt;
+        border: none;
+    }
+}
+/* On still-wider screens, expand the left-margin, keeping the sidebar attached to the right-hand edge.
+   When the screen is 850pt wide (expanding from the @media case above),
+   the left margin will be 210pt, the width 350pt, and the right margin therefore 290pt.*/
+@media screen and (min-width: 850pt) {
+    body {
+        margin-right: 290pt;    /* 290 = 850-(210+350) */
+        width: 350pt;
+        margin-left: auto;      /* ...takes up the slack */
+    }
+    div.topsidebar {
+        position: absolute;
+        width: 290pt;           /* same 290pt as above */
+        left: auto;
+        right: 0%;
+        padding-left: 0pt;
+        border: none;
+    }
+}
+
+
+code, pre {
+  font-family: Monaco, fixed;
+  font-size: 9pt;
+}
+
+a { text-decoration: none; }
+a:link { color: #66C; }
+a:visited { color: #669; }
+a[href]:hover { background: #EEE; }
+
+div.abstract {
+  font-style: oblique;
+  text-align: left;
+}
+div.abstract em { font-style: normal; }
+div.abstract code {
+  font-style: normal;
+  font-size: 80%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #822;
+  font-weight: 100;             /* few fonts have ultra-light weights */
+  line-height: 100%;            /* no need to spread out titles */
+}
+h1 {
+  margin-left: -40%;
+  margin-right: -5%;
+  padding: 0.5em;
+  border: solid thin #666;
+  text-align: right;
+}
+h2 {
+  margin-left: -40%;
+  margin-right: -5%;
+  padding: 0.2em;
+  border-top: solid thin #666;
+  clear: both;
+}
+
+h2.appendices {
+  margin-top: 10ex;
+  border-top: double medium #666;
+}
+h3 {
+  margin-left: -30%;
+  float: left;
+  width: 25%;
+  display: block;
+  text-align: right;
+  vertical-align: bottom;
+  padding-top: 0pt;
+  padding-right: 0.5em;
+  margin-top: 0pt;
+  line-height: 120%;
+}
+
+/*
+h4 {
+  color: #C66;
+}
+*/
+
+pre, table { background: #dde; }
+
+pre {
+  padding: 1em;
+  line-height: 130%;
+}
+
+table {
+  font-size: smaller;
+}
+td {
+  padding: 0.5ex;
+}
+
+Q:before { content: "“"; }
+Q:after  { content: "”"; }
+
+img.smallimage {
+  float: right;
+  margin: 24pt;
+  margin-right: -30%;
+}
+
+div.signature {
+  margin-left: -40%;
+  margin-right: -5%;
+  margin-top: 4ex;
+  text-align: right;
+  border: solid thin #666;
+  padding: 0.3em;
+  clear: both;
+}
+
+/* ============================================================
+ * Some other curiosities of my one-time formatting for web pages
+ */
+.doc-history {
+  font-size: xx-small;
+  background: #eee;
+  line-height: 100%;
+}
+
+div.subtoc, div.subsubtoc { display: none; }
+
+/* ============================================================
+ * Special formatting for ToC
+ */
+
+/*
+  If there's significant amount of text in front of the first subsection,
+  then the following are good to put in the per-document stylesheet:
+  width: 25%;
+  float: right;
+*/
+div#toc {
+  color: #888;
+  padding: 0;
+  font-size: smaller;
+  text-align: right;
+}
+div#toc a:link { color: #888; }
+div#toc > ul {
+  padding: 0pt;
+  margin: 0pt;
+  list-style: none;
+}
+div#toc li {
+  padding: 0pt;
+  display: inline-block;
+}
+div#toc li:before {
+  content: "§ ";
+  margin-left: 1em;
+}
+/* the following elements aren't currently generated by structure.lx */
+div#toc li ul {
+  padding-left: 1em;
+  margin-left: 0;
+  font-style: italic;
+  display: inline;
+}
+div#toc li ul:before {
+  content: "( ";
+}
+div#toc li ul:after {
+  content: " ) ";
+}
+div#toc li li {
+  padding-left: 0pt;
+}
+div#toc li li:after {
+  content: "; ";
+}

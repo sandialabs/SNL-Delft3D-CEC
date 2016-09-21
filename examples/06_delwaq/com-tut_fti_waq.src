@@ -1,0 +1,10 @@
+    3    ; time dependent sources                                               
+    1    ; block function                                                       
+    1    ; no. of sources in this block                                         
+   1                                                                            
+      2  ; number of breakpoints                                                
+1.0 1.0  ; scale factors                                                        
+         123000          ; breakpoint time                                      
+      0.100000E+02    1.0  ; SOURCE:   1                                        
+        1010000          ; breakpoint time                                      
+      0.100000E+02    1.0  ; SOURCE:   1                                        

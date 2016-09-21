@@ -1,0 +1,71 @@
+version 3 minor 32
+
+period 'whole period'
+   suffix     'whole'
+   start-time 'START'
+   stop-time  'STOP'
+end-period
+
+output-operation 'STADSC'
+   substance 'Salinity'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADPT'
+   substance 'Salinity'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADSC'
+   substance 'IM1'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADPT'
+   substance 'IM1'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADAY'
+   substance 'EColi'
+   suffix    'daily'
+   time-parameter 'TINIT' 'START'
+   time-parameter 'PERIOD' '0000/00/01-00:00:00'
+end-output-operation
+
+output-operation 'STAGEO'
+   substance 'EColi'
+   suffix    'geomean'
+   real-parameter 'THRESH' 1
+end-output-operation
+
+output-operation 'STADSC'
+   substance 'EColi'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADPT'
+   substance 'EColi'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADSC'
+   substance 'ExtUv'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADPT'
+   substance 'ExtUv'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADSC'
+   substance 'MrtToEColi'
+   suffix    ''
+end-output-operation
+
+output-operation 'STADPT'
+   substance 'MrtToEColi'
+   suffix    ''
+end-output-operation
+

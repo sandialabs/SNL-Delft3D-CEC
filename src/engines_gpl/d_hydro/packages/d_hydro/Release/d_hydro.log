@@ -1,0 +1,40 @@
+﻿  Generating version number in '.\include\d_hydro_version.h' ...
+  svn: E155036: The working copy at 'C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\engines_gpl\d_hydro'
+  is too old (format 10) to work with client version '1.8.3 (r1516576)' (expects format 31). You need to upgrade the working copy first.
+  
+  svn: E155036: Working copy 'C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\engines_gpl\d_hydro' is too old (format 10, created by Subversion 1.6)
+  ..\..\..\..\scripts_lgpl\win32\update_version.cmd: 000000
+  ..\..\..\..\scripts_lgpl\win32\update_version.cmd: Regenerating existing file '.\include\d_hydro_version.h'.
+  d_hydro.cpp
+c:\users\ccchart\desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\include\component.h(84): warning C4002: too many actual parameters for macro 'GetCurrentTime'
+C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\include\d_hydro.h(163): warning C4002: too many actual parameters for macro 'GetCurrentTime'
+src\d_hydro.cpp(156): warning C4996: '_splitpath': This function or variable may be unsafe. Consider using _splitpath_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdlib.h(854) : see declaration of '_splitpath'
+src\d_hydro.cpp(191): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(304) : see declaration of 'sscanf'
+src\d_hydro.cpp(197): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(211) : see declaration of 'fopen'
+src\d_hydro.cpp(240): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(211) : see declaration of 'fopen'
+src\d_hydro.cpp(316): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'sprintf'
+src\d_hydro.cpp(332): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+  d_hydro_version.cpp
+src\d_hydro_version.cpp(57): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\string.h(195) : see declaration of 'strncpy'
+src\d_hydro_version.cpp(65): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\string.h(195) : see declaration of 'strncpy'
+src\d_hydro_version.cpp(73): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\string.h(195) : see declaration of 'strncpy'
+  Generating code
+  Finished generating code
+  d_hydro.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\engines_gpl\d_hydro\packages\d_hydro\../../bin/Release\d_hydro.exe
+  oss-install...
+  Target directory: ..\bin
+  Source          : package/engine d_hydro
+  "installing d_hydro . . ."
+  C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\engines_gpl\d_hydro\bin\Release\d_hydro.exe -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\bin\win32\flow2d3d\bin\d_hydro.exe
+  1 File(s) copied
+  C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\engines_gpl\d_hydro\scripts\create_config_xml.tcl -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\bin\win32\menu\bin\create_config_xml.tcl
+  1 File(s) copied
+  The process tried to write to a nonexistent pipe.

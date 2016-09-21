@@ -1,0 +1,11 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 27 17:35:23 2016
+        MODULE ZOEKVAL__genmod
+          INTERFACE 
+            SUBROUTINE ZOEKVAL(MINP,KEY,VAL,JA)
+              INTEGER(KIND=4), INTENT(IN) :: MINP
+              CHARACTER(*), INTENT(IN) :: KEY
+              CHARACTER(*), INTENT(OUT) :: VAL
+              INTEGER(KIND=4), INTENT(OUT) :: JA
+            END SUBROUTINE ZOEKVAL
+          END INTERFACE 
+        END MODULE ZOEKVAL__genmod

@@ -1,0 +1,254 @@
+'V3.66.00        '  ; please, don't change this line
+
+'Example Delft3D-DELWAQ-PART coupled'
+'Delwaq takeover time 6h'
+'See 2.3.1 of D-WAQ Input File manual'
+'T0: 1990.08.05 00:00:00 (scu =       ls)'
+
+;                            Hydrodynamics file (*.hyd)
+'com-tut_fti_part.hyd'; name of *hyd file
+;
+
+;                            Numerical parameters
+; Type of model: 1 - tracer (basic module)
+;                2 - (obsolete option)
+;                3 - red tide model
+;                4 - oil model
+;                5 - (obsolete option)
+      1      0      0      0  ; type of model          tracks(0/1)    extra output      sed/erosion(0/1)
+      1    900                ; num. scheme            time_step(s)   (0=flow time step)
+      1   0.05      0         ; vert. disp option(*)   scale          disp_coeff.(m2/s)
+                              ; (*) 0=constant 1=depth averaged
+
+
+;                            Substances
+       1   ; no_of_substances
+ 'tracerp'
+
+;                            Particles
+    1000000 ; number of particles 
+
+;                            Physical parameters 
+           0.002 ; roughness [m]         
+            0.07 ; a coeff. in hor. diff. D = a*t^b
+             0.7 ; b coeff. in hor. diff. D = a*t^b
+               3 ; wind_drag (%)
+            1024 ; density of water (kg/m3)
+
+;                            Wind_parameters 
+  2 
+; dd hh mm ss        speed(m/s)   direction(degr.)
+
+   0 12 30  0           1.000      270.000 
+   1 20 30  0           1.000      270.000 
+
+;                            Model specific parameters
+ 
+   0 ; number of model specific parameters
+ 
+;                            Timers 
+;yyyy mm dd hh mm ss 
+          0 12 30  0      ;simulation start time 
+          1 20 30  0      ;simulation stop time 
+          0  6  0  0      ;DELWAQ take over time 
+          0 12 30  0      ;map file start time 
+          1 20 30  0      ;map file stop time 
+          0  0 15  0      ;map file time step 
+          0 12 30  0      ;his file start time 
+          1 20 30  0      ;his file stop time 
+          0  0 15  0      ;his file time step 
+ 1990  8  5  0  0  0      ;reference date for output
+
+;                            Observation points 
+    1
+;                                   x-coordinate           y-coordinate
+   'waste point'                       198912.00              610607.00  
+
+;                            Output parameters 
+;Zoom grid output method
+ 129
+; dd hh mm ss        recovery(-) (for scaling of output)
+   0 12 30  0           1.000 
+   0 12 45  0           1.000 
+   0 13  0  0           1.000 
+   0 13 15  0           1.000 
+   0 13 30  0           1.000 
+   0 13 45  0           1.000 
+   0 14  0  0           1.000 
+   0 14 15  0           1.000 
+   0 14 30  0           1.000 
+   0 14 45  0           1.000 
+   0 15  0  0           1.000 
+   0 15 15  0           1.000 
+   0 15 30  0           1.000 
+   0 15 45  0           1.000 
+   0 16  0  0           1.000 
+   0 16 15  0           1.000 
+   0 16 30  0           1.000 
+   0 16 45  0           1.000 
+   0 17  0  0           1.000 
+   0 17 15  0           1.000 
+   0 17 30  0           1.000 
+   0 17 45  0           1.000 
+   0 18  0  0           1.000 
+   0 18 15  0           1.000 
+   0 18 30  0           1.000 
+   0 18 45  0           1.000 
+   0 19  0  0           1.000 
+   0 19 15  0           1.000 
+   0 19 30  0           1.000 
+   0 19 45  0           1.000 
+   0 20  0  0           1.000 
+   0 20 15  0           1.000 
+   0 20 30  0           1.000 
+   0 20 45  0           1.000 
+   0 21  0  0           1.000 
+   0 21 15  0           1.000 
+   0 21 30  0           1.000 
+   0 21 45  0           1.000 
+   0 22  0  0           1.000 
+   0 22 15  0           1.000 
+   0 22 30  0           1.000 
+   0 22 45  0           1.000 
+   0 23  0  0           1.000 
+   0 23 15  0           1.000 
+   0 23 30  0           1.000 
+   0 23 45  0           1.000 
+   1  0  0  0           1.000 
+   1  0 15  0           1.000 
+   1  0 30  0           1.000 
+   1  0 45  0           1.000 
+   1  1  0  0           1.000 
+   1  1 15  0           1.000 
+   1  1 30  0           1.000 
+   1  1 45  0           1.000 
+   1  2  0  0           1.000 
+   1  2 15  0           1.000 
+   1  2 30  0           1.000 
+   1  2 45  0           1.000 
+   1  3  0  0           1.000 
+   1  3 15  0           1.000 
+   1  3 30  0           1.000 
+   1  3 45  0           1.000 
+   1  4  0  0           1.000 
+   1  4 15  0           1.000 
+   1  4 30  0           1.000 
+   1  4 45  0           1.000 
+   1  5  0  0           1.000 
+   1  5 15  0           1.000 
+   1  5 30  0           1.000 
+   1  5 45  0           1.000 
+   1  6  0  0           1.000 
+   1  6 15  0           1.000 
+   1  6 30  0           1.000 
+   1  6 45  0           1.000 
+   1  7  0  0           1.000 
+   1  7 15  0           1.000 
+   1  7 30  0           1.000 
+   1  7 45  0           1.000 
+   1  8  0  0           1.000 
+   1  8 15  0           1.000 
+   1  8 30  0           1.000 
+   1  8 45  0           1.000 
+   1  9  0  0           1.000 
+   1  9 15  0           1.000 
+   1  9 30  0           1.000 
+   1  9 45  0           1.000 
+   1 10  0  0           1.000 
+   1 10 15  0           1.000 
+   1 10 30  0           1.000 
+   1 10 45  0           1.000 
+   1 11  0  0           1.000 
+   1 11 15  0           1.000 
+   1 11 30  0           1.000 
+   1 11 45  0           1.000 
+   1 12  0  0           1.000 
+   1 12 15  0           1.000 
+   1 12 30  0           1.000 
+   1 12 45  0           1.000 
+   1 13  0  0           1.000 
+   1 13 15  0           1.000 
+   1 13 30  0           1.000 
+   1 13 45  0           1.000 
+   1 14  0  0           1.000 
+   1 14 15  0           1.000 
+   1 14 30  0           1.000 
+   1 14 45  0           1.000 
+   1 15  0  0           1.000 
+   1 15 15  0           1.000 
+   1 15 30  0           1.000 
+   1 15 45  0           1.000 
+   1 16  0  0           1.000 
+   1 16 15  0           1.000 
+   1 16 30  0           1.000 
+   1 16 45  0           1.000 
+   1 17  0  0           1.000 
+   1 17 15  0           1.000 
+   1 17 30  0           1.000 
+   1 17 45  0           1.000 
+   1 18  0  0           1.000 
+   1 18 15  0           1.000 
+   1 18 30  0           1.000 
+   1 18 45  0           1.000 
+   1 19  0  0           1.000 
+   1 19 15  0           1.000 
+   1 19 30  0           1.000 
+   1 19 45  0           1.000 
+   1 20  0  0           1.000 
+   1 20 15  0           1.000 
+   1 20 30  0           1.000 
+
+;                            Zoom grid output parameters 
+   185000.00     210000.00  ; x-start(m)              x-end(m)
+   600000.00     625000.00  ; y-start(m)              y-end(m)
+         150           150  ; grid cells in x dir(-)  grid cells in y dir(-)
+
+
+
+;                    Instantaneous releases 
+    0  ; number of instantaneous releases
+
+
+;                            Continuous releases 
+  1  ; number of continuous releases
+
+
+
+'cont. release 01'
+       198912.00      610909.00              1 ; x-coord(m)      y-coord(m)      layer
+          10.000         100.00                ; radius(m)       perc. of total particles(%)
+           1.000                               ; scale factor for load (kg/s)
+               0                               ; interpolation option (0=block 1=linear)
+
+; released_concentrations (kg/m3) 
+  1.000e+008        ; tracerp
+
+; release rates
+  2 
+; dd hh mm ss     rate (m3/s)
+   0 12 30  0         1.000
+   1 20 30  0         1.000
+
+;                            User defined releases 
+  0 
+
+;                            Decay rates
+  2 
+;dd hh mm ss          decay rates (1/day)
+
+   0 12 30  0           0.000 
+   1 20 30  0           0.000 
+
+;                            Settling velocities 
+; Generalized settling formula
+          0.0000  ; exponent for c(-)
+               1  ; grid refinement factor for accurate settling(-)
+ 
+; Settling tables
+            2  ; table dimension  
+
+
+; tracerp
+; dd hh mm ss       A0[m/s]     A1[m/s]   Period[h]    Phase[h]   Vmin[m/s]   Vmax[m/s]
+   0 12 30  0    1.000e-004       0.000       0.000       0.000     -10.000     100.000
+   1 20 30  0    1.000e-004       0.000       0.000       0.000     -10.000     100.000

@@ -1,0 +1,14 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 27 17:35:53 2016
+        MODULE RDFNAM__genmod
+          INTERFACE 
+            SUBROUTINE RDFNAM(LUN,IFNAM,FNAM,NFIL,IOUT,IPRI,ALONE)
+              INTEGER(KIND=4), INTENT(IN) :: NFIL
+              INTEGER(KIND=4), INTENT(OUT) :: LUN(NFIL)
+              CHARACTER(*), INTENT(IN) :: IFNAM
+              CHARACTER(*), INTENT(OUT) :: FNAM(NFIL)
+              INTEGER(KIND=4), INTENT(IN) :: IOUT
+              INTEGER(KIND=4), INTENT(IN) :: IPRI
+              LOGICAL(KIND=4), INTENT(IN) :: ALONE
+            END SUBROUTINE RDFNAM
+          END INTERFACE 
+        END MODULE RDFNAM__genmod

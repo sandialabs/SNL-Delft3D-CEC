@@ -1,0 +1,11 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 27 17:35:23 2016
+        MODULE ZOEKJA__genmod
+          INTERFACE 
+            SUBROUTINE ZOEKJA(MINP,REC,TEXT,JA)
+              INTEGER(KIND=4), INTENT(IN) :: MINP
+              CHARACTER(*) :: REC
+              CHARACTER(*), INTENT(IN) :: TEXT
+              INTEGER(KIND=4), INTENT(OUT) :: JA
+            END SUBROUTINE ZOEKJA
+          END INTERFACE 
+        END MODULE ZOEKJA__genmod

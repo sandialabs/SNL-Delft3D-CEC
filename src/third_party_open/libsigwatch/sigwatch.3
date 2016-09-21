@@ -1,0 +1,211 @@
+.\" $Id$
+.TH sigwatch 3 "July 2003"
+.SH NAME
+libsigwatch.a - simple signal watching for Fortran programs
+.SH SYNOPSIS
+.B integer function watchsignal (signum)
+.br
+.B integer signum
+.PP
+.B integer function watchsignalname (signame, response)
+.br
+.B character(*)* signame
+.br
+.B integer response
+.PP
+.B integer function getlastsignal
+.PP
+.B integer function sigwatchversion
+.SH DESCRIPTION
+.B libsigwatch.a
+is a library of routines to provide simple signal watching for Fortran
+programs.  This allows a minimal level of control of a running program
+from outside it, for example to tell it to checkpoint itself on
+receipt of a signal.  Signal handling is rather tricky in Fortran
+(because the function that is registered as a signal handler is later
+called by value rather than by reference), so this library provides
+functions to make it easier.
+.PP
+On Unix, there is a smallish set of signals which may be sent to a
+running process, which the process can either
+.I catch
+or 
+.I ignore.
+For example, the INT signal is sent to a process by pressing the
+interrupt character (usually
+.I "^C"
+), HUP is sent when a controlling terminal logs out, and KILL can be
+sent either by hand or by the system when it is forcing processes to
+die.  The default action of the INT signal is to terminate a process,
+and by default the HUP signal is ignored.  The KILL signal is one of
+those which cannot be caught or ignored, but always has its effect.
+There are also two signals, called USR1 and USR2 which are ignored by
+default, have no default meaning, and are provided for user convenience.
+.PP
+Each signal has a numeric value -- for example HUP is 1 and KILL is 9
+-- and after finding a process's PID with the ps(1) command, you can
+send signals to it with the kill(1) command:
+    \f(CRkill -HUP \fP
+.I <pid>
+.br
+or
+    \f(CRkill -1 \fP
+.I <pid>
+.br
+.PP
+Signals thus provide a limited mechanism for communicating with a
+running program.  A useful way to use this is to have the program
+watch for signal USR1, say, and examine this by calling function
+.B getlastsignal
+at the end of a loop.  If this returns a non-zero response, you might
+make your program checkpoint itself -- save its state for later
+restart -- in case the program crashes or has to be stopped for some
+reason.
+.PP
+For more details about signals, see the man pages for signal(3) or
+signal(7), depending on your platform.
+.PP
+A program prepares to receive signals by calling one of the
+.B watchsignalname
+or
+.B watchsignal
+functions, and calls
+.B getlastsignal
+at any point to retrieve the last signal which was sent to the
+process.
+.PP
+The arguments to
+.B watchsignalname
+are
+.I signame
+, a character string containing the name of the signal to watch for, and
+.I response
+, an integer which will be returned by
+.B getlastsignal
+after the specified signal has been caught.
+The signal names which the function recognises are those most likely
+to be useful, namely HUP, INT, USR1 and USR2.
+.PP
+The integer 
+.I response
+is the number which will subsequently be returned by
+.B getlastsignal
+, after this signal is caught.  If this response is passed as -1, the
+signal number associated with this name is what will be returned.
+Note that, although both HUP and INT have generally fixed numbers, the
+numbers associated with signals USR1 and USR2 are different on
+different unix variants.
+.PP
+If you need to catch
+another signal for some reason (make sure you understand the default
+behavour of the given signal first, however) you can give that signal
+as a number to the 
+.B watchsignal
+function; when that signal is later caught, the corresponding
+number is what will be returned by
+.B getlastsignal.
+.PP
+The 
+.B getlastsignal
+function returns the response associated with the last signal which was
+caught, or zero if no signal has been caught so far, or since the
+last call to
+.B getlastsignal.
+That is, any caught signal is returned only once.
+.PP
+The installed signal handler does
+.I not
+re-throw the signal after it has caught it; this would defeat the
+purpose of this library for those signals, such as HUP and INT, for
+which the default action is to kill the process.  Also, there is no
+way to tell if the signal was received by being re-thrown by another
+handler, installed after this one.  If all of this matters to you, then this
+library cannot reasonably help you, and you have no hope but to learn
+to love the sigaction(2) manpage.
+.PP
+When installing the handler, these functions 
+.I replace
+any previous signal handler.  If that was a non-default one (for
+example, one put there by an MPI environment) this could potentially
+change the behaviour of your program in an unhelpful fashion.  To warn
+you of this, these functions return +1 in this case; this is a success
+return value, but also a warning that you should understand what that
+previous signal handler was doing there.
+.PP
+The
+.B sigwatchversion
+function returns the version number of the library, as an integer
+formed from the version number by:
+    \f(CRmajor_version * 1000 + minor_version\fP
+.br
+So that the version number 1.2, for example, would be returned as
+integer 1002.
+.\" .SH LINKING
+.\" Libraries have been installed in:
+.\"    /usr/local/lib
+.\" 
+.\" If you ever happen to want to link against installed libraries
+.\" in a given directory, LIBDIR, you must either use libtool, and
+.\" specify the full pathname of the library, or use the `-LLIBDIR'
+.\" flag during linking and do at least one of the following:
+.\"    - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
+.\"      during execution
+.\"    - add LIBDIR to the `LD_RUN_PATH' environment variable
+.\"      during linking
+.\"    - use the `-Wl,--rpath -Wl,LIBDIR' linker flag
+.\"    - have your system administrator add LIBDIR to `/etc/ld.so.conf'
+.SH EXAMPLE
+The following Fortran program shows the library in use.
+      \f(CRprogram sigs
+      
+      implicit none
+
+      integer i
+      integer status
+
+      integer watchsignal
+      integer watchsignalname
+      integer getlastsignal
+      
+      status = watchsignal(10)
+      write(*,'("watchsignal 10:",i2)') status
+      status = watchsignalname("HUP", 99)
+      write(*,'("watchsignal HUP:",i2)') status
+
+      do i=1,10
+         call sleep(1)
+         write (*,'("lastsig=", i2)') getlastsignal()
+      enddo
+
+      end\fP
+.br
+.SH SIGNALS IN C PROGRAMS
+The library is intended to be callable from Fortran; there is little
+need for it in C programs, since the 
+.B signal
+function, and its function argument, are straightforwardly usable
+from C.
+.SH RETURN VALUES
+Both
+.B watchsignalname
+and
+.B watchsignal
+return 0 if the signal watching was installed successfully, and -1 if
+there was an error.  If there was a non-default signal handler already
+installed, it is replaced, but the routine returns 1 to warn you of this.
+.PP
+The function
+.B getlastsignal
+returns the response associated with the last signal caught, or zero
+if there has been no signal caught since the last time this function
+was invoked.
+.SH BUGS
+None known
+.SH "SEE ALSO"
+sigaction(2), kill(2), signal(3), signal(7)
+.SH AUTHOR
+Norman Gray
+.br
+http://www.astro.gla.ac.uk/users/norman/
+.br
+norman@astro.gla.ac.uk

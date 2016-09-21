@@ -1,0 +1,10 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 27 17:35:23 2016
+        MODULE READERROR__genmod
+          INTERFACE 
+            SUBROUTINE READERROR(W1,W2,MINP)
+              CHARACTER(*), INTENT(IN) :: W1
+              CHARACTER(*), INTENT(IN) :: W2
+              INTEGER(KIND=4), INTENT(IN) :: MINP
+            END SUBROUTINE READERROR
+          END INTERFACE 
+        END MODULE READERROR__genmod

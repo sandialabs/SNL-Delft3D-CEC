@@ -1,0 +1,14 @@
+﻿  streamtest.cpp
+streamtest.cpp(126): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\string.h(112) : see declaration of 'strcpy'
+streamtest.cpp(269): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'sprintf'
+streamtest.cpp(281): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'sprintf'
+streamtest.cpp(574): warning C4996: 'vsprintf': This function or variable may be unsafe. Consider using vsprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'vsprintf'
+streamtest.cpp(599): warning C4996: 'vsprintf': This function or variable may be unsafe. Consider using vsprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'vsprintf'
+  Generating code
+  Finished generating code
+  02-streamtest.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\utils_lgpl\deltares_common\tests\03_streams_test\bin/Release\02-streamtest.exe
