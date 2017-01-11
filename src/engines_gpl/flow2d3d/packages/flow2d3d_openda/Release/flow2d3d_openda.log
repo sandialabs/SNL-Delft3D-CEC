@@ -66,8 +66,8 @@ src\flow2d3d_openda_version.cpp(65): warning C4996: 'strncpy': This function or 
   15 File(s) copied
   C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\third_party_open\expat\win32\bin\Release\libexpat.dll -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\bin\win32\flow2d3d\bin\libexpat.dll
   1 File(s) copied
-  0 File(s) copied
   File not found - netcdf.dll
+  0 File(s) copied
   File not found - *.dll
   0 File(s) copied
   C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\engines_gpl\flow2d3d\default\dioconfig.ini -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\bin\win32\flow2d3d\default\dioconfig.ini

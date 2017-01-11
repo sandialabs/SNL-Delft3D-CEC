@@ -37,4 +37,3 @@ src\d_hydro_version.cpp(73): warning C4996: 'strncpy': This function or variable
   1 File(s) copied
   C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\engines_gpl\d_hydro\scripts\create_config_xml.tcl -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\bin\win32\menu\bin\create_config_xml.tcl
   1 File(s) copied
-  The process tried to write to a nonexistent pipe.

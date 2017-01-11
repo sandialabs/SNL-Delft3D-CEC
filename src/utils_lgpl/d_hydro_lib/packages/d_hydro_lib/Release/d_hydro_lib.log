@@ -5,45 +5,5 @@
   svn: E155036: Working copy 'C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\packages\d_hydro_lib' is too old (format 10, created by Subversion 1.6)
   ..\..\..\..\scripts_lgpl\win32\update_version.cmd: 000000
   ..\..\..\..\scripts_lgpl\win32\update_version.cmd: Regenerating existing file '.\include\d_hydro_lib_version.h'.
-  clock.cpp
-src\clock.cpp(127): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'sprintf'
-  component.cpp
-c:\users\ccchart\desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\include\component.h(84): warning C4002: too many actual parameters for macro 'GetCurrentTime'
-C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\include\d_hydro.h(163): warning C4002: too many actual parameters for macro 'GetCurrentTime'
-src\component.cpp(172): warning C4002: too many actual parameters for macro 'GetCurrentTime'
-  coredump.cpp
-c:\users\ccchart\desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\include\component.h(84): warning C4002: too many actual parameters for macro 'GetCurrentTime'
-C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\include\d_hydro.h(163): warning C4002: too many actual parameters for macro 'GetCurrentTime'
   d_hydro_lib_version.cpp
-  exception.cpp
-src\exception.cpp(57): warning C4996: 'vsnprintf': This function or variable may be unsafe. Consider using vsnprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\stdio.h(337) : see declaration of 'vsnprintf'
-src\exception.cpp(63): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\string.h(112) : see declaration of 'strcpy'
-  log.cpp
-c:\users\ccchart\desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\include\component.h(84): warning C4002: too many actual parameters for macro 'GetCurrentTime'
-c:\users\ccchart\desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\include\d_hydro.h(163): warning C4002: too many actual parameters for macro 'GetCurrentTime'
-src\log.cpp(60): warning C4996: 'strerror': This function or variable may be unsafe. Consider using strerror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\string.h(168) : see declaration of 'strerror'
-src\log.cpp(62): warning C4996: 'strerror': This function or variable may be unsafe. Consider using strerror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\string.h(168) : see declaration of 'strerror'
-src\log.cpp(103): warning C4996: 'strerror': This function or variable may be unsafe. Consider using strerror_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\string.h(168) : see declaration of 'strerror'
-src\log.cpp(145): warning C4996: 'vsnprintf': This function or variable may be unsafe. Consider using vsnprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\stdio.h(337) : see declaration of 'vsnprintf'
-  stringutils.cpp
-  xmltree.cpp
-src\xmltree.cpp(171): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\string.h(112) : see declaration of 'strcpy'
-src\xmltree.cpp(174): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\stdio.h(356) : see declaration of 'sprintf'
-src\xmltree.cpp(225): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\string.h(112) : see declaration of 'strcpy'
-src\xmltree.cpp(226): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\string.h(112) : see declaration of 'strcpy'
-src\xmltree.cpp(271): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\string.h(112) : see declaration of 'strcpy'
-src\xmltree.cpp(368): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-          C:\Program Files (x86)\VC\include\stdio.h(304) : see declaration of 'sscanf'
   d_hydro_lib.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\utils_lgpl\d_hydro_lib\packages\d_hydro_lib\../../lib/Release/static\d_hydro_lib.lib

@@ -1,6 +1,6 @@
  delwaq2
 
- Timestamp is 57ad08df (Thu Aug 11 17:23:11 2016)
+ Timestamp is 587341b4 (Mon Jan 09 00:54:28 2017)
 
  Preferred load address is 00400000
 
@@ -48,9 +48,9 @@
  0000:00009876       __fltused                  00009876     <absolute>
  0000:00009876       __ldused                   00009876     <absolute>
  0000:00000000       ___ImageBase               00400000     <linker-defined>
- 0001:00000000       _GETIDENTIFICATION         00401000 f   getidentification.obj
- 0001:00000030       _MAIN__                    00401030 f   dlwq2.obj
- 0001:00000280       __UNNAMED_DATA$            00401280 f   block.obj
+ 0001:00000000       _MAIN__                    00401000 f   dlwq2.obj
+ 0001:00000250       __UNNAMED_DATA$            00401250 f   block.obj
+ 0001:00000260       _GETIDENTIFICATION         00401260 f   getidentification.obj
  0001:00000290       _for_set_reentrancy        00401290 f   libifcoremt:for_reentrancy.obj
  0001:000002b0       _for__reentrancy_cleanup   004012b0 f   libifcoremt:for_reentrancy.obj
  0001:000004d0       _for__destroy_threadstor   004014d0 f   libifcoremt:for_reentrancy.obj

@@ -1,15 +1,1 @@
-﻿  fort-attio.c
-  fort-control.c
-  fort-dim.c
-  fort-genatt.c
-  fort-geninq.c
-  fort-genvar.c
-  fort-lib.c
-  fort-misc.c
-  fort-v2compat.c
-  fort-var1io.c
-  fort-varaio.c
-  fort-vario.c
-  fort-varmio.c
-  fort-varsio.c
-  f77_netcdf.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\third_party_open\netcdf\src\win32\2005\f77_netcdf\Release\f77_netcdf.lib
+﻿  f77_netcdf.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\third_party_open\netcdf\src\win32\2005\f77_netcdf\Release\f77_netcdf.lib

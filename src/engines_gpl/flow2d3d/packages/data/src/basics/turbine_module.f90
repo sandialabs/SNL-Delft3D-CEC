@@ -258,7 +258,7 @@ subroutine intersect_turbine(reldist,zlevel,z0,diam,width,height,turbtype,area,b
                            & area(n,k)
             elseif (turbtype == 1) then   ! BJ 20150326, new case of rectangular turbine
                blockfrac(n,k) = abs(min(max(reldist(n),-width/2.0_fp),width/2.0_fp) - min(max(reldist(n+1),-width/2.0_fp),width/2.0_fp)) * &
-                              & abs(min(max(zlevel(n,k)-z0,-height/2.0_fp),height/2.0_fp) - min(max(zlevel(n,k-1),-height/2.0_fp),height/2.0_fp)) / &
+                              & abs(min(max(zlevel(n,k)-z0,-height/2.0_fp),height/2.0_fp) - min(max(zlevel(n,k-1)-z0,-height/2.0_fp),height/2.0_fp)) / &
                               & area(n,k)
             endif   ! BJ 20150326
         enddo
