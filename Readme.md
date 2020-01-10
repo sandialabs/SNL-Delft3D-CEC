@@ -9,14 +9,15 @@ The SNL-Delft3D-CEC code incorporates a state-of-the-art current energy conversi
 
 The CEC Module was first implemented within the open source Environmental Fluids Dynamics Code (EFDC) and named SNL-EFDC. More information on the development and application of SNL-EFDC and SNL-Deflt3D-CEC can be found in the Publications tab below. The SNL- Deflt3D-CEC project is funded by the U.S. Department of Energy’s Wind and Water Power Technologies Office.
 
-Example Simulation Results: 
+Example Simulation Results:
+----------------------------
 ![alt text][sim]
 
 [sim]: http://energy.sandia.gov/wp-content/uploads/2016/09/Delft3D-Web-Page-Image-2-turbine.png "SNL-Delft3D-CEC Simulation"
 
 
 Tutorials
-=========================
+----------------------------
 
 * [SNL-Delft3D-CEC Tutorial 1](https://energy.sandia.gov/download/38843/)
 * [SNL-Delft3D-CEC Tutorial 2](https://energy.sandia.gov/download/38851/)
