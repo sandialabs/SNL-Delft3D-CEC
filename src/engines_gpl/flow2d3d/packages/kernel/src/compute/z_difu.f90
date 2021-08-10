@@ -15,10 +15,10 @@ subroutine z_difu(lundia    ,nst       ,icx       ,icy       ,j         , &
                 & dzs1      ,areau     ,areav     ,volum0    ,volum1    , &
                 & guu       ,gvv       ,bruvai    ,sedtyp    ,seddif    , &
                 & ws        ,lsed      ,lsal      ,ltem      ,eqmbcsand , &
-                & eqmbcmud  ,lsts      ,gdp       )
+                & eqmbcmud  ,lsts      ,s1        ,dps       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -42,8 +42,8 @@ subroutine z_difu(lundia    ,nst       ,icx       ,icy       ,j         , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: z_difu.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_difu.f90 $
+!  $Id: z_difu.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_difu.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Computes transport in the u, v and w-direction.
@@ -98,6 +98,7 @@ subroutine z_difu(lundia    ,nst       ,icx       ,icy       ,j         , &
     include 'flow_steps_f.inc'
     real(fp)                            , pointer :: hdt
     real(fp)                            , pointer :: ag
+    real(fp)                            , pointer :: dryflc
     real(fp)                            , pointer :: dzmin
     real(fp)                            , pointer :: vicmol
     real(fp)                            , pointer :: dicoww
@@ -160,6 +161,8 @@ subroutine z_difu(lundia    ,nst       ,icx       ,icy       ,j         , &
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)               , intent(in)  :: guv       ! Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)               , intent(in)  :: gvu       ! Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)               , intent(in)  :: gvv       ! Description and declaration in esm_alloc_real.f90
+    real(prec), dimension(gdp%d%nmlb:gdp%d%nmub)                           :: dps       ! Description and declaration in esm_alloc_real.f90
+    real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)                             :: s1        ! Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub, 0:kmax)                     :: bruvai    ! Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub, 0:kmax)       , intent(in)  :: vicww     ! Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub, 0:kmax)       , intent(in)  :: qzk       ! Description and declaration in esm_alloc_real.f90
@@ -289,6 +292,7 @@ subroutine z_difu(lundia    ,nst       ,icx       ,icy       ,j         , &
     ck          => gdp%gdturcoe%ck
     nonhyd      => gdp%gdprocs%nonhyd
     nh_level    => gdp%gdnonhyd%nh_level
+    dryflc      => gdp%gdnumeco%dryflc
     nudge       => gdp%gdnumeco%nudge
     dzmin       => gdp%gdzmodel%dzmin
     !
@@ -522,7 +526,7 @@ subroutine z_difu(lundia    ,nst       ,icx       ,icy       ,j         , &
        endif
        do nm = 1, nmmax
           if (kfs(nm) == 1) then
-          ksm = min(kfsmx0(nm), kfsmax(nm))
+             ksm = min(kfsmx0(nm), kfsmax(nm))
              do k = kfsmin(nm), ksm - 1
                 delz = max(0.0001_fp, 0.5_fp*(dzs1(nm, k) + dzs1(nm, k + 1)))
                 !
@@ -1148,18 +1152,20 @@ subroutine z_difu_difhor_expl( )
     !
     ! Local variables
     !
-    integer :: maskval
-    real(fp):: cl
-    real(fp):: cr
-    real(fp):: difl
-    real(fp):: difr
+    integer  :: maskval
+    real(fp) :: cl
+    real(fp) :: cr
+    real(fp) :: difl
+    real(fp) :: difr
+    real(fp) :: hmin
     !
     ! IN X-DIRECTION
     !
     do l = 1, lstsci
        do nm = 1, nmmax
           nmu = nm + icx
-          if (kfs(nm)*kfs(nmu) == 1) then
+          hmin = min(s1(nm) + real(dps(nm),fp), s1(nmu) + real(dps(nmu),fp))
+          if (kfs(nm)*kfs(nmu) == 1 .and. hmin > dryflc) then
              do k = kfumin(nm), kmax
                 if (kfuz0(nm, k)==1 .and. kfsz0(nm, k)*kfsz0(nmu, k)==1) then
                    cl               = r0   (nm , k, l)
@@ -1182,7 +1188,8 @@ subroutine z_difu_difhor_expl( )
     do l = 1, lstsci
        do nm = 1, nmmax
           num = nm + icy
-          if (kfs(nm)*kfs(num) == 1) then
+          hmin = min(s1(nm) + real(dps(nm),fp), s1(num) + real(dps(num),fp))
+          if (kfs(nm)*kfs(num) == 1 .and. hmin > dryflc) then
              do k = kfvmin(nm), kmax
                 if (kfvz0(nm, k)==1 .and. kfsz0(nm, k)*kfsz0(num, k)==1) then
                    cl               = r0   (nm , k, l)
@@ -1212,18 +1219,20 @@ subroutine z_difu_difhor_impl( )
     !
     ! Local variables
     !
-    integer :: maskval1
-    integer :: maskval2
-    real(fp):: areau1
-    real(fp):: areav1
-    real(fp):: difl
-    real(fp):: difr
+    integer  :: maskval1
+    integer  :: maskval2
+    real(fp) :: areau1
+    real(fp) :: areav1
+    real(fp) :: difl
+    real(fp) :: difr
+    real(fp) :: hmin
     !
     ! IN X-DIRECTION
     !
     do nm = 1, nmmax
-       if (kfu(nm) == 1) then
-          nmu      = nm + icx
+       nmu      = nm + icx
+       hmin = min(s1(nm) + real(dps(nm),fp), s1(nmu) + real(dps(nmu),fp))
+       if (kfu(nm) == 1 .and. hmin > dryflc) then
           mink_old = min(kfsmx0(nm),kfsmx0(nmu))
           mink_new = min(kfsmax(nm),kfsmax(nmu))
           mink     = min(mink_old  ,mink_new)
@@ -1248,8 +1257,9 @@ subroutine z_difu_difhor_impl( )
     ! IN Y-DIRECTION
     !
     do nm = 1, nmmax
-       if (kfv(nm) == 1) then
-          num      = nm + icy
+       num      = nm + icy
+       hmin = min(s1(nm) + real(dps(nm),fp), s1(num) + real(dps(num),fp))
+       if (kfv(nm) == 1 .and. hmin > dryflc) then
           mink_old = min(kfsmx0(nm),kfsmx0(num))
           mink_new = min(kfsmax(nm),kfsmax(num))
           mink     = min(mink_old  ,mink_new)
@@ -1467,7 +1477,7 @@ subroutine z_difu_solv_impl( )
           if (kfsmx0(nm) > kfsmax(nm)) then
              do k = kmin + 1, kmax
                 r1(nm, k, l) = r0(nm, k, l)
-                   vvdwk(nm, k) = 0.0_fp
+                vvdwk(nm, k) = 0.0_fp
              enddo
           elseif (kfsmx0(nm) < kfsmax(nm)) then
              do k = kmin + 1, kmax

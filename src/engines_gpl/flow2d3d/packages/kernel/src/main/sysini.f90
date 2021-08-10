@@ -2,7 +2,7 @@ subroutine sysini(error     ,runid     ,filmrs    ,prgnm     , &
                 & version_short ,filmd     ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine sysini(error     ,runid     ,filmrs    ,prgnm     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: sysini.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/main/sysini.f90 $
+!  $Id: sysini.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/main/sysini.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Initialises the FLOW system (EXCEPT for the
@@ -138,9 +138,9 @@ subroutine sysini(error     ,runid     ,filmrs    ,prgnm     , &
     !
     call util_getenv('ARCH',txthlp)
     call small(txthlp,message_len)
-    if (txthlp == 'win32' .or. txthlp == 'w32') then
+    if (txthlp == 'win32' .or. txthlp == 'w32' .or. txthlp == 'x86') then
        gdp%arch = 'win32'
-    elseif (txthlp == 'win64') then
+    elseif (txthlp == 'win64' .or. txthlp == 'x64') then
        gdp%arch = 'win64'
     else
        gdp%arch = 'linux'

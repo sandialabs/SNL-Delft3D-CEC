@@ -3,7 +3,7 @@ subroutine z_shrwav(nmmax     ,kmax      ,icx       ,dfu       ,deltau    , &
                   & kfumn0    ,kfumx0    ,dzu1      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine z_shrwav(nmmax     ,kmax      ,icx       ,dfu       ,deltau    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: z_shrwav.f90 1044 2011-11-21 21:22:12Z platzek $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20111115_13532_z-model_improvements_oss-merge/engines_gpl/flow2d3d/packages/kernel/src/compute/z_shrwav.f90 $
+!  $Id: z_shrwav.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_shrwav.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! NONE

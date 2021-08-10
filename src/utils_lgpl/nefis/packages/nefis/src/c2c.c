@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: c2c.c 5573 2015-11-08 21:28:52Z mooiman $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/nefis/packages/nefis/src/c2c.c $
+// $Id: c2c.c 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/nefis/packages/nefis/src/c2c.c $
 /*
  *   <c2c.c> - Functions related to the conversion C to C
  *
@@ -56,7 +56,7 @@
 #  define DLLEXPORT
 #endif
 
-#if defined(WIN32) || defined(WIN64)
+#if defined(_WIN32)
 #  include <io.h>
 #  include <sys\stat.h>
 #  define strdup _strdup
@@ -1536,8 +1536,8 @@ DLLEXPORT BInt4 INQUIRE_FIRST_CELL   ( BInt4 * fd             ,/* I */
 
     for ( i=0; i<cel_num_dim; i++ )
     {
-      strncpy( &el_names[i][0], &elm_names[i*(MAX_NAME+1)], MAX_NAME );
-      el_names[i][MAX_NAME] = '\0';
+        strncpy( &el_names[i][0], &elm_names[i*(MAX_NAME+1)], MAX_NAME );
+        el_names[i][MAX_NAME] = '\0';
     }
   }
 
@@ -1840,7 +1840,7 @@ DLLEXPORT BInt4 INQUIRE_NEXT_CELL3  (BInt4 *  fd          , /* I */
         *el_names = (char  *) malloc( cel_num_dim * (MAX_NAME+1) * sizeof(char) );
         for ( i=0; i<cel_num_dim; i++ )
         {
-			strncpy( *el_names+i*(MAX_NAME+1), &elm_names[i*(MAX_NAME+1)], MAX_NAME );
+             strncpy( *el_names+i*(MAX_NAME+1), &elm_names[i*(MAX_NAME+1)], MAX_NAME );
             (*el_names + i*(MAX_NAME + 1))[MAX_NAME] = '\0';
         }
     }

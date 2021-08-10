@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2013.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -23,8 +23,8 @@
 !  are registered trademarks of Stichting Deltares, and remain the property of  
 !  Stichting Deltares. All rights reserved.                                     
 
-!  $Id: ec_instance.f90 5609 2015-11-25 17:21:04Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/ec_module/packages/ec_module/src/ec_instance.f90 $
+!  $Id: ec_instance.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/ec_module/packages/ec_module/src/ec_instance.f90 $
 
 !> This module contains the constructor and destructor for the datatype tEcInstance.
 !! @author edwin.bos@deltares.nl
@@ -42,6 +42,7 @@ module m_ec_instance
    use m_ec_filereader
    use m_ec_bcreader
    use m_ec_netcdf_timeseries
+   use multi_file_io
    
    implicit none
    
@@ -61,6 +62,7 @@ module m_ec_instance
    public :: ecInstancePrintState
    public :: ecInstanceListSourceItems
    public :: ecInstanceListFileReaders
+   public :: ecIncreaseMaxOpenFiles
 
    
    contains
@@ -72,7 +74,9 @@ module m_ec_instance
       function ecInstanceCreate(ptr) result (success)
          logical                    :: success !< function status
          type(tEcInstance), pointer :: ptr     !< intent(out)
-         integer                    :: istat   !< allocate() status
+
+         integer                    :: istat        !< allocate() status
+         integer                    :: maxOpenFiles !< default for max. open files
          !
          success = .false.
          !
@@ -124,12 +128,13 @@ module m_ec_instance
                   call setECMessage("ERROR: ec_instance::ecInstanceCreate: Unable to allocate memory for ecNetCDFsPtr array.")
                   success = .false.
                end if
-               ptr%nBCBlocks = 0
-               allocate(ptr%ecStringbufferPtr(1), STAT = istat)
+               ptr%nBCFiles = 0
+               allocate(ptr%ecBCFilesPtr(10), STAT = istat)
                if (istat /= 0) then
-                  call setECMessage("ERROR: ec_instance::ecInstanceCreate: Unable to allocate memory for ecStringbufferPtr array.")
+                  call setECMessage("ERROR: ec_instance::ecInstanceCreate: Unable to allocate memory for ecBCFilesPtr array.")
                   success = .false.
                end if
+               ptr%nBCBlocks = 0
                allocate(ptr%ecItemsPtr(10), STAT = istat)
                if (istat /= 0) then
                   call setECMessage("ERROR: ec_instance::ecInstanceCreate: Unable to allocate memory for ecItemsPtr array.")
@@ -145,6 +150,12 @@ module m_ec_instance
                ptr%idCounter = 0
             end if
          end if
+
+         !
+         ! set max open files
+         maxOpenFiles = maxFileUnits
+         success = ecIncreaseMaxOpenFiles(maxOpenFiles)
+
       end function ecInstanceCreate
       
       ! =======================================================================
@@ -162,18 +173,36 @@ module m_ec_instance
             call setECMessage("INFO: ec_instance::ecInstanceFree: Dummy argument ptr is already disassociated.")
          else
             ! Delegate Free-and-deallocate call to all constituent data types.
-            if (ecConnectionFree1dArray(ptr%ecConnectionsPtr, ptr%nConnections) .and. &
-                ecConverterFree1dArray(ptr%ecConvertersPtr, ptr%nConverters) .and. &
-                ecElementSetFree1dArray(ptr%ecElementSetsPtr, ptr%nElementSets) .and. &
-                ecFileReaderFree1dArray(ptr%ecFileReadersPtr, ptr%nFileReaders) .and. &
-                ecNetCDFFree1dArray(ptr%ecNetCDFsPtr, ptr%nNetCDFs) .and. &
-                ecItemFree1dArray(ptr%ecItemsPtr, ptr%nItems) .and. &
-                ecQuantityFree1dArray(ptr%ecQuantitiesPtr, ptr%nQuantities) .and. &
-                ecFieldFree1dArray(ptr%ecFieldsPtr, ptr%nFields)) then
+            if (.not.ecConnectionFree1dArray(ptr%ecConnectionsPtr, ptr%nConnections)) then
+               return
+            endif
+            if (.not.ecConverterFree1dArray(ptr%ecConvertersPtr, ptr%nConverters)) then
+               return
+            endif
+            if (.not.ecElementSetFree1dArray(ptr%ecElementSetsPtr, ptr%nElementSets)) then
+               return
+            endif
+            if (.not.ecFieldFree1dArray(ptr%ecFieldsPtr, ptr%nFields)) then
+               return
+            endif
+            if (.not.ecFileReaderFree1dArray(ptr%ecFileReadersPtr, ptr%nFileReaders)) then
+               return
+            endif
+            if (.not.ecBCBlockFree1dArray(ptr%ecBCBlocksPtr, ptr%nBCBlocks)) then
+               return
+            endif
+            if (.not.ecNetCDFFree1dArray(ptr%ecNetCDFsPtr, ptr%nNetCDFs)) then
+               return
+            endif
+            if (.not.ecItemFree1dArray(ptr%ecItemsPtr, ptr%nItems)) then
+               return
+            endif
+            if (.not.ecQuantityFree1dArray(ptr%ecQuantitiesPtr, ptr%nQuantities)) then
+               return
+            endif
                ! Finally deallocate the tEcInstance pointer.
-               deallocate(ptr, stat = istat)
-               if (istat == 0) success = .true.
-            end if
+            deallocate(ptr, stat = istat)
+            if (istat == 0) success = .true.
          end if
       end function ecInstanceFree
       
@@ -415,7 +444,7 @@ module m_ec_instance
                   return
                end if
             end if
-            ! register the BCBlock
+            ! register the new instance
             instancePtr%nNetCDFs = instancePtr%nNetCDFs + 1
             instancePtr%ecNetCDFsPtr(instancePtr%nNetCDFs)%ptr => netCDFPtr
             instancePtr%idCounter = instancePtr%idCounter + 1
@@ -424,7 +453,6 @@ module m_ec_instance
       end function ecInstanceCreateNetCDF
 
       ! =======================================================================
-      
       !> 
       subroutine ecInstanceListSourceItems(instancePtr,dev)
          implicit none
@@ -436,9 +464,9 @@ module m_ec_instance
          do ii=1, instancePtr%nItems 
             sourceItemPtr => instancePtr%ecItemsPtr(ii)%ptr
             if (sourceItemPtr%role == itemType_source) then
-                     write(dev,'(a,i4.4,a,i1,a)') 'Source Item ',sourceItemPtr%id
-                     write(dev,'(a,i4.4,a,i1,a)') '  Quantity = '//trim(sourceItemPtr%quantityPtr%name)
-                     write(dev,'(a,i4.4,a,i1,a)') '  Location = '//trim(sourceItemPtr%elementsetPtr%name)
+                     write(dev,'(a,i5.5)') 'Source Item ',sourceItemPtr%id
+                     write(dev,'(a)')      '  Quantity = '//trim(sourceItemPtr%quantityPtr%name)
+                     write(dev,'(a)')      '  Location = '//trim(sourceItemPtr%elementsetPtr%name)
                      write(dev,*) ''
             endif 
          enddo
@@ -465,41 +493,74 @@ module m_ec_instance
             case default
                filename = ''
             end select
-            write(dev,'(a,i4.4,a,i1,a)') 'Filereader ',fileReaderPtr%id,' ('''//filename//''') provides items: '
+            write(dev,'(a,i5.5,a,i1,a)') 'Filereader ',fileReaderPtr%id,' ('''//filename//''') provides items: '
             do jj=1, fileReaderPtr%nItems
                sourceItemPtr => fileReaderPtr%items(jj)%ptr
-               write(dev,'(a,i4.4,a,i1,a)') '   Item ',sourceItemPtr%id
-               write(dev,'(a,i4.4,a,i1,a)') '      Quantity = '//trim(sourceItemPtr%quantityPtr%name)
-               write(dev,'(a,i4.4,a,i1,a)') '      Location = '//trim(sourceItemPtr%elementsetPtr%name)
+               write(dev,'(a,i5.5)') '   Item ',sourceItemPtr%id
+               write(dev,'(a)')      '      Quantity = '//trim(sourceItemPtr%quantityPtr%name)
+               write(dev,'(a)')      '      Location = '//trim(sourceItemPtr%elementsetPtr%name)
             enddo 
          write(dev,*) ''
          enddo
       end subroutine ecInstanceListFileReaders
       ! =======================================================================
       
-      !> 
-      subroutine ecInstancePrintState(instancePtr,dev)
+      subroutine ecInstancePrintState(instancePtr,messenger,lvl)
+      use m_ec_message
+      implicit none
          type(tEcInstance), pointer :: instancePtr           !< intent(in)
-         integer, intent(in)        :: dev                   !< target device 
-         !
+         interface 
+            subroutine messenger(lvl,msg)
+            integer, intent(in)             :: lvl
+            character(len=*), intent(in)    :: msg 
+            end subroutine
+         end interface
+         integer, intent(in)        :: lvl
+
          integer                      :: ii, ic, js, i, j
          type(tEcItem),       pointer :: targetItemPtr
          type(tEcConnection), pointer :: connectionPtr
          type(tEcItem),       pointer :: sourceItemPtr
          type(tEcFileReader), pointer :: FileReaderPtr
          type(tEcBCBlock),    pointer :: BCBlockPtr
+         character(len=maxMessageLen) :: line
     
+         call messenger(lvl, '.')
+         call messenger(lvl, 'EC MODULE ITEMS:')
          do ii=1, instancePtr%nItems 
             ! TODO: This lookup loop of items may be expensive for large models, use a lookup table with ids.
             targetItemPtr => instancePtr%ecItemsPtr(ii)%ptr
             if (targetItemPtr%role == itemType_target) then
-               write(dev,'(a,i4.4,a,i1,a)') 'Target Item ', targetItemPtr%id, ' (name='//trim(targetItemPtr%quantityPtr%name)//', vectormax=',targetItemPtr%quantityPtr%vectormax,')'
+               if (associated(targetItemPtr%quantityPtr)) then
+                  write(line,'(a,i5.5,a,i1,a)') 'Target Item ', targetItemPtr%id, ' (name='//trim(targetItemPtr%quantityPtr%name)//', vectormax=',targetItemPtr%quantityPtr%vectormax,')'
+               else
+                  write(line,'(a,i5.5,a,i1,a)') 'Target Item ', targetItemPtr%id
+               endif
+               call messenger(lvl, line)
+               if (associated(targetItemPtr%elementSetPtr)) then
+                  write(line,'(a,i5.5,a,i1,a)') 'Element Set ', targetItemPtr%elementSetPtr%id
+                  call messenger(lvl, line)
+               end if
+               if (targetItemPtr%nConnections==0) then
+                  write(line,'(a,i5.5,a)') '   TARGET ITEM ',targetItemPtr%id,' HAS NO CONNECTIONS !!!'
+                  call messenger(lvl, line)
+               end if
                do ic=1, targetItemPtr%nConnections
                   connectionPtr => targetItemPtr%connectionsPtr(ic)%ptr
-                  write(dev,'(a,i4.4)') '   Connection ',connectionPtr%id 
+                  if (associated(connectionPtr%converterPtr)) then
+                     write(line,'(a,i5.5,a,i5.5,a,i3.3)') '   Connection ',connectionPtr%id,', Converter ',connectionPtr%converterPtr%id,', targetIndex ',connectionPtr%converterPtr%targetIndex  
+                  else
+                     write(line,'(a,i5.5,a,i5.5,a,i3.3)') '   Connection ',connectionPtr%id,', Converter NONE !'
+                  end if
+                  call messenger(lvl, line)
+                  if (connectionPtr%nSourceItems==0) then
+                     write(line,'(a)') '   CONNECTION HAS NO SOURCE ITEMS !!!'
+                     call messenger(lvl, line)
+                  end if
                   do js=1, connectionPtr%nSourceItems
                      sourceItemPtr => connectionPtr%sourceItemsPtr(js)%ptr
-                     write(dev,'(a,i4.4,a,i1,a)') '      Source Item ',sourceItemPtr%id, ' (name='//trim(sourceItemPtr%quantityPtr%name)//', vectormax=',sourceItemPtr%quantityPtr%vectormax,')'
+                     write(line,'(a,i5.5,a,i1,a)') '      Source Item ',sourceItemPtr%id, ' (name='//trim(sourceItemPtr%quantityPtr%name)//', vectormax=',sourceItemPtr%quantityPtr%vectormax,')'
+                     call messenger(lvl, line)
                      ! Find the FileReader which can update this source Item.
                      frs: do i=1, instancePtr%nFileReaders
                         do j=1, instancePtr%ecFileReadersPtr(i)%ptr%nItems
@@ -507,20 +568,25 @@ module m_ec_instance
                               fileReaderPtr => instancePtr%ecFileReadersPtr(i)%ptr
                               if (associated(fileReaderPtr%bc)) then 
                                  BCBlockPtr => fileReaderPtr%bc
-                                 write(dev,'(a,i4.4,a)') '         File Reader ',fileReaderPtr%id, '(filename='//trim(fileReaderPtr%bc%fname)//')'
-                                 write(dev,'(a,i4.4)') '            BCBlock ',BCBlockPtr%id 
+                                 write(line,'(a,i5.5,a)') '         File Reader ',fileReaderPtr%id, '(filename='//trim(fileReaderPtr%bc%fname)//')'
+                                 call messenger(lvl, line)
+                                 write(line,'(a,i5.5)') '            BCBlock ',BCBlockPtr%id 
+                                 call messenger(lvl, line)
                               else 
-                                 write(dev,'(a,i4.4,a)') '         File Reader ',fileReaderPtr%id, '(filename='//trim(fileReaderPtr%filename)//')'
+                                 write(line,'(a,i5.5,a)') '         File Reader ',fileReaderPtr%id, '(filename='//trim(fileReaderPtr%filename)//')'
+                                 call messenger(lvl, line)
                               end if 
                               if (associated(sourceItemPtr%QuantityPtr)) then
                               !  if (allocated(sourceItemPtr%QuantityPtr%name))  write(dev,'(a)') '            Quantity = '//trim(sourceItemPtr%QuantityPtr%name)
                                  if (len_trim(sourceItemPtr%QuantityPtr%name)>0) then
-                                    write(dev,'(a)') '            Quantity = '//trim(sourceItemPtr%QuantityPtr%name)
+                                    write(line,'(a)') '            Quantity = '//trim(sourceItemPtr%QuantityPtr%name)
+                                    call messenger(lvl, line)
                                  end if
                               end if
                               if (associated(sourceItemPtr%ElementSetPtr)) then
                                  if (len_trim(sourceItemPtr%ElementSetPtr%name)>0) then
-                                    write(dev,'(a)') '            Location = '//trim(sourceItemPtr%ElementSetPtr%name)
+                                    write(line,'(a)') '            Location = '//trim(sourceItemPtr%ElementSetPtr%name)
+                                    call messenger(lvl, line)
                                  end if
                               end if 
                               exit frs ! exits outer named do loop
@@ -528,9 +594,31 @@ module m_ec_instance
                         end do
                      end do frs
                   enddo ! SOURCE ITEMS 
-               enddo	! CONNECTIONS  
+               enddo ! CONNECTIONS  
             endif 
          enddo ! TARGET ITEMS OF INSTANCE 
+         call messenger(lvl,'.')
       end subroutine ecInstancePrintState
+
+
+      function ecIncreaseMaxOpenFiles(max_open_files) result(success)
+      implicit none
+      logical                     :: success          !< function result
+      integer(kind=4), intent(in) :: max_open_files   !< preferred max open files
+      integer (kind=4)            :: ret              !< actual max open files, as returned by mf_increase_max_open
+      character(len=128)          :: message          !< error message
+
+      success = .false.
+      ret = mf_increase_max_open(max_open_files)
+      if (ret < max_open_files) then
+         maxFileUnits = ret
+         write(message, '(a,i0,a)') "ERROR: ec_instance::ecIncreaseMaxOpenFiles: Increasing the max number of open files to ", max_open_files, " failed."
+         call setECMessage(message)
+      else
+         success = .true.
+      end if
+
+      end function ecIncreaseMaxOpenFiles
+
 
 end module m_ec_instance

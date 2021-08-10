@@ -6,7 +6,7 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="../../lib/$(ConfigurationName)/static" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="./include;../../include;../../../../utils_lgpl/deltares_common/packages/deltares_common/include;../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/esmfsm.lib" LinkLibraryDependencies="true"/>
+				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/esmfsm.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -16,7 +16,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="../../lib/$(ConfigurationName)/static" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="./include;../../include;../../../../utils_lgpl/deltares_common/packages/deltares_common/include;../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/esmfsm.lib" LinkLibraryDependencies="true"/>
+				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/esmfsm.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -25,8 +25,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="../../lib/$(PlatformName)\$(ConfigurationName)/static" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="./include;../../include;../../../../utils_lgpl/deltares_common/packages/deltares_common/include;../../../../utils_lgpl/deltares_common/lib/$(PlatformName)/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/esmfsm.lib" LinkLibraryDependencies="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="$(ProjectDir)./include;$(ProjectDir)../../include;$(ProjectDir)../../../../utils_lgpl/deltares_common/packages/deltares_common/include;$(ProjectDir)../../../../utils_lgpl/deltares_common/lib/$(PlatformName)/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
+				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/esmfsm.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -35,8 +35,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="../../lib/$(PlatformName)\$(ConfigurationName)/static" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="./include;../../include;../../../../utils_lgpl/deltares_common/packages/deltares_common/include;../../../../utils_lgpl/deltares_common/lib/$(PlatformName)/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/esmfsm.lib" LinkLibraryDependencies="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="$(ProjectDir)./include;$(ProjectDir)../../include;$(ProjectDir)../../../../utils_lgpl/deltares_common/packages/deltares_common/include;$(ProjectDir)../../../../utils_lgpl/deltares_common/lib/$(PlatformName)/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL" DisableDefaultLibSearch="true"/>
+				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/esmfsm.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>

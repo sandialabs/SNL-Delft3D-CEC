@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -22,7 +22,10 @@
 !!  rights reserved.
 
       module delwaq_user_wasteloads
+
       use delwaq_loads
+      use waq_plugin_wasteload_version_module
+
       contains
       subroutine delwaq_user_wasteload ( nowst , wasteloads, notot , nosys , noseg ,
      +                                   itime , conc      , syname)
@@ -43,6 +46,7 @@
       integer                             :: itime                  ! system time
       real                                :: conc(notot,noseg)      ! concentration array
       character(len=*)                    :: syname(notot)          ! substance names
+      character(len=120)                  :: idstr                  ! waq_plugin_wasteload version number
 
       ! local declarations
 
@@ -55,11 +59,17 @@
       ! the inlet outlet coupling
 
       if (ifirst == 1) then
+         ifirst = 0
+
          call dhopnf (lunrep, 'delwaq_user_wasteloads.mon', 19, 1, ierr)
          if (ierr .ne. 0) then
             write(*,'(A)') 'Could not open delwaq_user_wasteloads.mon for writing.'
             call srstop(1)
          endif
+
+         ! waq_plugin_wasteload version number
+         call getfullversionstring_waq_plugin_wasteload(idstr)
+         write ( lunrep , * ) idstr
       endif
 
       call delwaq_user_inlet_outlet ( nowst , wasteloads, notot , nosys , noseg ,
@@ -74,8 +84,6 @@
 
       call delwaq_user_bubble_bath  ( nowst , wasteloads, notot , nosys , noseg ,
      &                                itime , conc      , syname, lunrep)
-
-      ifirst = 0
 
       return
       end subroutine delwaq_user_wasteload
@@ -238,27 +246,28 @@
 
       ! local declarations
 
-      integer, parameter  :: mxcomb = 100     ! maximum number of combinations
-      integer, save       :: ifirst = 1       ! initialisation indicator
-      integer             :: lunrep           ! report file
-      logical             :: l_exi            ! file exists or not
-      integer             :: ncomb            ! number of possible inlet outlet combinations
-      integer             :: ninout           ! actual number of inlet outlet combinations
-      character(len=20)   :: c_in             ! read buffer name inlet
-      character(len=20)   :: c_out            ! read buffer name outlet
-      character(len=20)   :: namin(mxcomb)    ! names inlet in the possible combinations
-      character(len=20)   :: namout(mxcomb)   ! names outlet in the possible combinations
-      integer             :: iwin(mxcomb)     ! wasteload number inlet of the actual combinations
-      integer             :: iwout(mxcomb)    ! wasteload number outlet of the actual combinations
-      real                :: flow             ! inlet flow rate
-      integer             :: ipin             ! wasteload number inlet
-      integer             :: ipout            ! wasteload number outlet
-      integer             :: iseg             ! inlet segment number
-      integer             :: iwst             ! loop counter wasteloads
-      integer             :: isys             ! loop counter substances
-      integer             :: icomb            ! loop counter combinations
-      integer             :: iinout           ! loop counter of inlet outlet combinations
-      integer             :: i                ! loop counter
+      integer, save       :: ifirst = 1                       ! initialisation indicator
+      integer             :: lunrep                           ! report file
+      logical             :: l_exi                            ! file exists or not
+      integer             :: ncomb                            ! number of possible inlet outlet combinations
+      integer             :: ninout                           ! actual number of inlet outlet combinations
+      character(len=20)   :: c_in                             ! read buffer name inlet
+      character(len=20)   :: c_out                            ! read buffer name outlet
+      character(len=20), dimension(:), allocatable  :: namin  ! names inlet in the possible combinations
+      character(len=20), dimension(:), allocatable  :: namout ! names outlet in the possible combinations
+      integer, dimension(:), allocatable  ::           iwin   ! wasteload number inlet of the actual combinations
+      integer, dimension(:), allocatable  ::           iwout  ! wasteload number outlet of the actual combinations
+      real                :: flow                             ! inlet flow rate
+      integer             :: ipin                             ! wasteload number inlet
+      integer             :: ipout                            ! wasteload number outlet
+      integer             :: iseg                             ! inlet segment number
+      integer             :: isego                            ! outlet segment number
+      integer             :: iwst                             ! loop counter wasteloads
+      integer             :: isys                             ! loop counter substances
+      integer             :: icomb                            ! loop counter combinations
+      integer             :: iinout                           ! loop counter of inlet outlet combinations
+      integer             :: ierr                             ! local I/O error
+      integer             :: i                                ! loop counter
 
       ! Save all local variables
 
@@ -278,36 +287,38 @@
             write(lunrep,2004)
             open ( 83 , file='inloutl.dat' )
             ncomb = 0
-   10       continue
-               read ( 83 , '(2a20)' , end = 20 ) c_in,c_out
-               ncomb = ncomb + 1
-               if ( ncomb .gt. mxcomb ) then
-                  write(lunrep,2005) mxcomb
-                  call srstop(1)
+            do
+               read ( 83 , '(2a20)' , iostat = ierr ) c_in,c_out
+               if ( ierr /= 0 ) then
+                   exit
                endif
-               namin(ncomb) = c_in
-               namout(ncomb) = c_out
-               goto 10
-   20       continue
+
+               ncomb = ncomb + 1
+            enddo
+
+            allocate( namin(ncomb), namout(ncomb), iwin(ncomb), iwout(ncomb) )
+
+            rewind( 83 )
+
+            do i = 1,ncomb
+               read ( 83 , '(2a20)' ) c_in,c_out
+               namin(i) = c_in
+               namout(i) = c_out
+            enddo
             close ( 83 )
          else
 
             ! construct the default list of combination INLETxx/OUTLETxx
 
+            ncomb = max(999,size(wasteloads))
+
+            allocate( namin(ncomb), namout(ncomb), iwin(ncomb), iwout(ncomb) )
+
             write(lunrep,2006)
-            do i = 1 , min(mxcomb,9)
-               write(namin(i),2007) i
-               write(namout(i),2008) i
+            do i = 1 , ncomb
+               write(namin(i),'(a,i0)')  'INLET',  i
+               write(namout(i),'(a,i0)') 'OUTLET', i
             enddo
-            do i = 10 , min(mxcomb,99)
-               write(namin(i),2009) i
-               write(namout(i),2010) i
-            enddo
-            do i = 100 , min(mxcomb,999)
-               write(namin(i),2011) i
-               write(namout(i),2012) i
-            enddo
-            ncomb = mxcomb
          endif
 
          ! check the actual list of wasteloads with the list of possible combinations
@@ -341,14 +352,26 @@
          ipin  = iwin(iinout)
          ipout = iwout(iinout)
          iseg  = wasteloads(ipin)%loc%segnr
+         isego = wasteloads(ipout)%loc%segnr
          flow  = wasteloads(ipin)%flow
-         wasteloads(ipout)%flow = 0.0
-         do isys = 1, nosys
-            wasteloads(ipout)%loads(isys) = -flow*conc(isys,iseg)
-         enddo
-         do isys = nosys + 1 , notot
-            wasteloads(ipout)%loads(isys) = 0.0
-         enddo
+         if ( flow <= 0.0 ) then
+            wasteloads(ipout)%flow = 0.0
+            do isys = 1, nosys
+               wasteloads(ipout)%loads(isys) = -flow*conc(isys,iseg)
+            enddo
+            do isys = nosys + 1 , notot
+               wasteloads(ipout)%loads(isys) = 0.0
+            enddo
+         else
+            ! Reversed flow - still using the flow rate at the inlet (!)
+            wasteloads(ipin)%flow = 0.0
+            do isys = 1, nosys
+               wasteloads(ipin)%loads(isys) = flow*conc(isys,isego)
+            enddo
+            do isys = nosys + 1 , notot
+               wasteloads(ipin)%loads(isys) = 0.0
+            enddo
+         endif
       enddo
 !
       return
@@ -360,12 +383,6 @@
      +        'file <inloutl.dat>')
  2005 format ('    error : number of combinations exceed maximum:',i4)
  2006 format ('    no file <inloutl.dat> using default combinations names')
- 2007 format ('INLET',i1,14x)
- 2008 format ('OUTLET',i1,13x)
- 2009 format ('INLET',i2,13x)
- 2010 format ('OUTLET',i2,12x)
- 2011 format ('INLET',i3,12x)
- 2012 format ('OUTLET',i3,11x)
  2013 format ('    no INLET/OUTLET combination found')
 
       end subroutine delwaq_user_inlet_outlet
@@ -630,7 +647,7 @@
             read( 84, *, iostat = ierr ) dummy, dummy, dummy, dummy
             if ( ierr /= 0 ) then
                write( lunrep, 2004 ) next_time
-               stop
+               call srstop(1)
             endif
          enddo
 

@@ -25,7 +25,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="..\..\bin\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\..\part\include;..\..\include;..\..\..\..\third_party_open\openda\core\native\include" FixedFormLineLength="fixedLength132" ModulePath="$(OutDir)" Traceback="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\..\part\include;..\..\include;..\..\..\..\third_party_open\openda\core\native\include" FixedFormLineLength="fixedLength132" ModulePath="$(OutDir)" Traceback="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -35,7 +35,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="..\..\bin\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" OmitFramePointers="false" AdditionalIncludeDirectories="..\..\..\part\include;..\..\include;..\..\..\..\third_party_open\openda\core\native\include" FixedFormLineLength="fixedLength132" ModulePath="$(OutDir)" Traceback="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" OmitFramePointers="false" AdditionalIncludeDirectories="..\..\..\part\include;..\..\include;..\..\..\..\third_party_open\openda\core\native\include" FixedFormLineLength="fixedLength132" ModulePath="$(OutDir)" Traceback="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -54,80 +54,6 @@
 		<File RelativePath=".\src\ods\getmat.f"/>
 		<File RelativePath=".\src\ods\getpar.f"/>
 		<File RelativePath=".\src\ods\gettme.f"/></Filter>
-		<Filter Name="proc_preprocess">
-		<File RelativePath=".\src\proc_preprocess\actrep.f"/>
-		<File RelativePath=".\src\proc_preprocess\add_atrfrc.f"/>
-		<File RelativePath=".\src\proc_preprocess\add_dspfrc.f"/>
-		<File RelativePath=".\src\proc_preprocess\add_flxfrc.f"/>
-		<File RelativePath=".\src\proc_preprocess\add_prcfrc.f"/>
-		<File RelativePath=".\src\proc_preprocess\add_sumfrc.f"/>
-		<File RelativePath=".\src\proc_preprocess\algrep.f"/>
-		<File RelativePath=".\src\proc_preprocess\blmd09.f"/>
-		<File RelativePath=".\src\proc_preprocess\blmeff.f"/>
-		<File RelativePath=".\src\proc_preprocess\cnfrep.f"/>
-		<File RelativePath=".\src\proc_preprocess\cnvpro.f"/>
-		<File RelativePath=".\src\proc_preprocess\dhpfil.f"/>
-		<File RelativePath=".\src\proc_preprocess\dhrep2.f"/>
-		<File RelativePath=".\src\proc_preprocess\dhrepc.f"/>
-		<File RelativePath=".\src\proc_preprocess\dlwqp1.f"/>
-		<File RelativePath=".\src\proc_preprocess\dlwqs1.f"/>
-		<File RelativePath=".\src\proc_preprocess\expand_frc.f"/>
-		<File RelativePath=".\src\proc_preprocess\fill_old_items.f"/>
-		<File RelativePath=".\src\proc_preprocess\get_sfrac.f"/>
-		<File RelativePath=".\src\proc_preprocess\getinv.f"/>
-		<File RelativePath=".\src\proc_preprocess\intoou.f"/>
-		<File RelativePath=".\src\proc_preprocess\makbar.f"/>
-		<File RelativePath=".\src\proc_preprocess\primpro.f"/>
-		<File RelativePath=".\src\proc_preprocess\proc_totals.f"/>
-		<File RelativePath=".\src\proc_preprocess\prprop.f"/>
-		<File RelativePath=".\src\proc_preprocess\prsort.f"/>
-		<File RelativePath=".\src\proc_preprocess\rbpdf2.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_filid.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabm1.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabp1.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabp2.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabp3.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabp4.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabp5.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabr1.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabr2.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabr3.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabr4.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabr5.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabr6.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabr7.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabr8.f"/>
-		<File RelativePath=".\src\proc_preprocess\rd_tabs.f"/>
-		<File RelativePath=".\src\proc_preprocess\rdstat.f"/>
-		<File RelativePath=".\src\proc_preprocess\rdwrko.f"/>
-		<File RelativePath=".\src\proc_preprocess\reaalg.f"/>
-		<File RelativePath=".\src\proc_preprocess\repuse.f"/>
-		<File RelativePath=".\src\proc_preprocess\set_active.f"/>
-		<File RelativePath=".\src\proc_preprocess\set_fractions.f"/>
-		<File RelativePath=".\src\proc_preprocess\set_old_items.f"/>
-		<File RelativePath=".\src\proc_preprocess\set_stat_output.f"/>
-		<File RelativePath=".\src\proc_preprocess\setday.f"/>
-		<File RelativePath=".\src\proc_preprocess\setdpt.f"/>
-		<File RelativePath=".\src\proc_preprocess\setdsc.f"/>
-		<File RelativePath=".\src\proc_preprocess\setdvp.f"/>
-		<File RelativePath=".\src\proc_preprocess\setgeo.f"/>
-		<File RelativePath=".\src\proc_preprocess\setgr2.f"/>
-		<File RelativePath=".\src\proc_preprocess\setgrd.f"/>
-		<File RelativePath=".\src\proc_preprocess\setopo.f"/>
-		<File RelativePath=".\src\proc_preprocess\setopp.f"/>
-		<File RelativePath=".\src\proc_preprocess\setprc.f"/>
-		<File RelativePath=".\src\proc_preprocess\setprg.f"/>
-		<File RelativePath=".\src\proc_preprocess\setqtl.f"/>
-		<File RelativePath=".\src\proc_preprocess\setvat.f"/>
-		<File RelativePath=".\src\proc_preprocess\tabdim.f"/>
-		<File RelativePath=".\src\proc_preprocess\timers.f"/>
-		<File RelativePath=".\src\proc_preprocess\valpoi.f"/>
-		<File RelativePath=".\src\proc_preprocess\vxlpoi.f"/>
-		<File RelativePath=".\src\proc_preprocess\wr_proceswrk.f"/>
-		<File RelativePath=".\src\proc_preprocess\wripro.f"/>
-		<File RelativePath=".\src\proc_preprocess\wrstoc.f"/>
-		<File RelativePath=".\src\proc_preprocess\wrtoys.f"/>
-		<File RelativePath=".\src\proc_preprocess\wrwrko.f"/></Filter>
 		<Filter Name="waq_io">
 		<File RelativePath=".\src\waq_io\bound.f">
 			<FileConfiguration Name="Release|Win32">
@@ -148,7 +74,6 @@
 		<File RelativePath=".\src\waq_io\dlwq09.f"/>
 		<File RelativePath=".\src\waq_io\dlwq0f.f"/>
 		<File RelativePath=".\src\waq_io\dlwq0i.f"/>
-		<File RelativePath=".\src\waq_io\dlwq0t.f"/>
 		<File RelativePath=".\src\waq_io\dlwq5a.f"/>
 		<File RelativePath=".\src\waq_io\dlwq5b.f"/>
 		<File RelativePath=".\src\waq_io\dlwq5c.f"/>
@@ -169,9 +94,7 @@
 		<File RelativePath=".\src\waq_io\opt1.f"/>
 		<File RelativePath=".\src\waq_io\opt2.f"/>
 		<File RelativePath=".\src\waq_io\opt3.f"/>
-		<File RelativePath=".\src\waq_io\outbo2.f"/>
 		<File RelativePath=".\src\waq_io\outboo.f"/>
-		<File RelativePath=".\src\proc_preprocess\partab.f90"/>
 		<File RelativePath=".\src\waq_io\pointb.f"/>
 		<File RelativePath=".\src\waq_io\pointi.f"/>
 		<File RelativePath=".\src\waq_io\pointr.f"/>
@@ -183,6 +106,7 @@
 		<File RelativePath=".\src\waq_io\read_data_ods.f"/>
 		<File RelativePath=".\src\waq_io\read_grid.f"/>
 		<File RelativePath=".\src\waq_io\read_header.f"/>
+		<File RelativePath=".\src\waq_io\read_hydfile.f90"/>
 		<File RelativePath=".\src\waq_io\read_initials.f"/>
 		<File RelativePath=".\src\waq_io\read_items.f"/>
 		<File RelativePath=".\src\waq_io\read_nobottomlay.f"/>

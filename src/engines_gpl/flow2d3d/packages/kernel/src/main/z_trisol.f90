@@ -1,4 +1,4 @@
-subroutine z_trisol(dischy    ,solver    ,icreep    , &
+subroutine z_trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                   & timnow    ,nst       ,itiwec    ,trasol    ,forfuv    , &
                   & forfww    ,nfltyp    , &
                   & saleqs    ,temeqs    , &
@@ -7,7 +7,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                   & betac     ,tkemod    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -31,8 +31,8 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: z_trisol.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/main/z_trisol.f90 $
+!  $Id: z_trisol.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/main/z_trisol.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Z-model
@@ -65,7 +65,6 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     use sync_flm
     use SyncRtcFlow
     use flow2d3d_timers
-    use m_rdturbine, only : updturbine, updturbinethrust
     !
     use globaldata
     !
@@ -291,6 +290,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     integer(pntrsize)                    , pointer :: precip
     integer(pntrsize)                    , pointer :: procbc
     integer(pntrsize)                    , pointer :: pship
+    integer(pntrsize)                    , pointer :: qsrcrt
     integer(pntrsize)                    , pointer :: qtfrac
     integer(pntrsize)                    , pointer :: qtfrct
     integer(pntrsize)                    , pointer :: qtfrt2
@@ -307,6 +307,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     integer(pntrsize)                    , pointer :: rhowat
     integer(pntrsize)                    , pointer :: rich
     integer(pntrsize)                    , pointer :: rint
+    integer(pntrsize)                    , pointer :: rintsm
     integer(pntrsize)                    , pointer :: rlabda
     integer(pntrsize)                    , pointer :: rmneg
     integer(pntrsize)                    , pointer :: rnpl
@@ -373,6 +374,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     integer(pntrsize)                    , pointer :: w10mag
     integer(pntrsize)                    , pointer :: windsu
     integer(pntrsize)                    , pointer :: windsv
+    integer(pntrsize)                    , pointer :: windcd
     integer(pntrsize)                    , pointer :: windu
     integer(pntrsize)                    , pointer :: windv
     integer(pntrsize)                    , pointer :: wphy
@@ -468,7 +470,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     integer(pntrsize)                    , pointer :: tprofu
     integer                              , pointer :: nrcmp
 
-    logical                              , pointer :: rtcact
+    integer                              , pointer :: rtcact
     real(fp)      , dimension(:)         , pointer :: rhosol
     integer                              , pointer :: ifirst
     integer                              , pointer :: nubnd
@@ -491,6 +493,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
 !
 ! Global variables
 !
+    integer             :: ithisc      !! History file output time step
     integer             :: icreep      !  Description and declaration in tricom.igs
     integer             :: itiwec      !!  Current time counter for the cali-
                                        !!  bration of internal wave energy
@@ -528,6 +531,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
 !
     integer      :: icx
     integer      :: icy
+    integer      :: imode
     integer      :: itemp
     integer      :: itype
     integer      :: n
@@ -747,6 +751,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     precip              => gdp%gdr_i_ch%precip
     procbc              => gdp%gdr_i_ch%procbc
     pship               => gdp%gdr_i_ch%pship
+    qsrcrt              => gdp%gdr_i_ch%qsrcrt
     qtfrac              => gdp%gdr_i_ch%qtfrac
     qtfrct              => gdp%gdr_i_ch%qtfrct
     qtfrt2              => gdp%gdr_i_ch%qtfrt2
@@ -763,6 +768,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     rhowat              => gdp%gdr_i_ch%rhowat
     rich                => gdp%gdr_i_ch%rich
     rint                => gdp%gdr_i_ch%rint
+    rintsm              => gdp%gdr_i_ch%rintsm
     rlabda              => gdp%gdr_i_ch%rlabda
     rmneg               => gdp%gdr_i_ch%rmneg
     rnpl                => gdp%gdr_i_ch%rnpl
@@ -828,6 +834,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     w10mag              => gdp%gdr_i_ch%w10mag
     windsu              => gdp%gdr_i_ch%windsu
     windsv              => gdp%gdr_i_ch%windsv
+    windcd              => gdp%gdr_i_ch%windcd
     windu               => gdp%gdr_i_ch%windu
     windv               => gdp%gdr_i_ch%windv
     wphy                => gdp%gdr_i_ch%wphy
@@ -1035,8 +1042,8 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     ! Some of the new features are not yet supported in ZMODEL
     ! (see routine CHKZMOD)!!!
     !
-    if (rtcact) then
-       call rtc_comm_get(((nst*2)+1) * hdt,r(cbuvrt) ,nsluv     , gdp)
+    if (rtcact /= noRTC) then
+       call rtc_comm_get(((nst*2)+1) * hdt, r(cbuvrt), nsluv, r(qsrcrt) , nsrc, gdp)
     endif
     if (kc > 0 .or. nrcmp > 0) then
        call timer_start(timer_nodal_factor, gdp)
@@ -1051,7 +1058,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
        call timer_start(timer_incmeteo, gdp)
        call incmeteo(timhr     , grdang   , &
                    & r (windu ),r (windv ),r (patm  ), &
-                   & i (kcs   ),r (alfas ), &
+                   & i (kcs   ),r (alfas ),r (windcd), &
                    & r (windsu),r (windsv),r (w10mag), gdp)
        call timer_stop(timer_incmeteo, gdp)
     endif
@@ -1113,11 +1120,11 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                  & icx       ,icy       ,i(kfsmn0) ,i(kfsmx0) , &
                  & ch(disint),ch(dismmt),i(itdis)  ,i(kcu)    ,i(kcv)    , &
                  & i(kfs)    ,i(ibuff)  ,i(mnksrc) ,r(alfas)  ,r(xcor)   , &
-                 & r(ycor)   ,r(dp)     ,r(disch)  , &
+                 & r(ycor)   ,r(dp)     ,r(disch)  ,r(voldis) , &
                  & r(disch0) ,r(disch1) ,r(rint)   ,r(rint0)  ,r(rint1)  , &
                  & r(umdis)  ,r(umdis0) ,r(umdis1) ,r(vmdis)  ,r(vmdis0) , &                 
                  & r(vmdis1) ,bubble    ,r(r0)     ,r(thick)  ,r(zwork)  , &
-                 & r(dzs0)   ,d(dps)    ,r(s0)     ,gdp       )
+                 & r(dzs0)   ,d(dps)    ,r(s0)     ,r(qsrcrt) ,gdp       )
        call timer_stop(timer_incdis, gdp)
        !
        ! Computation of discharge in case of culverts
@@ -1363,10 +1370,6 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
           call timer_stop(timer_updbar, gdp)
        endif
        !
-       call updturbine(gdp%turbines, r(dzu0), r(dzv0), r(dpu), r(dpv), &
-                     & r(hu), r(hv), r(s0), r(thick), r(u0), r(v0), &
-                     & r(alfas), hdt, nmaxddb, gdp)
-       !
        ! Computation of V1, i.e. evaluate momentum equation for one half
        ! timestep. 
        ! HU is updated calculate HV and set KFV = 0 for HV < HTRSH (.5*DRYFLC)
@@ -1408,9 +1411,6 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                 & r(rnpl)   ,sbkol     ,r(cfurou) ,r(cfvrou) ,r(r0)     , &
                 & lstsci    ,r(precip)  ,gdp       )
        call timer_stop(timer_1stadi, gdp)
-       !
-       call updturbinethrust(gdp%turbines, r(u0), r(u1), r(v0), r(v1), &
-                           & r(gvu), r(guv), r(wrkb2), nmaxddb, hdt, gdp)
        !
        ! Calculate tau_bottom values using local 'updated' values for
        ! HU and HV use work array WRKA3 for this purpose.
@@ -1529,7 +1529,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                       & nmmaxj    ,icx       ,icy       ,ch(namsrc),i(mnksrc) , &
                       & i(kfs)    ,i(kcs)    ,i(kfsmn0) ,i(kfsmx0) ,r(sour)   , &
                       & r(sink)   ,d(dps)    ,r(s0)     ,r(dzs0)   ,r(r0)     , &
-                      & r(disch)  ,r(rint)   ,r(zwork)  ,r(zwork+kmax),bubble    ,gdp       )
+                      & r(disch)  ,r(rint)   ,r(rintsm) ,r(zwork)  ,r(zwork+kmax),bubble    ,gdp       )
           call timer_stop(timer_discha, gdp)
        endif
        !
@@ -1591,7 +1591,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                      & icx       ,icy       ,lundia    ,d(dps)    ,r(s0)     , &
                      & r(umean)  ,r(vmean)  ,r(z0urou) ,r(z0vrou) ,i(kfu)    , &
                      & i(kfv)    ,zmodel    ,i(kfsmx0) ,i(kfsmn0) ,r(dzs0)   , &
-                     & gdp       )
+                     & lstsci    ,gdp       )
              call timer_stop(timer_fallve, gdp)
           endif
           !
@@ -1649,18 +1649,18 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                     & r(dzs1)   ,r(areau)  ,r(areav)  ,r(volum0) ,r(volum1) , &
                     & r(guu)    ,r(gvv)    ,r(bruvai) ,sedtyp    ,r(seddif) , &
                     & r(ws)     ,lsed      ,lsal      ,ltem      ,eqmbcsand , &
-                    & eqmbcmud  ,lsts      ,gdp       )
+                    & eqmbcmud  ,lsts      ,r(s1)     ,d(dps)    ,gdp       )
           !
           ! z_difu can be called again for correction
           !
           call timer_stop(timer_1stdifu, gdp)
           call z_difuflux(stage  ,lundia ,kmax      ,nmmax     ,nmmaxj    , &
                   & lstsci    ,r(r0)     ,r(r1)     ,r(qxk)    ,r(qyk)    , &
-                  & r(u0)     ,r(v0)     ,&
+                  & r(u0)     ,r(v0)     ,r(s1)     ,d(dps)    , &
                   & r(dicuv)  ,r(guv)    ,r(gvu)    ,r(areau)  ,r(areav)  , &
                   & i(kfuz1)  ,i(kfvz1)  ,i(kfsz1)  ,i(kcs)    ,i(kfs)    , &
-                  & i(kfu)    ,i(kfuz0)  ,i(kfv)    ,i(kfvz0)  ,&
-                  & i(kfsmx0) ,i(kfsmax) ,i(kfsz0)  ,&
+                  & i(kfu)    ,i(kfuz0)  ,i(kfv)    ,i(kfvz0)  , &
+                  & i(kfsmx0) ,i(kfsmax) ,i(kfsz0)  , &
                   & i(kfumn0) ,i(kfumx0) ,i(kfvmn0) ,i(kfvmx0) ,r(sigdif) , &
                   & hdt       ,icx       ,icy       ,gdp       )
           call timer_stop(timer_tritra, gdp)
@@ -1835,6 +1835,10 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
        call updwaqflx(nst       ,zmodel    ,nmmax     ,kmax      ,i(kcs)    , &
                     & i(kcu)    ,i(kcv)    ,r(qxk)    ,r(qyk)    ,r(qzk)    , &
                     & nsrc      ,r(disch)  ,gdp       )
+       call updmassbal(2        ,r(qxk)    ,r(qyk)    ,i(kcs)    ,r(r1)     , &
+                    & r(volum0) ,r(volum1) ,r(sbuu)   ,r(sbvv)   ,r(disch)  , &
+                    & i(mnksrc) ,r(sink)   ,r(sour)   ,r(gsqs)   ,r(guu)    , &
+                    & r(gvv)    ,d(dps)    ,r(rintsm) ,hdt       ,gdp       )
        call updcomflx(nst       ,zmodel    ,nmmax     ,kmax      ,i(kcs)    , &
                     & i(kcu)    ,i(kcv)    ,r(qxk)    ,r(qyk)    ,r(qzk)    , &
                     & nsrc      ,r(disch)  ,i(kfumin) ,i(kfvmin) ,r(qu)     , &
@@ -1877,9 +1881,10 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
        call timer_stop(timer_f0isf1, gdp)
     endif
     !
-    if (rtcact) then
+    if (rtcact /= noRTC) then
        call rtc_comm_put(i(kfs)    ,i(kfsmin) ,i(kfsmax) ,r(sig)    , &
                        & r(sig)    ,r(s1)     ,d(dps)    ,r(r1)     , &
+                       & nsluv     ,r(cbuv)   ,nsrc      ,r(disch)  , &
                        & gdp)
     endif
     !
@@ -1907,8 +1912,8 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
     !
     ! Communicate with RTC for second half time step
     !
-    if (rtcact) then
-       call rtc_comm_get(((nst*2)+2) * hdt,r(cbuvrt) ,nsluv     , gdp)
+    if (rtcact /= noRTC) then
+       call rtc_comm_get(((nst*2)+2) * hdt, r(cbuvrt), nsluv, r(qsrcrt) , nsrc, gdp)
     endif
     if (wind) then
        !
@@ -1917,7 +1922,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
        call timer_start(timer_incmeteo, gdp)
        call incmeteo(timhr     , grdang   , &
                    & r(windu ) , r(windv ), r(patm  ),    &
-                   & i(kcs   ) , r(alfas ),               &
+                   & i(kcs   ) , r(alfas ), r(windcd),    &
                    & r(windsu) , r(windsv), r(w10mag), gdp)
        call timer_stop(timer_incmeteo, gdp)
     endif
@@ -1979,11 +1984,11 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                  & icx       ,icy       ,i(kfsmn0) ,i(kfsmx0) , &
                  & ch(disint),ch(dismmt),i(itdis)  ,i(kcu)    ,i(kcv)    , &
                  & i(kfs)    ,i(ibuff)  ,i(mnksrc) ,r(alfas)  ,r(xcor)   , &
-                 & r(ycor)   ,r(dp)     ,r(disch)  , &
+                 & r(ycor)   ,r(dp)     ,r(disch)  ,r(voldis) , &
                  & r(disch0) ,r(disch1) ,r(rint)   ,r(rint0)  ,r(rint1)  , &
                  & r(umdis)  ,r(umdis0) ,r(umdis1) ,r(vmdis)  ,r(vmdis0) , &                 
                  & r(vmdis1) ,bubble    ,r(r0)     ,r(thick)  ,r(zwork)  , &
-                 & r(dzs0)   ,d(dps)    ,r(s0)     ,gdp       )
+                 & r(dzs0)   ,d(dps)    ,r(s0)     ,r(qsrcrt) ,gdp       )
        call timer_stop(timer_incdis, gdp)
        !
        ! Computation of discharge in case of culverts
@@ -2158,10 +2163,6 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
           call timer_stop(timer_updbar, gdp)
        endif
        !
-       call updturbine(gdp%turbines, r(dzu0), r(dzv0), r(dpu), r(dpv), &
-                     & r(hu), r(hv), r(s0), r(thick), r(u0), r(v0), &
-                     & r(alfas), hdt, nmaxddb, gdp)
-       !
        ! Computation of U1, i.e. evaluate momentum equation for one half
        ! timest calculate HU and set KFU = 0 for HU < HTRSH (.5*DRYFLC)
        !
@@ -2201,9 +2202,6 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                 & r(rnpl)   ,sbkol     ,r(cfurou) ,r(cfvrou) ,r(r0)     , &
                 & lstsci    ,r(precip)  ,gdp       )
        call timer_stop(timer_2ndadi, gdp)
-       !
-       call updturbinethrust(gdp%turbines, r(u0), r(u1), r(v0), r(v1), &
-                           & r(gvu), r(guv), r(wrkb2), nmaxddb, hdt, gdp)
        !
        ! Calculate tau_bottom values using local values for HU and HV
        ! use work array WRKA3 for this purpose.
@@ -2322,7 +2320,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                       & nmmaxj    ,icx       ,icy       ,ch(namsrc),i(mnksrc) , &
                       & i(kfs)    ,i(kcs)    ,i(kfsmn0) ,i(kfsmx0) ,r(sour)   , &
                       & r(sink)   ,d(dps)    ,r(s0)     ,r(dzs0)   ,r(r0)     , &
-                      & r(disch)  ,r(rint)   ,r(zwork)  ,r(zwork+kmax),bubble    ,gdp       )
+                      & r(disch)  ,r(rint)   ,r(rintsm) ,r(zwork)  ,r(zwork+kmax),bubble    ,gdp       )
           call timer_stop(timer_discha, gdp)
        endif
        !
@@ -2384,7 +2382,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                      & icx       ,icy       ,lundia    ,d(dps)    ,r(s0)     , &
                      & r(umean)  ,r(vmean)  ,r(z0urou) ,r(z0vrou) ,i(kfu)    , &
                      & i(kfv)    ,zmodel    ,i(kfsmx0) ,i(kfsmn0) ,r(dzs0)   , &
-                     & gdp       )
+                     & lstsci    ,gdp       )
              call timer_stop(timer_fallve, gdp)
           endif
           !
@@ -2443,18 +2441,18 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
                     & r(dzs1)   ,r(areav)  ,r(areau)  ,r(volum0) ,r(volum1) , &
                     & r(gvv)    ,r(guu)    ,r(bruvai) ,sedtyp    ,r(seddif) , &
                     & r(ws)     ,lsed      ,lsal      ,ltem      ,eqmbcsand , &
-                    & eqmbcmud  ,lsts      ,gdp       )
+                    & eqmbcmud  ,lsts      ,r(s1)     ,d(dps)    ,gdp       )
           !
           ! z_difu can be called again for correction
           !
           call timer_stop(timer_2nddifu, gdp)
           call z_difuflux(stage  ,lundia ,kmax      ,nmmax     ,nmmaxj    , &
                   & lstsci    ,r(r0)     ,r(r1)     ,r(qyk)    ,r(qxk)    , &
-                  & r(v0)     ,r(u0)     ,&
+                  & r(v0)     ,r(u0)     ,r(s1)     ,d(dps)    , &
                   & r(dicuv)  ,r(gvu)    ,r(guv)    ,r(areav)  ,r(areau)  , &
                   & i(kfvz1)  ,i(kfuz1)  ,i(kfsz1)  ,i(kcs)    ,i(kfs)    , &
-                  & i(kfv)    ,i(kfvz0)  ,i(kfu)    ,i(kfuz0)  ,&
-                  & i(kfsmx0) ,i(kfsmax) ,i(kfsz0)  ,&
+                  & i(kfv)    ,i(kfvz0)  ,i(kfu)    ,i(kfuz0)  , &
+                  & i(kfsmx0) ,i(kfsmax) ,i(kfsz0)  , &
                   & i(kfvmn0) ,i(kfvmx0) ,i(kfumn0) ,i(kfumx0) ,r(sigdif) , &
                   & hdt       ,icx       ,icy       ,gdp       )
           call timer_stop(timer_tritra, gdp)
@@ -2794,6 +2792,15 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
        call updwaqflx(nst       ,zmodel    ,nmmax     ,kmax      ,i(kcs)    , &
                     & i(kcu)    ,i(kcv)    ,r(qxk)    ,r(qyk)    ,r(qzk)    , &
                     & nsrc      ,r(disch)  ,gdp       )
+       if (nst+1 == ithisc) then
+          imode = 3 ! output needed, so update fluxes and volumes
+       else
+          imode = 2 ! no output needed, so just update fluxes
+       endif
+       call updmassbal(imode    ,r(qxk)    ,r(qyk)    ,i(kcs)    ,r(r1)     , &
+                    & r(volum0) ,r(volum1) ,r(sbuu)   ,r(sbvv)   ,r(disch)  , &
+                    & i(mnksrc) ,r(sink)   ,r(sour)   ,r(gsqs)   ,r(guu)    , &
+                    & r(gvv)    ,d(dps)    ,r(rintsm) ,hdt       ,gdp       )
        call updcomflx(nst       ,zmodel    ,nmmax     ,kmax      ,i(kcs)    , &
                     & i(kcu)    ,i(kcv)    ,r(qxk)    ,r(qyk)    ,r(qzk)    , &
                     & nsrc      ,r(disch)  ,i(kfumin) ,i(kfvmin) ,r(qu)     , &
@@ -2836,9 +2843,10 @@ subroutine z_trisol(dischy    ,solver    ,icreep    , &
        call timer_stop(timer_f0isf1, gdp)
     endif
     !
-    if (rtcact) then
+    if (rtcact /= noRTC) then
        call rtc_comm_put(i(kfs)    ,i(kfsmin) ,i(kfsmax) ,r(sig)    , &
                        & r(sig)    ,r(s1)     ,d(dps)    ,r(r1)     , &
+                       & nsluv     ,r(cbuv)   ,nsrc      ,r(disch)  , &
                        & gdp)
     endif
     if (sbkol) then

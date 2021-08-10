@@ -23,7 +23,7 @@ function Info=bct_io(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -48,8 +48,8 @@ function Info=bct_io(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/bct_io.m $
-%   $Id: bct_io.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/bct_io.m $
+%   $Id: bct_io.m 65778 2020-01-14 14:07:42Z mourits $
 
 switch lower(cmd)
     case 'clip'
@@ -128,8 +128,7 @@ switch Tab.TimeUnit
 end
 T=T0+Tab.Data(t,1)/f;
 
-function Info=Local_read_bct(filename)
-
+function Info = Local_read_bct(filename)
 fid=fopen(filename,'r');
 Info.Check='NotOK';
 Info.FileName=filename;
@@ -137,6 +136,11 @@ Info.NTables=0;
 
 floc=ftell(fid);
 Line=fgetl(fid);
+if strcmp(Line,'[forcing]')
+    Info = Local_read_bc(Info,fid);
+    return
+end
+%
 while ischar(Line) && ~isempty(Line) && Line(1)=='#'
     floc=ftell(fid);
     Line=fgetl(fid);
@@ -203,6 +207,74 @@ if Info.NTables==0
     error('No tables in bct file?')
 end
 Info.Check='OK';
+
+
+function Info = Local_read_bc(Info,fid)
+i    = 1;
+NPar = 0;
+while ~feof(fid)
+    floc = ftell(fid);
+    %
+    Line = fgetl(fid);
+    [key,remainder] = strtok(Line);
+    [eq,remainder] = strtok(remainder);
+    remainder = strtrim(remainder);
+    if ~strcmp(eq,'=')
+        Data = sscanf(Line,'%f',inf);
+        if length(Data)==NPar
+            % data
+            fseek(fid,floc,-1);
+            Data = fscanf(fid,'%f',[NPar inf]);
+            Info.Table(i).Data = Data';
+            Info.NTables=Info.NTables+1;
+            %
+            i=i+1;
+            NPar=0;
+        else
+            error('Unable to identify keyword-value pair on line: %s',Line)
+        end
+    end
+    switch lower(key)
+        case 'name'
+            % Name                            = Downstream
+            Info.Table(i).Name = '';
+            Info.Table(i).Contents = '';
+            Info.Table(i).Location = remainder;
+            Info.Table(i).TimeFunction = '';
+            Info.Table(i).ReferenceTime = '';
+            Info.Table(i).TimeUnit = '';
+            Info.Table(i).Interpolation = '';
+            Info.Table(i).Parameter = [];
+            Info.Table(i).Data = [];
+        case 'function'
+            % Function                        = qhtable
+            Info.Table(i).Contents = remainder;
+        case 'time-interpolation'
+            % Time-interpolation              = linear
+            Info.Table(i).Interpolation = remainder;
+        case 'quantity'
+            % Quantity                        = qhbnd discharge
+            % Quantity                        = qhbnd waterlevel
+            % Quantity                        = time
+            NPar=NPar+1;
+            Info.Table(i).Parameter(NPar).Name=remainder;
+        case 'unit'
+            % Unit                            = m³/s
+            % Unit                            = m
+            % Unit                            = seconds since 2017-02-15 00:00:00
+            Info.Table(i).Parameter(NPar).Unit=remainder;
+            %
+            if strcmp(Info.Table(i).Parameter(NPar).Name,'time')
+                Time = sscanf(remainder,'%s since %d-%d-%d %d:%d:%d');
+                Info.Table(i).ReferenceTime = [[10000 100 1]*Time(end-5:end-3) [10000 100 1]*Time(end-2:end)];
+                Info.Table(i).TimeUnit = char(Time(1:end-6))';
+            end
+    end
+end
+%
+fclose(fid);
+Info.Check='OK';
+
 
 function [Str1,remainder]=strextract(Str,Quote)
 if nargin==1
@@ -299,7 +371,7 @@ for i = 1:length(Info.Table)
        nperc = 1;
     end
     if nperc==1
-       fmt = [repmat([' ',deblank2(fmt)],1,nval),'\n'];
+       fmt = [repmat([' ',strtrim(fmt)],1,nval),'\n'];
        fmt = fmt(2:end);
     elseif nperc==nval
        fmt = [Info.Table(i).Format,'\n'];

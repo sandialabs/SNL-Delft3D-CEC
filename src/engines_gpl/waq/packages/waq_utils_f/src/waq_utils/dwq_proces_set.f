@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -40,6 +40,8 @@
 
       integer, parameter :: ITEM_NAME_SIZE =  20             ! length all names
       integer, parameter :: ITEM_TEXT_SIZE =  50             ! length all desriptions
+      integer, parameter :: ITEM_STDN_SIZE = 100             ! length all standard names
+      integer, parameter :: ITEM_STDU_SIZE =  40             ! length all standard units
       integer, parameter :: MAX_NUM        =   5             ! allocated per bunch
       integer, parameter :: MAX_NUM_MAX    = 100             ! allocated per bunch
 
@@ -103,6 +105,8 @@
          character(len=ITEM_NAME_SIZE)    :: name            ! item name
          character(len=ITEM_TEXT_SIZE)    :: text            ! item description
          character(len=ITEM_NAME_SIZE)    :: unit            ! item unit
+         character(len=ITEM_STDN_SIZE)    :: stdn            ! item standard name
+         character(len=ITEM_STDU_SIZE)    :: stdu            ! item standar unit
          real                             :: default         ! default value
          character(len=ITEM_NAME_SIZE)    :: aggrega         ! aggregation wheight variable
          character(len=ITEM_NAME_SIZE)    :: disaggr         ! dis-aggregation wheight variable

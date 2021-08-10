@@ -1,17 +1,36 @@
-function d0=pathdistance(varargin)
+function d0 = pathdistance(varargin)
 %PATHDISTANCE Computes the distance along a path.
-%   Computes the distance along the path from the first
-%   point for every point on the path.
+%   Computes the distance along the path from the first point for every
+%   point on the path.
 %
-%   Distance=PATHDISTANCE(XCoord,YCoord,ZCoord)
-%   Distance=PATHDISTANCE(XCoord,YCoord)
-%   Distance=PATHDISTANCE(Coord)
+%   Distance = PATHDISTANCE(Coord) computes the distance in a linear space.
 %
-%   NaNs are skipped in the computation of the path length.
+%   Distance = PATHDISTANCE(XCoord,YCoord) computes the distance in a
+%   two-dimensional Cartesian space.
+%
+%   Distance = PATHDISTANCE(XCoord,YCoord,ZCoord) computes the distance in
+%   three-dimensional Cartesian space.
+%
+%   Distance = PATHDISTANCE(Longitude,Latitude,'Geographic') computes the
+%   distances over the spherical earth.
+%
+%   Distance = PATHDISTANCE(Longitude,Latitude,ZCoord,'Geographic')
+%   computes the distances as
+%   SQRT(spherical earth distance^2 + vertical distance^2)
+%
+%   NaNs are skipped in the computation of the path length, that is, the
+%   vector Distance will contain a NaN for the each NaN included in the
+%   coordinate vector(s), but the accumulated distance will include the
+%   distance between the last point before and the first point after the
+%   gap.
+%
+%   Example:
+%      PATHDISTANCE([1 2 NaN 2 3],[0 0 NaN 1.5 1.5])
+%      returns [0 1 NaN 2.5 3.5]
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -36,8 +55,8 @@ function d0=pathdistance(varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/pathdistance.m $
-%   $Id: pathdistance.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/pathdistance.m $
+%   $Id: pathdistance.m 65778 2020-01-14 14:07:42Z mourits $
 
 igeo=0;
 iopt=0;

@@ -58,7 +58,7 @@ rem =============================================================
     rem
     rem "echo f |" is (only) needed when dest does not exist
     rem and does not harm in other cases
-    rem 
+    rem
     echo f | xcopy "%fileName%" %dest% /F /Y
     if NOT !ErrorLevel! EQU 0 (
         echo ERROR: while copying "!fileName!" to "!dest!"
@@ -70,7 +70,7 @@ rem =============================================================
 rem === copyNetcdf copy the appropriate netcdf.dll            ===
 rem =============================================================
 :copyNetcdf
-    call :copyFile "third_party_open\netcdf\src\win32\2005\libsrc\x64\Debug\netcdf.dll" !dest_bin!
+    call :copyFile "third_party_open\netcdf\netCDF 4.6.1\bin\*" !dest_bin!
 goto :endproc
 
 
@@ -81,13 +81,13 @@ rem ===============
     echo "    installing all open source projects (debug) . . ."
 
     call :d_hydro
+    call :dimr
     call :flow2d3d
     call :flow2d3d_openda
 	call :delwaq1
-	call :delwaq1_lib
 	call :delwaq2
-	call :delwaq2_lib
-	call :delwaq2_openda_lib
+	call :delwaq_dll
+rem 	call :delwaq2_openda_lib
 	call :waq_plugin_wasteload
     call :wave
     call :plugin_culvert
@@ -110,7 +110,26 @@ rem ==========================
     set dest_bin="engines_gpl\d_hydro\bin\x64\Debug"
 
     if not exist !dest_bin!     mkdir !dest_bin!
-    
+
+goto :endproc
+
+
+
+rem ==========================
+rem === INSTALL_DIMR
+rem ==========================
+:dimr
+    echo "installing dimr . . ."
+    set dest_bin="engines_gpl\dimr\bin\x64\Debug"
+
+    if not exist !dest_bin!     mkdir !dest_bin!
+
+    copy third_party_open\pthreads\bin\x64\*.dll                                             !dest_bin!
+
+    copy third_party_open\mpich2\x64\bin\*.exe                                               !dest_bin!
+    copy third_party_open\mpich2\x64\lib\*.dll                                               !dest_bin!
+    copy third_party_open\expat\x64\x64\Debug\libexpat.dll                                   !dest_bin!
+
 goto :endproc
 
 
@@ -122,6 +141,23 @@ rem ====================
     echo "installing flow2d3d . . ."
 
     set dest_bin="engines_gpl\d_hydro\bin\x64\Debug"
+
+    if not exist !dest_bin!     mkdir !dest_bin!
+
+    copy engines_gpl\flow2d3d\bin\x64\Debug\flow2d3d.dll                                     !dest_bin!
+    copy engines_gpl\flow2d3d\bin\x64\Debug\flow2d3d_sp.dll                                  !dest_bin!
+       rem One of these two dlls will not exist and cause an ErrorLevel=1. Reset it.
+    set ErrorLevel=0
+    copy third_party_open\DelftOnline\lib\x64\Debug\DelftOnline.dll                          !dest_bin!
+    copy third_party_open\pthreads\bin\x64\*.dll                                             !dest_bin!
+
+    copy third_party_open\mpich2\x64\bin\*.exe                                               !dest_bin!
+    copy third_party_open\mpich2\x64\lib\*.dll                                               !dest_bin!
+    copy third_party_open\expat\x64\x64\Debug\libexpat.dll                                   !dest_bin!
+    copy utils_lgpl\delftonline\lib\x64\Debug\dynamic\delftonline.dll                        !dest_bin!
+    call :copyNetcdf
+
+    set dest_bin="engines_gpl\dimr\bin\x64\Debug"
 
     if not exist !dest_bin!     mkdir !dest_bin!
 
@@ -179,24 +215,6 @@ goto :endproc
 
 
 
-rem =======================
-rem === INSTALL_DELWAQ1_LIB
-rem =======================
-:delwaq1_lib
-    echo "installing delwaq1_lib . . ."
-
-    set dest_bin="engines_gpl\waq\bin\x64\debug"
-    
-    if not exist !dest_bin!     mkdir !dest_bin!
-	
-    copy engines_gpl\waq\default\bloom.spe                           !dest_bin!
-    copy engines_gpl\waq\default\bloominp.d09                        !dest_bin!
-    copy engines_gpl\waq\default\proc_def.dat                        !dest_bin!
-    copy engines_gpl\waq\default\proc_def.def                        !dest_bin!
-goto :endproc
-
-
-
 rem ===================
 rem === INSTALL_DELWAQ2
 rem ===================
@@ -207,12 +225,16 @@ goto :endproc
 
 
 
-rem =======================
-rem === INSTALL_DELWAQ2_LIB
-rem =======================
-:delwaq2_lib
-    echo "installing delwaq2_lib . . ."
-    echo "... nothing to be done"
+rem ======================
+rem === INSTALL_DELWAQ_DLL
+rem ======================
+:delwaq_dll
+    echo "installing delwaq dll . . ."
+
+    set dest_bin="engines_gpl\waq\bin\x64\debug"
+
+    if not exist !dest_bin!     mkdir !dest_bin!
+    call :copyNetcdf
 goto :endproc
 
 
@@ -249,6 +271,7 @@ rem ================
 
     copy third_party_open\pthreads\bin\win32\pthreadVCE2.dll                             !dest_bin!
     copy third_party_open\pthreads\bin\win32\pthreadvce.dll                              !dest_bin!
+    call :copyNetcdf
 goto :endproc
 
 
@@ -340,7 +363,7 @@ goto :endproc
 if NOT %ErrorLevel% EQU 0 (
     rem
     rem Only jump to :end when the script is completely finished
-    rem 
+    rem
     exit %ErrorLevel%
 )
 

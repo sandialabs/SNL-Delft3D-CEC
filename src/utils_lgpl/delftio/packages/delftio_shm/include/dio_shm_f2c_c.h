@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: dio_shm_f2c_c.h 4612 2015-01-21 08:48:09Z mourits $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftio/packages/delftio_shm/include/dio_shm_f2c_c.h $
+// $Id: dio_shm_f2c_c.h 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftio/packages/delftio_shm/include/dio_shm_f2c_c.h $
 //
 //  dio_shm_f2c_c.h: DelftIO Shared Memory F90 to C interface, C part.
 //
@@ -122,29 +122,29 @@ extern "C" {
 // DioShmDataset functions
 //
 
-void STDCALL DIO_SHM_F2C_DS_DEFINE_C(int *retVal, int *headerSize, int *dataSize, int *memType, long int *cHandle, char * name, int nameLen);
-void STDCALL DIO_SHM_F2C_DS_GETINFO_C(int *retVal, int *memType, long int *cHandle, char * name, int nameLen);
-void STDCALL DIO_SHM_F2C_DS_SETSIZE_C(int *retVal, long int *cHandle, int *hSize, int * dSize);
-void STDCALL DIO_SHM_F2C_DS_SETSIZEPART_C(int *retVal, long int *cHandle, int *part, int * dSize);
+void STDCALL DIO_SHM_F2C_DS_DEFINE_C(int *retVal, int *headerSize, int *dataSize, int *memType, long long int *cHandle, char * name, int nameLen);
+void STDCALL DIO_SHM_F2C_DS_GETINFO_C(int *retVal, int *memType, long long int *cHandle, char * name, int nameLen);
+void STDCALL DIO_SHM_F2C_DS_SETSIZE_C(int *retVal, long long int *cHandle, int *hSize, int * dSize);
+void STDCALL DIO_SHM_F2C_DS_SETSIZEPART_C(int *retVal, long long int *cHandle, int *part, int * dSize);
 
-void STDCALL DIO_SHM_F2C_DS_DESTROY_C(long int *cHandle);
+void STDCALL DIO_SHM_F2C_DS_DESTROY_C(long long int *cHandle);
 
-void STDCALL DIO_SHM_F2C_START_WRITE_C(long int *cHandle, int *part, int * retVal);
-void STDCALL DIO_SHM_F2C_END_WRITE_C(long int *cHandle, int *part);
-void STDCALL DIO_SHM_F2C_START_READ_C(long int *cHandle, int *part, int * retVal);
-void STDCALL DIO_SHM_F2C_END_READ_C(long int *cHandle, int *part);
+void STDCALL DIO_SHM_F2C_START_WRITE_C(long long int *cHandle, int *part, int * retVal);
+void STDCALL DIO_SHM_F2C_END_WRITE_C(long long int *cHandle, int *part);
+void STDCALL DIO_SHM_F2C_START_READ_C(long long int *cHandle, int *part, int * retVal);
+void STDCALL DIO_SHM_F2C_END_READ_C(long long int *cHandle, int *part);
 
-void STDCALL DIO_SHM_F2C_DS_WRITE_REALS_C  (long int *, int *, int *, float *);
-void STDCALL DIO_SHM_F2C_DS_WRITE_DOUBLES_C(long int *, int *, int *, double *);
-void STDCALL DIO_SHM_F2C_DS_WRITE_INTS_C   (long int *, int *, int *, int *);
-void STDCALL DIO_SHM_F2C_DS_WRITE_INT_C    (long int *, int *, int *);
-void STDCALL DIO_SHM_F2C_DS_WRITE_CHARS_C  (long int *, int *, int *, char *, int);
+void STDCALL DIO_SHM_F2C_DS_WRITE_REALS_C  (long long int *, int *, int *, float *);
+void STDCALL DIO_SHM_F2C_DS_WRITE_DOUBLES_C(long long int *, int *, int *, double *);
+void STDCALL DIO_SHM_F2C_DS_WRITE_INTS_C   (long long int *, int *, int *, int *);
+void STDCALL DIO_SHM_F2C_DS_WRITE_INT_C    (long long int *, int *, int *);
+void STDCALL DIO_SHM_F2C_DS_WRITE_CHARS_C  (long long int *, int *, int *, char *, int);
 
-int  STDCALL DIO_SHM_F2C_DS_READ_REALS_C   (long int *, int *, int *, float *);
-int  STDCALL DIO_SHM_F2C_DS_READ_DOUBLES_C (long int *, int *, int *, double *);
-int  STDCALL DIO_SHM_F2C_DS_READ_INTS_C    (long int *, int *, int *, int *);
-int  STDCALL DIO_SHM_F2C_DS_READ_INT_C     (long int *, int *, int *);
-int  STDCALL DIO_SHM_F2C_DS_READ_CHARS_C   (long int *, int *, int *, char *, int);
+int  STDCALL DIO_SHM_F2C_DS_READ_REALS_C   (long long int *, int *, int *, float *);
+int  STDCALL DIO_SHM_F2C_DS_READ_DOUBLES_C (long long int *, int *, int *, double *);
+int  STDCALL DIO_SHM_F2C_DS_READ_INTS_C    (long long int *, int *, int *, int *);
+int  STDCALL DIO_SHM_F2C_DS_READ_INT_C     (long long int *, int *, int *);
+int  STDCALL DIO_SHM_F2C_DS_READ_CHARS_C   (long long int *, int *, int *, char *, int);
 
 //
 // Dio Shared Mem DataBlock functions

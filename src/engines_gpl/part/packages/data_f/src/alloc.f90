@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -122,7 +122,8 @@ module alloc_mod
          arr => wrk
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',i11)' )name, n1
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -166,7 +167,8 @@ module alloc_mod
          arr => wrk
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',i11)' )name, n1, n2
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -188,7 +190,8 @@ module alloc_mod
          write ( lunmem, '(i4,'' integer    ('',i1,'') '',a,t40,i11)' ) number,knd,name,n1*n2*n3*knd/4
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',3i11)' )name, n1, n2, n3
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -238,7 +241,8 @@ module alloc_mod
          arr => wrk
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',i11)' )name, n1
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -260,7 +264,8 @@ module alloc_mod
          write ( lunmem, '(i4,'' real       ('',i1,'') '',a,t40,i11)' ) number,knd,name,n1*knd/4
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',i11)' )name, n1
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -304,7 +309,8 @@ module alloc_mod
          arr => wrk
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',i11)' )name, n1, n2
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -351,7 +357,8 @@ module alloc_mod
          arr => wrk
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',i11)' )name, n1, n2
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -373,7 +380,8 @@ module alloc_mod
          write ( lunmem, '(i4,'' real       ('',i1,'') '',a,t40,i11)' ) number,knd,name,n1*n2*n3*n4*knd/4
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',4i11)' )name, n1, n2, n3, n4
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -397,7 +405,8 @@ module alloc_mod
          write ( lunmem, '(i4,'' character('',i3,'') '',a,t40,i11)' ) number,knd,name,n1*knd/4
       else
          write ( lunmem, '('' ERROR allocating: '',a,'' requested size: '',i11)' )name, n1*knd
-         stop ' Allocation error. Inspect memory_map file.'
+         write (*,*) ' Allocation error. Inspect memory_map file.'
+         call stop_exit(1)
       endif
       return
 
@@ -423,6 +432,6 @@ module alloc_mod
          write(*     ,'(  a)') ' *    Could not allocate required memory'
          write(*     ,'(  a)') ' *    Please contact Delft3D Support    '
          write(*     ,'(a//)') ' *    Part aborted                          '
-         STOP ' Part aborted ! '
+         call stop_exit(1)
       end subroutine alloc_error
 end module alloc_mod

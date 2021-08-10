@@ -6,7 +6,7 @@
 #-------------------------------------------------------------------------------
 
 include $(top_srcdir)/common.am
-noinst_LTLIBRARIES = libwaq_plugin_wasteload.la
+lib_LTLIBRARIES = libwaq_plugin_wasteload.la
 
 #-------------------------------------------------------------------------------
 #Includes
@@ -15,9 +15,20 @@ FMODULES += \
 
 #-------------------------------------------------------------------------------
 #Sources
-libwaq_plugin_wasteload_la_SOURCES = delwaq_user_wasteloads.f \
+libwaq_plugin_wasteload_la_SOURCES = \
+       waq_plugin_wasteload_version.F90 \
+       delwaq_user_wasteloads.f \
        srstop.f \
        zoekns.f
 
 #-------------------------------------------------------------------------------
 # Libraries
+
+BUILT_SOURCES = ./always \
+	./waq_plugin_wasteload_version.F90
+
+./always:
+	rm -rf ./waq_plugin_wasteload_version.F90
+
+./waq_plugin_wasteload_version.F90:
+	$(top_srcdir)/scripts_lgpl/linux/update_version.sh $(srcdir)/waq_plugin_wasteload_version.F90 $(srcdir) $(top_srcdir)/engines_gpl/waq/version/version_number.ini $(top_builddir)

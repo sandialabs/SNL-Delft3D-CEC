@@ -16,7 +16,7 @@ function [xo,yo,po,mo,to,lo,dxt,dyt,out]=int_lntri(xi,yi,TRI,X,Y)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -41,8 +41,8 @@ function [xo,yo,po,mo,to,lo,dxt,dyt,out]=int_lntri(xi,yi,TRI,X,Y)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/int_lntri.m $
-%   $Id: int_lntri.m 5506 2015-10-20 06:00:15Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/int_lntri.m $
+%   $Id: int_lntri.m 65778 2020-01-14 14:07:42Z mourits $
 
 if ~isa(TRI,'double')
     TRI  = double(TRI); % fix in case TRI is provided as int32 (not supported by tsearch)

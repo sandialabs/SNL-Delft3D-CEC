@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: local.cpp 4612 2015-01-21 08:48:09Z mourits $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/esmfsm/packages/esmfsm_c/src/esm/local.cpp $
+// $Id: local.cpp 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/esmfsm/packages/esmfsm_c/src/esm/local.cpp $
 //------------------------------------------------------------------------------
 //  Delft-ESM (Easy Shared Memory)
 //  Local memory implemention (using malloc and free)
@@ -147,7 +147,7 @@ ESM_Local_Alloc (
     int ci,
     int contextid,
     char * name,
-    int size
+    size_t size
     ) {
 
     if (ci == -1) {
@@ -192,7 +192,7 @@ ESM_Local_Alloc (
     //  tolerable since the number of regions is usually not more than 100's.
 
     void * addr;
-    long long nwsize = size + ESM_ALIGNMENT;
+    size_t nwsize = size + ESM_ALIGNMENT;
     if ((addr = (void *) malloc (nwsize)) == NULL) {
         SetError (thid, "Cannot allocate region (%d+%d bytes) in ESM_Alloc", size, ESM_ALIGNMENT);
         return NULL;

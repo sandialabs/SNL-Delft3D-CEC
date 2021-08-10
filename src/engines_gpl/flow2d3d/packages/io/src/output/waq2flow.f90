@@ -1,7 +1,7 @@
 subroutine waq2flow(dps, mmax, nmaxus, kmax, lundia, mlb, mub, nlb, nub, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -107,9 +107,9 @@ subroutine waq2flow(dps, mmax, nmaxus, kmax, lundia, mlb, mub, nlb, nub, gdp)
           allocate(dps0(nlb:nub, mlb:mub))
        endif
        if ( ierr_alloc .ne. 0 ) then
-          write(*,*)      'errror waq2flow: allocating work array'
-          write(lundia,*) 'errror waq2flow: allocating work array'
-          stop 'errror waq2flow: allocating work array'
+          write(*,*)      'ERROR waq2flow: allocating work array'
+          write(lundia,*) 'ERROR waq2flow: allocating work array'
+          call throwexception()
        endif
        !
        write(lundia,*) '--------------------------------------------'

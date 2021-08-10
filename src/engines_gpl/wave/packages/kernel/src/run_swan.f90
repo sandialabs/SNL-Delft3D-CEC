@@ -1,7 +1,7 @@
 subroutine run_swan (casl)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine run_swan (casl)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: run_swan.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/kernel/src/run_swan.f90 $
+!  $Id: run_swan.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/kernel/src/run_swan.f90 $
 !!--description-----------------------------------------------------------------
 !
 !     *** Run swan; produce output file swanout with values on     ***
@@ -73,10 +73,11 @@ subroutine run_swan (casl)
     call cp_file( swninp, wvsswn, copy, nuerr)
     if (nuerr > 0) then
        write (*, '(a,i3)') '*** ERROR: While copying swan.inp to waves.swn, errorcode:', nuerr
-       stop
+       call wavestop(1, '*** ERROR: While copying swan.inp to waves.swn')
     endif
     !
     if (arch == 'linux') then
+       write(*,'(a)')'>>...Check file swan_sh.log'
        write(swanCommand, '(3a)') 'swan.sh', ' ', trim(casl)
        !
        ! SWAN execution
@@ -96,6 +97,7 @@ subroutine run_swan (casl)
           call util_system(swanCommand(1:len_trim(swanCommand)+5))
        endif
     else
+       write(*,'(a)')'>>...Check file swan_bat.log'
        write(swanCommand,'(3a)') 'swan.bat', ' ', trim(casl)
        !
        ! SWAN execution
@@ -111,7 +113,7 @@ subroutine run_swan (casl)
     inquire (file = 'norm_end', exist = ex)
     if (.not. ex) then
        write (*,'(a)') '*** ERROR: file ''norm_end'' expected to signal a correct SWAN calculation'
-       stop
+       call wavestop(1, '*** ERROR: file ''norm_end'' expected to signal a correct SWAN calculation')
     endif
     !
     ! Check SWAN output file PRINT
@@ -125,7 +127,7 @@ subroutine run_swan (casl)
     append       = 'append'
     call cp_file(prints     ,string    ,append    ,nuerr             )
     if (nuerr > 0) then
-       write (*, '(a,i3)') '*** ERROR: While appending PRINT to diag file'
+       write (*, '(a,i3)') '*** ERROR: While appending PRINT to diag file: ', nuerr
     endif
     !
     ! Remove SWAN input/output/tmp files (except SWANOUT output data file)

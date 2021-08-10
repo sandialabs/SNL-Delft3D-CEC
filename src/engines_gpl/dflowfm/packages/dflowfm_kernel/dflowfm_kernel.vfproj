@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectType="typeStaticLibrary" ProjectCreator="Intel Fortran" Keyword="Static Library" Version="11.0" ProjectIdGuid="{53832B54-D882-4BF4-B319-7C1C80A042CC}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" OutputDirectory="$(PlatformName)\$(ConfigurationName)" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)" BuildLogFile="$(IntDir)\$(ProjectName)-BuildLog.htm" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="$(SolutionDir)engines_gpl\dflowfm\packages\dflowfm_kernel\include;$(SolutionDir)third_party_open\mpich2\include" PreprocessorDefinitions="WIN32;HAVE_METIS;HAVE_OPENGL;HAVE_MPI=$(HAVE_MPI);HAVE_POLYPACK;HAVE_PROJ;HAVE_SHAPELIB" OpenMP="OpenMPParallelCode" ParallelizerDiagLevel="parallelizerDiagLevel0" VectorizerDiagLevel="vectorizerDiagLevel0" WarnDeclarations="true" WarnUnusedVariables="true" WarnInterfaces="true" FloatingPointExceptionHandling="fpe0" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" RuntimeChecks="rtChecksAll" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" UseMkl="mklParallel"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd src\unstruc_version.F90 ..\..\..\..\engines_gpl\dflowfm\ ..\..\..\..\engines_gpl\dflowfm\res\version_number.ini --onlyifmissing" Description="Expand unstruc_version.F90.svn and version_number.rc.svn to unstruc_version.F90 and version_number.rc"/>
+				<Tool Name="VFPostBuildEventTool"/></Configuration>
+		<Configuration Name="Release|Win32" OutputDirectory="$(PlatformName)\$(ConfigurationName)" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)" BuildLogFile="$(IntDir)\$(ProjectName)-BuildLog.htm" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="$(SolutionDir)engines_gpl\dflowfm\packages\dflowfm_kernel\include;$(SolutionDir)third_party_open\mpich2\include" PreprocessorDefinitions="WIN32;HAVE_METIS;HAVE_OPENGL;HAVE_MPI=$(HAVE_MPI);HAVE_POLYPACK;HAVE_PROJ;HAVE_SHAPELIB" OpenMP="OpenMPParallelCode" ParallelizerDiagLevel="parallelizerDiagLevel0" VectorizerDiagLevel="vectorizerDiagLevel0" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" UseMkl="mklParallel"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd src\unstruc_version.F90 ..\..\..\..\engines_gpl\dflowfm\ ..\..\..\..\engines_gpl\dflowfm\res\version_number.ini" Description="Expand unstruc_version.F90.svn and version_number.rc.svn to unstruc_version.F90 and version_number.rc"/>
+				<Tool Name="VFPostBuildEventTool"/></Configuration>
+		<Configuration Name="Debug|x64" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)" BuildLogFile="$(IntDir)\$(ProjectName)-BuildLog.htm" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="$(SolutionDir)engines_gpl\dflowfm\packages\dflowfm_kernel\include;$(SolutionDir)third_party_open\mpich2\$(PlatformName)\include;$(SolutionDir)\third_party_open\Tecplot\include" PreprocessorDefinitions="WIN32;HAVE_METIS;HAVE_OPENGL;HAVE_MPI=$(HAVE_MPI);HAVE_TECPLOT;HAVE_POLYPACK;HAVE_PROJ;HAVE_SHAPELIB" ParallelizerDiagLevel="parallelizerDiagLevel0" VectorizerDiagLevel="vectorizerDiagLevel0" WarnDeclarations="true" WarnInterfaces="true" FloatingPointExceptionHandling="fpe0" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" DescriptorDataSizeCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" UseMkl="mklParallel"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd src\unstruc_version.F90 ..\..\..\..\engines_gpl\dflowfm\ ..\..\..\..\engines_gpl\dflowfm\res\version_number.ini --onlyifmissing" Description="Expand unstruc_version.F90.svn and version_number.rc.svn to unstruc_version.F90 and version_number.rc"/>
+				<Tool Name="VFPostBuildEventTool"/></Configuration>
+		<Configuration Name="Release|x64" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)" BuildLogFile="$(IntDir)\$(ProjectName)-BuildLog.htm" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="$(SolutionDir)engines_gpl\dflowfm\packages\dflowfm_kernel\include;$(SolutionDir)third_party_open\mpich2\$(PlatformName)\include;$(SolutionDir)\third_party_open\Tecplot\include;$(SolutionDir)third_party_open\petsc\petsc-3.10.2\include" PreprocessorDefinitions="HAVE_PETSC;WIN32;HAVE_METIS;HAVE_OPENGL;HAVE_MPI=$(HAVE_MPI);HAVE_TECPLOT;HAVE_POLYPACK;HAVE_PROJ;HAVE_SHAPELIB" OpenMP="OpenMPParallelCode" ParallelizerDiagLevel="parallelizerDiagLevel0" VectorizerDiagLevel="vectorizerDiagLevel0" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" UseMkl="mklParallel"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd src\unstruc_version.F90 ..\..\..\..\engines_gpl\dflowfm\ ..\..\..\..\engines_gpl\dflowfm\res\version_number.ini" Description="Expand unstruc_version.F90.svn and version_number.rc.svn to unstruc_version.F90 and version_number.rc"/>
+				<Tool Name="VFPostBuildEventTool"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd">
+		<File RelativePath=".\include\blasfm.h"/></Filter>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+		<File RelativePath="..\..\res\version_number.ini"/></Filter>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath="src\advec.f90"/>
+		<File RelativePath="src\bedform_data.f90"/>
+		<File RelativePath="src\bedform_io.f90"/>
+		<File RelativePath=".\src\caching.f90"/>
+		<File RelativePath="src\calibration.f90"/>
+		<File RelativePath="src\d3ddimens.f90"/>
+		<File RelativePath="src\d_flooding.f90"/>
+		<File RelativePath="src\dem.f90"/>
+		<File RelativePath="src\dfm_signals.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\dredge_data.f90"/>
+		<File RelativePath="src\dredgepolygon.f90"/>
+		<File RelativePath="src\filez.f90"/>
+		<File RelativePath=".\src\filter.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\fm_bedform.f90"/>
+		<File RelativePath="src\fm_dredge.f90"/>
+		<File RelativePath="src\fm_erosed.f90"/>
+		<File RelativePath="src\fm_morstatistics.f90"/>
+		<File RelativePath="src\fm_thahbc.f90"/>
+		<File RelativePath="src\fm_wq_processes.f90"/>
+		<File RelativePath=".\src\fm_wq_processes_mba.f90"/>
+		<File RelativePath="src\fourier_analysis.f90"/>
+		<File RelativePath="src\gui.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\hrfft.f"/>
+		<File RelativePath=".\src\inquire_flowgeom.f90"/>
+		<File RelativePath=".\src\m_filter.f90"/>
+		<File RelativePath="src\manholes.f90"/>
+		<File RelativePath="src\meteo1.f90"/>
+		<File RelativePath="src\model_specific.f90"/>
+		<File RelativePath="src\modules.f90"/>
+		<File RelativePath="src\monitoring.f90"/>
+		<File RelativePath="src\net.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\network.f90"/>
+		<File RelativePath="src\oned_functions.f90"/>
+		<File RelativePath="src\part.f90"/>
+		<File RelativePath="src\partition.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\rcm.f90"/>
+		<File RelativePath="src\removedcode.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="src\rest.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\rgfstuff.f90"/>
+		<File RelativePath="src\saadf.F">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" WarnDeclarations="false"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" WarnDeclarations="false"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" WarnDeclarations="false"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" WarnDeclarations="false"/></FileConfiguration></File>
+		<File RelativePath="src\saadf90.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" WarnDeclarations="false" EmitSourceListing="true"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" WarnDeclarations="false"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" WarnDeclarations="false"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" WarnDeclarations="false"/></FileConfiguration></File>
+		<File RelativePath="src\shaec.f"/>
+		<File RelativePath="src\shsec.f"/>
+		<File RelativePath="src\solve_guus.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\solve_petsc.F90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="src\sphcom.f"/>
+		<File RelativePath="src\splines.f90"/>
+		<File RelativePath="src\step_to_screen.f90"/>
+		<File RelativePath="src\tecplot.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\transport.f90"/>
+		<File RelativePath="src\unstruc.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\unstruc_api.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\unstruc_boundaries.f90"/>
+		<File RelativePath="src\unstruc_display.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\unstruc_files.f90"/>
+		<File RelativePath="src\unstruc_ini.f90"/>
+		<File RelativePath=".\src\unstruc_inifields.f90"/>
+		<File RelativePath="src\unstruc_messages.f90"/>
+		<File RelativePath="src\unstruc_model.f90"/>
+		<File RelativePath="src\unstruc_netcdf.f90"/>
+		<File RelativePath="src\unstruc_netcdf_incremental.f90"/>
+		<File RelativePath="src\unstruc_opengis.f90"/>
+		<File RelativePath="src\unstruc_opengl.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\unstruc_shapefile.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\unstruc_startup.f90"/>
+		<File RelativePath="src\unstruc_structures.f90"/>
+		<File RelativePath="src\unstruc_version.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\unstruc_version.F90.svn"/>
+		<File RelativePath="src\waves.f90"/>
+		<File RelativePath="src\wrwaq.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\xbeach_errorhandling.f90"/>
+		<File RelativePath="src\xbeach_filefunctions.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath="src\xbeach_interp.F90"/>
+		<File RelativePath="src\xbeach_math_tools.F90"/>
+		<File RelativePath="src\xbeach_netcdf.f90"/>
+		<File RelativePath="src\xbeach_paramsconst.f90"/>
+		<File RelativePath="src\xbeach_readkey.F90"/>
+		<File RelativePath="src\xbeach_typesandkinds.F90"/>
+		<File RelativePath="src\xbeach_wave_boundary_datastore.f90"/>
+		<File RelativePath="src\xbeach_wave_boundary_main.f90"/>
+		<File RelativePath="src\xbeach_wave_boundary_update.f90"/>
+		<File RelativePath="src\xbeachwaves.f90"/></Filter></Files>
+	<Globals/></VisualStudioProject>

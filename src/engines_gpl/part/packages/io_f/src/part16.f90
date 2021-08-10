@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -29,7 +29,8 @@ module part16_mod
 !  data definition module(s)
 !
 use precision_part              ! single and double precision
-      use timers
+use timers
+use openfl_mod
 use fileinfo               ! file information for all input/output files
 !
 !  module procedure(s)
@@ -77,7 +78,7 @@ contains
 !                             lun2 - output log file
 !
 !
-!     subroutines called    : srstop
+!     subroutines called    : stop_exit
 !
 !
 !     functions   called    : none.
@@ -240,7 +241,7 @@ contains
 !
                 if (ilay   >  nolay) then
                   write (lun2, 99002)
-                  call srstop(1)
+                  call stop_exit(1)
                 endif
 !
                 do 50, isub = 1, nosubs

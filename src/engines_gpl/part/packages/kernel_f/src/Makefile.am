@@ -10,22 +10,21 @@
 include $(top_srcdir)/common.am
 noinst_LTLIBRARIES = libkernel_f.la
 
-AM_FCFLAGS += $(OPENMP_FCFLAGS)
-AM_FFLAGS += $(OPENMP_FFLAGS)
+AM_FCFLAGS += -fopenmp $(OPENMP_FCFLAGS)
+AM_FFLAGS += -fopenmp $(OPENMP_FFLAGS)
 
 #-------------------------------------------------------------------------------
 #Includes
 FMODULES += \
-	-I../../data_f/src \
-	-I../../utils_f/src \
-	-I../../io_f/src \
+        -I$(top_builddir)/engines_gpl/part/packages/data_f/src \
+        -I$(top_builddir)/engines_gpl/part/packages/io_f/src \
+        -I$(top_builddir)/engines_gpl/part/packages/utils_f/src \
         -I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src/rd_token \
         -I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src
 
 #-------------------------------------------------------------------------------
 #Sources
 libkernel_f_la_SOURCES = \
-         avundf_linux.f90 \
          vdisp.f90 \
          mudrel.f90 \
          extout.f90 \
@@ -34,7 +33,7 @@ libkernel_f_la_SOURCES = \
          umagi.f90 \
          p10cor.f90 \
          inipart_asc.f90 \
-		 inipart.f90 \
+         inipart.f90 \
          densty.f90 \
          part01.f90 \
          part10.f90 \
@@ -53,8 +52,7 @@ libkernel_f_la_SOURCES = \
          partvs.f90 \
          p10ddb.f90 \
          diffus.f90 \
-         delpar.F90 \
-         dlmain.f90
+         delpar.F90
 
 #-------------------------------------------------------------------------------
 #Libraries

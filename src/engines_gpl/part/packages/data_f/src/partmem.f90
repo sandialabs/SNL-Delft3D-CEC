@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -41,7 +41,7 @@ module partmem
       character(len=256)                :: fnamep(nfilesp) = ' '  ! file names for in-/output files
       character(len=20) , dimension(2)  :: ftypep          = ' '  ! file types, i.e. unformatted or binary
       logical                           :: alone                  ! if .false. coupled with Delwaq
-      integer(ip)   :: itrakc  , itraki  , npwndn  , npwndw  , nstep
+      integer(ip)   :: itrakc  , itraki  , npwndn  , npwndw  , nstep  , nstept
       real   (sp)   :: defang  , hmin    , ptlay   , accrjv
       logical       :: oil     , oil2dh  , oil3d   , ltrack  , acomp  , fout
 
@@ -201,6 +201,11 @@ module partmem
       integer  ( ip), pointer  :: kwaste (:)    ! layer nr of waste point
       integer  ( ip), pointer  :: ioptrad(:)    ! radius option of dye release
       real     ( rp), pointer  :: radius (:)    ! radius parameter of waste point
+      character( 256),pointer  :: fidye(:)      ! temporary array with names of dye polygon files
+      character( 256),pointer  :: fiwaste(:)    ! names of waste polygon files
+      real     ( sp), pointer  :: xpolwaste(:,:)! x-coordinates of waste polygon
+      real     ( sp), pointer  :: ypolwaste(:,:)! y-coordinates of waste polygon
+      integer  ( ip), pointer  :: nrowswaste(:) ! length of waste polygon
       real     ( rp), pointer  :: wparm  (:)    ! percentage of particles taken
       integer  ( ip), pointer  :: ndprt  (:)    ! number of particles per waste point
       real     ( rp), pointer  :: amassd(:,:)   ! mass of dye per substance
@@ -314,3 +319,38 @@ module partmem
       real          (sp       ) ,  pointer, dimension(:,:     ) :: flres
 
 end module partmem
+
+module spec_feat_par
+
+      !     special feature parameters
+
+      use precision_part      ! single and double precision
+
+!     vertical bounce
+      logical                                                   :: vertical_bounce
+
+!     restart files
+      logical                                                   :: write_restart_file
+      integer  (ip)                                             :: max_restart_age
+
+!     plastics parameters
+      integer   (sp)            ,  pointer, dimension(:       ) :: plparset
+      real      (sp)            ,  pointer, dimension(:       ) :: pldensity
+      real      (sp)            ,  pointer, dimension(:       ) :: plshapefactor
+      real      (sp)            ,  pointer, dimension(:       ) :: plmeansize
+      real      (sp)            ,  pointer, dimension(:       ) :: plvarsize
+      real      (sp)            ,  pointer, dimension(:       ) :: plmusize
+      real      (sp)            ,  pointer, dimension(:       ) :: plsigmasize
+      real      (sp)            ,  pointer, dimension(:       ) :: plfragrate
+      logical                                                   :: pldebug
+      
+!     screens
+      logical                  :: screens          ! are sceens active
+      real     ( sp)           :: permealeft       ! leftside permeability of screeens
+      real     ( sp)           :: permearight      ! rightside permeability of screeens
+      character( 256)          :: fiscreens        ! names of screens polygon files
+      integer  ( ip)           :: nrowsscreens     ! length of screen polygon
+      real     ( sp), pointer  :: xpolscreens(:)   ! x-coordinates of screen polygon
+      real     ( sp), pointer  :: ypolscreens(:)   ! y-coordinates of screen polygon
+      
+end module spec_feat_par

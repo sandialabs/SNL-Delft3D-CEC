@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,14 +24,14 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: engelund_hansen.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/plugins_lgpl/plugin_delftflow_traform/src/engelund_hansen.f90 $
+!  $Id: engelund_hansen.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/plugins_lgpl/plugin_delftflow_traform/src/engelund_hansen.f90 $
 subroutine enghan(dll_integers, max_integers, &
                   dll_reals   , max_reals   , &
                   dll_strings , max_strings , &
                   sbc_total, sbc  , sbcu, sbcv, sbwu, sbwv     , &
                   equi_conc, cesus, ssus, sswu, sswv, t_relax  , &
-                  error_message   )
+                  error_message_c   )
 !DEC$ ATTRIBUTES DLLEXPORT, ALIAS: 'ENGHAN' :: ENGHAN
 !!--description-----------------------------------------------------------------
 !
@@ -41,6 +41,7 @@ subroutine enghan(dll_integers, max_integers, &
 !!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
+use iso_c_binding, only: c_char
 implicit none
 !
 ! Local constants
@@ -59,24 +60,25 @@ character(len=256), dimension(max_strings) , intent(in)  :: dll_strings
 !
 ! Subroutine arguments: output
 !
-real(hp)          , intent(out) :: sbc           ! bed load due to currents, magnitude [m3/m/s]
-real(hp)          , intent(out) :: sbcu          ! bed load due to currents, m component [m3/m/s]
-real(hp)          , intent(out) :: sbcv          ! bed load due to currents, n component [m3/m/s]
-real(hp)          , intent(out) :: sbwu          ! bed load due to waves, m component [m3/m/s]
-real(hp)          , intent(out) :: sbwv          ! bed load due to waves, n component [m3/m/s]
-real(hp)          , intent(out) :: cesus         ! susp load concentration [m3/m3]
-real(hp)          , intent(out) :: ssus          ! susp load due to currents, magnitude [m3/m/s]
-real(hp)          , intent(out) :: sswu          ! susp load due to waves, m component [m3/m/s]
-real(hp)          , intent(out) :: sswv          ! susp load due to waves, n component [m3/m/s]
-real(hp)          , intent(out) :: t_relax       ! relaxation time in 2D mode [s]
-character(len=256), intent(out) :: error_message ! not empty: echo and stop run
-logical           , intent(out) :: equi_conc     ! true: contration cesus returned by formula
-                                                 ! false: susp load ssus returned by formula
-logical           , intent(out) :: sbc_total     ! true: bed load magnitude returned by formula
-                                                 ! false: bed load components returned
+real(hp)              , intent(out) :: sbc                ! bed load due to currents, magnitude [m3/m/s]
+real(hp)              , intent(out) :: sbcu               ! bed load due to currents, m component [m3/m/s]
+real(hp)              , intent(out) :: sbcv               ! bed load due to currents, n component [m3/m/s]
+real(hp)              , intent(out) :: sbwu               ! bed load due to waves, m component [m3/m/s]
+real(hp)              , intent(out) :: sbwv               ! bed load due to waves, n component [m3/m/s]
+real(hp)              , intent(out) :: cesus              ! susp load concentration [m3/m3]
+real(hp)              , intent(out) :: ssus               ! susp load due to currents, magnitude [m3/m/s]
+real(hp)              , intent(out) :: sswu               ! susp load due to waves, m component [m3/m/s]
+real(hp)              , intent(out) :: sswv               ! susp load due to waves, n component [m3/m/s]
+real(hp)              , intent(out) :: t_relax            ! relaxation time in 2D mode [s]
+character(kind=c_char), intent(out) :: error_message_c(*) ! not empty: echo and stop run
+logical               , intent(out) :: equi_conc          ! true: contration cesus returned by formula
+                                                          ! false: susp load ssus returned by formula
+logical               , intent(out) :: sbc_total          ! true: bed load magnitude returned by formula
+                                                          ! false: bed load components returned
 !
 ! Local variables for input parameters
 !
+integer            :: i
 integer            :: l
 integer            :: m
 integer            :: n, nm
@@ -95,6 +97,7 @@ real(hp)           :: ws
 real(hp)           :: zumod
 character(len=256) :: runid
 character(len=256) :: filenm
+character(len=256) :: error_message
 !
 ! Local variables
 !
@@ -107,6 +110,9 @@ real(hp)           :: ustar
 !
 if (max_integers < 4) then
    error_message = 'Insufficient integer values provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 nm      = dll_integers( 1) ! nm index of the grid cell
@@ -116,6 +122,9 @@ l       = dll_integers( 4) ! number of the sediment fraction in the computation
 !
 if (max_reals < 30) then
    error_message = 'Insufficient real values provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 timsec  = dll_reals( 1)    ! current time since reference time [s]
@@ -151,6 +160,9 @@ taub    = dll_reals(30)    ! bed shear stress [N/m2]
 !
 if (max_strings < 2) then
    error_message = 'Insufficient strings provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 runid   = dll_strings( 1)  ! user-specified run-identification
@@ -212,4 +224,8 @@ sswv    = 0.0_hp          ! suspended load transport, n direction due to waves i
 ! set to zero.
 !
 t_relax = 0.0_hp          ! relaxation time is zero
+!
+do i=1,256
+   error_message_c(i) = error_message(i:i)
+enddo
 end subroutine enghan

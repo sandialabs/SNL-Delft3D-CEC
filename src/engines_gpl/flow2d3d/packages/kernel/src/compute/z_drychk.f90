@@ -6,7 +6,7 @@ subroutine z_drychk(idry      ,j         ,nmmaxj    ,nmmax     ,kmax      , &
                   & lstsci    ,dzs1      ,zk        ,nst       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -30,8 +30,8 @@ subroutine z_drychk(idry      ,j         ,nmmaxj    ,nmmax     ,kmax      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: z_drychk.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_drychk.f90 $
+!  $Id: z_drychk.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_drychk.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: This subroutine checks for drying in water level
@@ -55,6 +55,7 @@ subroutine z_drychk(idry      ,j         ,nmmaxj    ,nmmax     ,kmax      , &
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
     integer  , pointer :: lundia
+    real(fp) , pointer :: drycrt
     real(fp) , pointer :: dzmin
 !
 ! Global variables
@@ -101,6 +102,7 @@ subroutine z_drychk(idry      ,j         ,nmmaxj    ,nmmax     ,kmax      , &
     integer, dimension(1)  :: nm_s1max2
     logical                :: flood
     logical                :: zmodel
+    real(fp)               :: drytrsh
     real(fp)               :: s1max1
     real(fp)               :: s1max2
     real(fp)               :: zdiff
@@ -109,11 +111,19 @@ subroutine z_drychk(idry      ,j         ,nmmaxj    ,nmmax     ,kmax      , &
 !! executable statements -------------------------------------------------------
 !
     lundia  => gdp%gdinout%lundia
+    drycrt  => gdp%gdnumeco%drycrt
     dzmin   => gdp%gdzmodel%dzmin
     !
     idry   = 0
     nm_pos = 1
     !
+    ! A drying treshold to avoid very thin layers in active cells
+    ! 0.01 * dryflc (0.02*drycrt), but limited between 10^(-9) and 10^(-3)
+    ! Such thin layers cause inaccuracies in the solution of the transport equation (in conservative formulation)
+    ! This choice of limits was chosen avoid too thin layers, but to simultaneously allow thin layers when 
+    ! demanded by the user through a small dryflc, e.g. for dry dambreak problems.
+    !
+    drytrsh = max(1.0e-9_fp, min(0.02_fp*drycrt, 1.0e-3_fp))
     do nm = 1, nmmax
        nmd = nm - icx
        ndm = nm - icy
@@ -121,9 +131,9 @@ subroutine z_drychk(idry      ,j         ,nmmaxj    ,nmmax     ,kmax      , &
           !
           ! Check on kfs(nm) == 1 is necessary, because when the last active cell edge of a cell
           ! was set dry in Z_SUD, all KFU/KFV are zero and this check would not be performed
-          !
+          ! 
           if (kfu(nm)==1 .or. kfu(nmd)==1 .or. kfv(nm)==1 .or. kfv(ndm)==1 .or. kfs(nm)==1) then
-             if ( s1(nm) <= -real(dps(nm),fp) ) then
+             if ( s1(nm) <= -real(dps(nm),fp)+drytrsh ) then
                 kfu(nm ) = 0
                 kfu(nmd) = 0
                 kfv(nm ) = 0

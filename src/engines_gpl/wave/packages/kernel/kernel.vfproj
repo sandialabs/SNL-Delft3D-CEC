@@ -5,7 +5,7 @@
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="bin\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\bin\$(ConfigurationName);..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\bin\$(ConfigurationName);..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
@@ -15,7 +15,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="bin\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\data\bin\$(ConfigurationName);..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\data\lib\$(ConfigurationName);..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
@@ -25,7 +25,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="bin\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\bin\$(PlatformName)\$(ConfigurationName)" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\bin\$(PlatformName)\$(ConfigurationName)" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -34,8 +34,8 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|x64" OutputDirectory="bin\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\data\bin\$(PlatformName)\$(ConfigurationName)" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+		<Configuration Name="Release|x64" OutputDirectory="lib/$(PlatformName)/$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\data\lib\$(PlatformName)\$(ConfigurationName)" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -54,11 +54,9 @@
 		<File RelativePath=".\src\grids_and_gridmaps.f90"/>
 		<File RelativePath=".\src\grmap.f90"/>
 		<File RelativePath=".\src\map_swan_output.f90"/>
-		<File RelativePath=".\src\new_lun.f90"/>
 		<File RelativePath=".\src\perpar.f90"/>
 		<File RelativePath=".\src\rm_del.f90"/>
 		<File RelativePath=".\src\run_swan.f90"/>
-		<File RelativePath=".\src\small.f90"/>
 		<File RelativePath=".\src\update_wavecond.f90"/>
 		<File RelativePath=".\src\wapar.f90"/>
 		<File RelativePath=".\src\wave2com.f90"/>

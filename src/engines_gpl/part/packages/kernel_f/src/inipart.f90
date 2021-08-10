@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -58,7 +58,6 @@
       use get_key_mod
       use grid_search_mod
       use pinpok_mod
-      use wait_mod
 
       implicit none ! force explicit typing
 
@@ -281,71 +280,40 @@
 
   900 write(*,'(//a,a)')       ' Error: problem with ini-file ',ini_file(:len_file)
       write(*,'(a)')           ' Could not open/find ini-file ??'
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with ini-file ',ini_file(:len_file)
       write(lunpr,'(a,a)')     ' Could not open/find ini-file ??'
-      stop  ' Part aborted'
+      call stop_exit(1)
 
   910 write(*,'(//a,a)')       ' Error: problem with ini-file ',ini_file(:len_file)
       write(*,'(a,a)')         ' Could not find key ',key
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with ini-file ',ini_file(:len_file)
       write(lunpr,'(a,a)')     ' Could not find key ',key
-      stop  ' Part aborted'
+      call stop_exit(1)
 
   920 write(*,'(//a,a)')       ' Error: problem with ini-file ',ini_file(:len_file)
       write(*,'(//a,a)')       ' End-of-file found on ini-file '
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with ini-file ',ini_file(:len_file)
       write(lunpr,'(//a,a)')   ' End-of-file found on ini-file '
-      stop  ' Part aborted'
+      call stop_exit(1)
 
   930 write(*,'(//a,a)')       ' Error: problem with ini-file ',ini_file(:len_file)
       write(*,'(//a,a)')       ' Error while reading ini-file'
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with ini-file ',ini_file(:len_file)
       write(lunpr,'(//a,a)')   ' Error while reading ini-file'
-      stop  ' Part aborted'
+      call stop_exit(1)
 
   940 write(*,'(//a,a)')       ' Error: problem with ini-file ',ini_file(:len_file)
       write(*,'(//a,a)')       ' Could not find substance ',fract
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with ini-file ',ini_file(:len_file)
       write(lunpr,'(//a,a)')   ' Could not find substance ',fract
-      stop  ' Part aborted'
+      call stop_exit(1)
 
   950 write(*,'(//a,a)')       ' Error: problem with ini-file ',ini_file(:len_file)
       write(*,'(//a)')         ' Couldn''t find cells for the initial oil particles.'
       write(*,'(//a)')         ' Is (part of) the polygon within the grid range?'
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with ini-file ',ini_file(:len_file)
       write(lunpr,'(//a)')     ' Couldn''t find cells for the initial oil particles.'
       write(lunpr,'(//a)')     ' Is (part of) the polygon within the grid range?'
-      stop  ' Part aborted'
+      call stop_exit(1)
       
       end subroutine inipart
-
-
-      character(len=200) function get_valid_line(lun,lunpr)
-      implicit none           !   force explicit typing
-      integer :: lun, lunpr, ios
-      character*200 line
-      read(lun,'(a)',iostat=ios) line
-
-!     check for valid input line
-
-      if (ios < 0) then
-         write(lunpr,'(a,a)') ' END-of-file reached on *.ini file '
-         write(lunpr,'(a  )') ' last line read: ',line
-         write(*    ,'(a,a)') ' END-of-file reached on *.ini file '
-         write(*    ,'(a  )') ' last line read: ',line
-      else if (ios > 0) then
-         write(lunpr,'(a,a)')  &
-                ' ERROR detected while reading file *.ini file'
-         write(lunpr,'(a,i6)')   &
-                ' file status (iostat) = ',ios
-      else
-         get_valid_line=line ! return the validated input line
-      endif
-      stop ' part aborted'
-      end function get_valid_line

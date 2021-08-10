@@ -5,46 +5,60 @@
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="bin/$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\bin\$(ConfigurationName);..\kernel\bin\$(ConfigurationName);..\..\..\..\utils_lgpl\ec_module\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\bin\$(ConfigurationName);..\kernel\bin\$(ConfigurationName);..\..\..\..\utils_lgpl\ec_module\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.F90 ..\..\ .\include\version_number.ini&#xA;call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.rc .\ .\include\version_number.ini"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="echo &quot;This file is overwritten by the post-build command of the project wave&quot; &gt; ./src/wave_version.F90"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|Win32" OutputDirectory="bin/$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\data\bin\$(ConfigurationName);..\kernel\bin\$(ConfigurationName);..\..\..\..\utils_lgpl\ec_module\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+		<Configuration Name="Release|Win32" OutputDirectory="bin\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\data\lib\$(ConfigurationName);..\kernel\lib\$(ConfigurationName);..\..\..\..\utils_lgpl\ec_module\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\delftio\lib\$(ConfigurationName)\static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.F90 ..\..\ .\include\version_number.ini&#xA;call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.rc .\ .\include\version_number.ini"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="echo &quot;This file is overwritten by the post-build command of the project wave&quot; &gt; ./src/wave_version.F90"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="bin\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\bin\$(PlatformName)\$(ConfigurationName);..\kernel\bin\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\bin\$(PlatformName)\$(ConfigurationName);..\kernel\bin\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.F90 ..\..\ .\include\version_number.ini&#xA;call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.rc .\ .\include\version_number.ini"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="echo &quot;This file is overwritten by the post-build command of the project wave&quot; &gt; ./src/wave_version.F90"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|x64" OutputDirectory="bin\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\data\bin\$(PlatformName)\$(ConfigurationName);..\kernel\bin\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+		<Configuration Name="Release|x64" OutputDirectory="lib/$(PlatformName)/$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\data\lib\$(PlatformName)\$(ConfigurationName);..\kernel\lib\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\ec_module\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool"/>
-				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.F90 ..\..\ .\include\version_number.ini&#xA;call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.rc .\ .\include\version_number.ini"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="echo &quot;This file is overwritten by the post-build command of the project wave&quot; &gt; ./src/wave_version.F90"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath=".\src\swan_tot.f90"/></Filter></Files>
+		<File RelativePath=".\src\checklicense.f90"/>
+		<File RelativePath=".\src\swan_tot.f90"/>
+		<File RelativePath=".\src\usage.f90"/>
+		<File RelativePath=".\src\wave_main.f90"/>
+		<File RelativePath=".\src\wave_version.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File></Filter>
+		<File RelativePath=".\src\resource.h"/>
+		<File RelativePath=".\src\wave_version.rc"/></Files>
 	<Globals/></VisualStudioProject>

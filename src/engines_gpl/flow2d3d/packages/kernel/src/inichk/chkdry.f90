@@ -1,6 +1,6 @@
 subroutine chkdry(j         ,nmmaxj    ,nmmax     ,kmax      ,lsec      , &
                 & lsecfl    ,lstsci    ,ltur      ,icx       ,icy       , &
-                & initia    ,kcu       ,kcv       ,kcs       ,kfu       , &
+                & kcu       ,kcv       ,kcs       ,kfu       , &
                 & kfv       ,kfs       ,kspu      ,kspv      ,dpu       , &
                 & dpv       ,hu        ,hv        ,hkru      ,hkrv      , &
                 & thick     ,s1        ,dps       ,u1        ,v1        , &
@@ -8,7 +8,7 @@ subroutine chkdry(j         ,nmmaxj    ,nmmax     ,kmax      ,lsec      , &
                 & gvv       ,qxk       ,qyk       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -32,8 +32,8 @@ subroutine chkdry(j         ,nmmaxj    ,nmmax     ,kmax      ,lsec      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: chkdry.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/chkdry.f90 $
+!  $Id: chkdry.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/chkdry.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Initiates the depth values at velocity points
@@ -72,7 +72,6 @@ subroutine chkdry(j         ,nmmaxj    ,nmmax     ,kmax      ,lsec      , &
 !
     integer                                                 , intent(in)  :: icx    !!  Increment in the X-dir., if ICX= NMAX then computation proceeds in the X-dir. If icx=1 then computation proceeds in the Y-dir.
     integer                                                 , intent(in)  :: icy    !!  Increment in the Y-dir. (see ICX)
-    integer                                                 , intent(in)  :: initia !!  if < 0: iteration process of morsys else  : equal to initi
     integer                                                               :: j      !!  Begin pointer for arrays which have been transformed into 1D arrays. Due to the shift in the 2nd (M-) index, J = -2*NMAX + 1
     integer                                                               :: kmax   !  Description and declaration in esm_alloc_int.f90
     integer                                                 , intent(in)  :: lsec   !  Description and declaration in dimens.igs
@@ -137,126 +136,124 @@ subroutine chkdry(j         ,nmmaxj    ,nmmax     ,kmax      ,lsec      , &
     !
     nm_pos             =  1
     !
-    if (initia > 0) then
-       if ( restid .ne. 'STATE' ) then
-          do nm = j, nmmaxj
-             kfs(nm) = max(min(1, kcs(nm)),0)
-             if (kfuv_from_restart) then
-                if (kcu(nm)==0) kfu(nm) = 0
-                if (kcv(nm)==0) kfv(nm) = 0
-             else
-                kfu(nm) = min(1, kcu(nm))
-                kfv(nm) = min(1, kcv(nm))
-             endif
-          enddo
-       endif
-       !
-       ! Apply boundary condition d()/dn=0 at open boundaries for waterlevel points
-       ! if the simulation is NOT a restart
-       ! first apply boundary condition in horizontal direction then in vertical
-       ! direction, that is because uzd is first applied in vertical direction
-       !
-       if (restid == ' ') then
-           do nm = 1, nmmax
-              nmd = nm - icx
-              nmu = nm + icx
-              ndm = nm - icy
-              num = nm + icy
-              !
-              !   Boundary at left side
-              !
-              if (kcs(nmd)==2 .and. kcs(nm)==1) then
-                 s1(nmd) = s1(nm)
-                 do k = 1, kmax
-                    do l = 1, lstsci
-                      r1(nmd, k, l) = r1(nm, k, l)
-                    enddo
-                 enddo
-                 do k = 0, kmax
-                    do l = 1, ltur
-                       rtur1(nmd, k, l) = rtur1(nm, k, l)
-                    enddo
-                 enddo
-              endif
-              !
-              !   Boundary at right side
-              !
-              if (kcs(nm)==1 .and. kcs(nmu)==2) then
-                 s1(nmu) = s1(nm)
-                 do k = 1, kmax
-                    do l = 1, lstsci
-                      r1(nmu, k, l) = r1(nm, k, l)
-                    enddo
-                 enddo
-                 do k = 0, kmax
-                    do l = 1, ltur
-                       rtur1(nmu, k, l) = rtur1(nm, k, l)
-                    enddo
-                 enddo
-              endif
-              !
-              !   Boundary at bottom side
-              !
-              if (kcs(ndm)==2 .and. kcs(nm)==1) then
-                 s1(ndm) = s1(nm)
-                 do k = 1, kmax
-                    do l = 1, lstsci
-                      r1(ndm, k, l) = r1(nm, k, l)
-                    enddo
-                 enddo
-                 do k = 0, kmax
-                    do l = 1, ltur
-                       rtur1(ndm, k, l) = rtur1(nm, k, l)
-                    enddo
-                 enddo
-              endif
-              !
-              !   Boundary at top side
-              !
-              if (kcs(nm)==1 .and. kcs(num)==2) then
-                 s1(num) = s1(nm)
-                 do k = 1, kmax
-                    do l = 1, lstsci
-                      r1(num, k, l) = r1(nm, k, l)
-                    enddo
-                 enddo
-                 do k = 0, kmax
-                    do l = 1, ltur
-                       rtur1(num, k, l) = rtur1(nm, k, l)
-                    enddo
-                 enddo
-              endif
-           enddo
-       endif
-       !
-       ! redefine S1 in case they are smaller then DPS and reset the mask
-       ! arrays KFU,KFV and KFS
-       ! -icx := -1 in m-direction, -icy := -1 in n-direction
-       !
-       if (restid .ne. 'STATE') then
-          do nm = 1, nmmax
-             nmd = nm - icx
-             ndm = nm - icy
-             if (kcs(nm)>0) then
-                if (s1(nm)<= - real(dps(nm),fp)) then
-                   s1(nm)   = -real(dps(nm),fp)
-                   kfu(nm)  = 0
-                   kfu(nmd) = 0
-                   kfv(nm)  = 0
-                   kfv(ndm) = 0
-                   kfs(nm)  = 0
-                endif
-             endif
-          enddo
-       endif
-       !
-       ! Delft3D-16494: NOT NECESSARY? Could the loop above for determining kfs also be done with kcs/=0?
-       ! otherwise also need to communicate kfu/kfv and s1?
-       !
-       ! exchange mask array kfs with neighbours for parallel runs
-       !
-       call dfexchg ( kfs, 1, 1, dfint, nm_pos, gdp )
+    if ( restid .ne. 'STATE' ) then
+       do nm = j, nmmaxj
+          kfs(nm) = max(min(1, kcs(nm)),0)
+          if (kfuv_from_restart) then
+             if (kcu(nm)==0) kfu(nm) = 0
+             if (kcv(nm)==0) kfv(nm) = 0
+          else
+             kfu(nm) = min(1, kcu(nm))
+             kfv(nm) = min(1, kcv(nm))
+          endif
+       enddo
     endif
+    !
+    ! Apply boundary condition d()/dn=0 at open boundaries for waterlevel points
+    ! if the simulation is NOT a restart
+    ! first apply boundary condition in horizontal direction then in vertical
+    ! direction, that is because uzd is first applied in vertical direction
+    !
+    if (restid == ' ') then
+        do nm = 1, nmmax
+           nmd = nm - icx
+           nmu = nm + icx
+           ndm = nm - icy
+           num = nm + icy
+           !
+           !   Boundary at left side
+           !
+           if (kcs(nmd)==2 .and. kcs(nm)==1) then
+              s1(nmd) = s1(nm)
+              do k = 1, kmax
+                 do l = 1, lstsci
+                   r1(nmd, k, l) = r1(nm, k, l)
+                 enddo
+              enddo
+              do k = 0, kmax
+                 do l = 1, ltur
+                    rtur1(nmd, k, l) = rtur1(nm, k, l)
+                 enddo
+              enddo
+           endif
+           !
+           !   Boundary at right side
+           !
+           if (kcs(nm)==1 .and. kcs(nmu)==2) then
+              s1(nmu) = s1(nm)
+              do k = 1, kmax
+                 do l = 1, lstsci
+                   r1(nmu, k, l) = r1(nm, k, l)
+                 enddo
+              enddo
+              do k = 0, kmax
+                 do l = 1, ltur
+                    rtur1(nmu, k, l) = rtur1(nm, k, l)
+                 enddo
+              enddo
+           endif
+           !
+           !   Boundary at bottom side
+           !
+           if (kcs(ndm)==2 .and. kcs(nm)==1) then
+              s1(ndm) = s1(nm)
+              do k = 1, kmax
+                 do l = 1, lstsci
+                   r1(ndm, k, l) = r1(nm, k, l)
+                 enddo
+              enddo
+              do k = 0, kmax
+                 do l = 1, ltur
+                    rtur1(ndm, k, l) = rtur1(nm, k, l)
+                 enddo
+              enddo
+           endif
+           !
+           !   Boundary at top side
+           !
+           if (kcs(nm)==1 .and. kcs(num)==2) then
+              s1(num) = s1(nm)
+              do k = 1, kmax
+                 do l = 1, lstsci
+                   r1(num, k, l) = r1(nm, k, l)
+                 enddo
+              enddo
+              do k = 0, kmax
+                 do l = 1, ltur
+                    rtur1(num, k, l) = rtur1(nm, k, l)
+                 enddo
+              enddo
+           endif
+        enddo
+    endif
+    !
+    ! redefine S1 in case they are smaller then DPS and reset the mask
+    ! arrays KFU,KFV and KFS
+    ! -icx := -1 in m-direction, -icy := -1 in n-direction
+    !
+    if (restid .ne. 'STATE') then
+       do nm = 1, nmmax
+          nmd = nm - icx
+          ndm = nm - icy
+          if (kcs(nm)>0) then
+             if (s1(nm)<= - real(dps(nm),fp)) then
+                s1(nm)   = -real(dps(nm),fp)
+                kfu(nm)  = 0
+                kfu(nmd) = 0
+                kfv(nm)  = 0
+                kfv(ndm) = 0
+                kfs(nm)  = 0
+             endif
+          endif
+       enddo
+    endif
+    !
+    ! Delft3D-16494: NOT NECESSARY? Could the loop above for determining kfs also be done with kcs/=0?
+    ! otherwise also need to communicate kfu/kfv and s1?
+    !
+    ! exchange mask array kfs with neighbours for parallel runs
+    !
+    call dfexchg ( kfs, 1, 1, dfint, nm_pos, gdp )
     !
     ! initialize global arrays
     ! (HU, HV, QXK and QYK are initialized in esm_alloc_real)
@@ -285,47 +282,45 @@ subroutine chkdry(j         ,nmmaxj    ,nmmax     ,kmax      ,lsec      , &
     ! the MIN operator works as planned
     !
     if (restid .ne. 'STATE') then
-       if (initia>0) then
-          do nm = 1, nmmax
-             hucres = 1E9
-             if (abs(kspu(nm, 0))==9) then
-                if (umean(nm)>=0.001) then
-                   hucres = s1(nm) + hkru(nm)
-                elseif (umean(nm)<= - 0.001) then
-                   hucres = s1(nm + icx) + hkru(nm)
-                else
-                   hucres = max(s1(nm + icx), s1(nm)) + hkru(nm)
-                endif
+       do nm = 1, nmmax
+          hucres = 1E9
+          if (abs(kspu(nm, 0))==9) then
+             if (umean(nm)>=0.001) then
+                hucres = s1(nm) + hkru(nm)
+             elseif (umean(nm)<= - 0.001) then
+                hucres = s1(nm + icx) + hkru(nm)
+             else
+                hucres = max(s1(nm + icx), s1(nm)) + hkru(nm)
              endif
-             !
-             hvcres = 1E9
-             if (abs(kspv(nm, 0))==9) then
-                if (vmean(nm)>=0.001) then
-                   hvcres = s1(nm) + hkrv(nm)
-                elseif (vmean(nm)<= - 0.001) then
-                   hvcres = s1(nm + icy) + hkrv(nm)
-                else
-                   hvcres = max(s1(nm + icy), s1(nm)) + hkrv(nm)
-                endif
+          endif
+          !
+          hvcres = 1E9
+          if (abs(kspv(nm, 0))==9) then
+             if (vmean(nm)>=0.001) then
+                hvcres = s1(nm) + hkrv(nm)
+             elseif (vmean(nm)<= - 0.001) then
+                hvcres = s1(nm + icy) + hkrv(nm)
+             else
+                hvcres = max(s1(nm + icy), s1(nm)) + hkrv(nm)
              endif
-             !
-             if (.not.kfuv_from_restart) then
-                if (kfu(nm)*min(hu(nm), hucres)<dryflc .and. kcu(nm)*kfu(nm)==1) then
-                   kfu(nm) = 0
-                endif
-                if (kfv(nm)*min(hv(nm), hvcres)<dryflc .and. kcv(nm)*kfv(nm)==1) then
-                   kfv(nm) = 0
-                endif
+          endif
+          !
+          if (.not.kfuv_from_restart) then
+             if (kfu(nm)*min(hu(nm), hucres)<dryflc .and. kcu(nm)*kfu(nm)==1) then
+                kfu(nm) = 0
              endif
-          enddo
-          !
-          ! Delft3D-16494: NOT NECESSARY?
-          !
-          ! Exchange mask arrays kfu and kfv with neighbours for parallel runs
-          !
-          call dfexchg ( kfu, 1, 1, dfint, nm_pos, gdp )
-          call dfexchg ( kfv, 1, 1, dfint, nm_pos, gdp )
-       endif
+             if (kfv(nm)*min(hv(nm), hvcres)<dryflc .and. kcv(nm)*kfv(nm)==1) then
+                kfv(nm) = 0
+             endif
+          endif
+       enddo
+       !
+       ! Delft3D-16494: NOT NECESSARY?
+       !
+       ! Exchange mask arrays kfu and kfv with neighbours for parallel runs
+       !
+       call dfexchg ( kfu, 1, 1, dfint, nm_pos, gdp )
+       call dfexchg ( kfv, 1, 1, dfint, nm_pos, gdp )
     endif
     !
     ! mask initial arrays

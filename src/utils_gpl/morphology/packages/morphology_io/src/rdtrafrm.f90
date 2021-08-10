@@ -1,7 +1,7 @@
 module m_rdtrafrm
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,9 +25,10 @@ module m_rdtrafrm
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdtrafrm.f90 5584 2015-11-12 14:00:35Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_io/src/rdtrafrm.f90 $
+!  $Id: rdtrafrm.f90 65813 2020-01-17 16:46:56Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_io/src/rdtrafrm.f90 $
 !-------------------------------------------------------------------------------
+use m_depfil_stm
 
 private
 
@@ -312,6 +313,7 @@ subroutine rdtrafrm(lundia    ,error     ,filtrn    ,lsedtot   , &
                  & parfil    ,iparfld   ,nparfld   ,0         , &
                  & filtrn    ,name      ,dll_handle,dll_name  ,dll_function, &
                  & dll_usrfil,ipardef   ,rpardef   ,npardef   ,sedblock  )
+    if (error) return
     iformdef = iform(1)
     do ll=2, lsedtot
        if (iform(ll)==-999 .and. flstrn(ll)==' ') then
@@ -373,7 +375,7 @@ subroutine rdtrafrm0(lundia    ,error     ,iform     ,npar      ,par       , &
     use properties
     use string_module
     use message_module
-    use system_utils, only:SHARED_LIB_EXTENSION
+    use system_utils, only:SHARED_LIB_PREFIX, SHARED_LIB_EXTENSION
     !
     implicit none
 !
@@ -490,7 +492,7 @@ subroutine rdtrafrm0(lundia    ,error     ,iform     ,npar      ,par       , &
              call prop_get_string(tran_ptr,'TransportFormula','Name',name(l))
              !
              iform(l) = 15
-             rec(len_trim(rec)+1:) = SHARED_LIB_EXTENSION
+             write(rec,'(3a)') SHARED_LIB_PREFIX, trim(dll_name(l)), SHARED_LIB_EXTENSION
              !
              ! Get handle to the DLL
              !
@@ -521,8 +523,7 @@ subroutine rdtrafrm0(lundia    ,error     ,iform     ,npar      ,par       , &
        else
           write (lundia, '(a)') '    File in traditional MOR-format.'
           !
-          inp = newunit()
-          open (inp, file = flname(1:lfile),status = 'old', iostat = iost)
+          open (newunit = inp, file = flname(1:lfile),status = 'old', iostat = iost)
           if (iost/=0) then
              errmsg = FILE_NOT_FOUND // flname(1:lfile)
              call write_error(errmsg, unit=lundia)
@@ -668,6 +669,7 @@ subroutine rdtraparfld(lundia    ,error     ,lsedtot   ,trapar    , &
     use precision
     use morphology_data_module
     use grid_dimens_module 
+    use message_module, only: write_error
     !
     implicit none
     !
@@ -692,6 +694,7 @@ subroutine rdtraparfld(lundia    ,error     ,lsedtot   ,trapar    , &
     integer           :: j
     integer           :: ll
     character(256)    :: filename
+    character(256)    :: errmsg
     character(11)     :: fmttmp
 !
 !! executable statements -------------------------------------------------------
@@ -718,9 +721,12 @@ subroutine rdtraparfld(lundia    ,error     ,lsedtot   ,trapar    , &
           if (j>0) then
              filename = trapar%parfil(i,ll)
              write (lundia, '(a,a)') 'Reading: ',trim(filename)
-             call depfil(lundia     ,error      ,filename   ,fmttmp    , &
-                       & parfld(:,j),1          ,1          ,dims      )
-             if (error) return
+             call depfil_stm(lundia     ,error      ,filename   ,fmttmp    , &
+                           & parfld(:,j),1          ,1          ,dims      , errmsg)
+             if (error) then 
+                 call write_error(errmsg, unit=lundia)
+                 return
+             endif
           endif
        enddo
     enddo
@@ -970,7 +976,7 @@ subroutine traparams(iform     ,name      ,nparreq   ,nparopt   ,parkeyw   , &
        pardef(7)  = -1.0_fp
     elseif (iform == -2) then
        name       = 'Van Rijn (2007): TRANSPOR2004'
-       nparopt    = 7
+       nparopt    = 8
        parkeyw(1) = 'IopSus'
        pardef(1)  = 0.0_fp
        parkeyw(2) = 'Pangle'
@@ -985,9 +991,11 @@ subroutine traparams(iform     ,name      ,nparreq   ,nparopt   ,parkeyw   , &
        pardef(6)  = 1.5_fp
        parkeyw(7) = 'SalMax'
        pardef(7)  = 0.0_fp
+       parkeyw(8) = 'BetaM'
+       pardef(8)  = 3.0_fp
     elseif (iform == -1) then
        name       = 'Van Rijn (1993)'
-       nparopt    = 7
+       nparopt    = 8
        parkeyw(1) = 'IopSus'
        pardef(1)  = 0.0_fp
        parkeyw(2) = 'AksFac'
@@ -1002,6 +1010,8 @@ subroutine traparams(iform     ,name      ,nparreq   ,nparopt   ,parkeyw   , &
        pardef(6)  = 1.0_fp
        parkeyw(7) = 'EpsPar'
        pardef(7)  = 0.0_fp ! false
+       parkeyw(8) = 'BetaM'
+       pardef(8)  = 3.0_fp
     elseif (iform == 1) then
        name       = 'Engelund-Hansen (1967)'
        nparreq    = 1
@@ -1112,6 +1122,67 @@ subroutine traparams(iform     ,name      ,nparreq   ,nparopt   ,parkeyw   , &
        pardef(1)  = 0.03_fp
        parkeyw(2) = 'Alpha0'
        pardef(2)  = 0.3_fp
+    elseif (iform == 19) then
+       name       = 'Van Thiel / Van Rijn (2008)'
+       nparopt    =  13
+       parkeyw(1) = 'facua'
+       pardef(1)  = 0.1_fp               
+       parkeyw(2) = 'facAs'
+       pardef(2)  = 0.1_fp     
+       parkeyw(3) = 'facSk'
+       pardef(3)  = 0.1_fp      
+       parkeyw(4) = 'waveform'
+       pardef(4)  = 2.0_fp      ! 1=ruessink, 2=van thiel         
+       parkeyw(5) = 'sws'
+       pardef(5)  = 1.0_fp ! true    
+       parkeyw(6) = 'lws'
+       pardef(6)  = 1.0_fp ! true           
+       parkeyw(7) = 'dilatancy'
+       pardef(7)  = 0.0_fp ! false      
+       parkeyw(8) = 'rheeA'
+       pardef(8)  = 0.75_fp      
+       parkeyw(9) = 'pormax'
+       pardef(9)  = 0.5_fp        
+       parkeyw(10) = 'bedslpini'
+       pardef(10)  = 0.0_fp  ! 0=none, 1=total; 2=bedload only                  
+       parkeyw(11) = 'smax'
+       pardef(11)  = -1.0_fp     ! [-1; 3]             
+       parkeyw(12) = 'reposeangle'
+       pardef(12)  = 30.0_fp
+       parkeyw(13) = 'cmax'
+       pardef(13)  = 0.1_fp
+       
+    elseif (iform == 20) then
+       name       = 'Soulsby / Van Rijn, XBeach flavour'
+       nparopt    =  14
+       parkeyw(1) = 'facua'
+       pardef(1)  = 0.1_fp               
+       parkeyw(2) = 'facAs'
+       pardef(2)  = 0.1_fp     
+       parkeyw(3) = 'facSk'
+       pardef(3)  = 0.1_fp      
+       parkeyw(4) = 'waveform'
+       pardef(4)  =  2.0_fp      ! 1=ruessink, 2=van thiel         
+       parkeyw(5) = 'sws'
+       pardef(5)  = 1.0_fp ! true    
+       parkeyw(6) = 'lws'
+       pardef(6)  = 1.0_fp ! true           
+       parkeyw(7) = 'dilatancy'
+       pardef(7)  = 0.0_fp ! false      
+       parkeyw(8) = 'rheeA'
+       pardef(8)  = 0.75_fp      
+       parkeyw(9) = 'pormax'
+       pardef(9)  = 0.5_fp        
+       parkeyw(10) = 'bedslpini'
+       pardef(10)  = 0.0_fp ! 0=none, 1=total; 2=bedload only                  
+       parkeyw(11) = 'smax'
+       pardef(11)  = -1.0_fp   ! [-1; 3]             
+       parkeyw(12) = 'reposeangle'
+       pardef(12)  = 30.0_fp
+       parkeyw(13) = 'cmax'
+       pardef(13)  = 0.1_fp 
+       parkeyw(14) = 'z0'
+       pardef(14)  = 0.006_fp
     endif
 end subroutine traparams
 

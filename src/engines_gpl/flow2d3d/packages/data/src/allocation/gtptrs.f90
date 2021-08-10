@@ -1,7 +1,7 @@
 subroutine gtptrs(gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine gtptrs(gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: gtptrs.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/allocation/gtptrs.f90 $
+!  $Id: gtptrs.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/allocation/gtptrs.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Gets the pointers of the dynamically allocated arrays.
@@ -192,6 +192,7 @@ subroutine gtptrs(gdp)
     integer(pntrsize), pointer :: precip
     integer(pntrsize), pointer :: procbc
     integer(pntrsize), pointer :: pship
+    integer(pntrsize), pointer :: qsrcrt
     integer(pntrsize), pointer :: qtfrac
     integer(pntrsize), pointer :: qtfrct
     integer(pntrsize), pointer :: qtfrt2
@@ -213,6 +214,7 @@ subroutine gtptrs(gdp)
     integer(pntrsize), pointer :: rhowat
     integer(pntrsize), pointer :: rich
     integer(pntrsize), pointer :: rint
+    integer(pntrsize), pointer :: rintsm
     integer(pntrsize), pointer :: rlabda
     integer(pntrsize), pointer :: rmneg
     integer(pntrsize), pointer :: rnpl
@@ -309,6 +311,7 @@ subroutine gtptrs(gdp)
     integer(pntrsize), pointer :: wenfm
     integer(pntrsize), pointer :: wenl
     integer(pntrsize), pointer :: wenlm
+    integer(pntrsize), pointer :: windcd
     integer(pntrsize), pointer :: windsu
     integer(pntrsize), pointer :: windsv
     integer(pntrsize), pointer :: windu
@@ -378,6 +381,7 @@ subroutine gtptrs(gdp)
     integer(pntrsize), pointer :: zwl
     integer(pntrsize), pointer :: zws
     integer(pntrsize), pointer :: zwndsp
+    integer(pntrsize), pointer :: zwndcd
     integer(pntrsize), pointer :: zwnddr
     integer(pntrsize), pointer :: zairp
     integer(pntrsize), pointer :: drhodx
@@ -665,6 +669,7 @@ subroutine gtptrs(gdp)
     precip     => gdp%gdr_i_ch%precip
     procbc     => gdp%gdr_i_ch%procbc
     pship      => gdp%gdr_i_ch%pship
+    qsrcrt     => gdp%gdr_i_ch%qsrcrt
     qtfrac     => gdp%gdr_i_ch%qtfrac
     qtfrct     => gdp%gdr_i_ch%qtfrct
     qtfrt2     => gdp%gdr_i_ch%qtfrt2
@@ -686,6 +691,7 @@ subroutine gtptrs(gdp)
     rhowat     => gdp%gdr_i_ch%rhowat
     rich       => gdp%gdr_i_ch%rich
     rint       => gdp%gdr_i_ch%rint
+    rintsm     => gdp%gdr_i_ch%rintsm
     rlabda     => gdp%gdr_i_ch%rlabda
     rmneg      => gdp%gdr_i_ch%rmneg
     rnpl       => gdp%gdr_i_ch%rnpl
@@ -784,6 +790,7 @@ subroutine gtptrs(gdp)
     wenlm      => gdp%gdr_i_ch%wenlm
     windsu     => gdp%gdr_i_ch%windsu
     windsv     => gdp%gdr_i_ch%windsv
+    windcd     => gdp%gdr_i_ch%windcd
     windu      => gdp%gdr_i_ch%windu
     windv      => gdp%gdr_i_ch%windv
     wlen       => gdp%gdr_i_ch%wlen
@@ -851,6 +858,7 @@ subroutine gtptrs(gdp)
     zwl        => gdp%gdr_i_ch%zwl
     zws        => gdp%gdr_i_ch%zws
     zwndsp     => gdp%gdr_i_ch%zwndsp
+    zwndcd     => gdp%gdr_i_ch%zwndcd
     zwnddr     => gdp%gdr_i_ch%zwnddr
     zairp      => gdp%gdr_i_ch%zairp
     zprecp     => gdp%gdr_i_ch%zprecp
@@ -1215,6 +1223,7 @@ subroutine gtptrs(gdp)
     precip     = gtrpnt('precip', gdp)
     procbc     = gtrpnt('procbc', gdp)
     pship      = gtrpnt('pship' , gdp)
+    qsrcrt     = gtrpnt('qsrcrt', gdp)
     qtfrac     = gtrpnt('qtfrac', gdp)
     qtfrct     = gtrpnt('qtfrct', gdp)
     qtfrt2     = gtrpnt('qtfrt2', gdp)
@@ -1235,6 +1244,7 @@ subroutine gtptrs(gdp)
     rhowat     = gtrpnt('rhowat', gdp)
     rich       = gtrpnt('rich'  , gdp)
     rint       = gtrpnt('rint'  , gdp)
+    rintsm     = gtrpnt('rintsm', gdp)
     rlabda     = gtrpnt('rlabda', gdp)
     rmneg      = gtrpnt('rmneg' , gdp)
     rob        = gtrpnt('rob'   , gdp)
@@ -1328,6 +1338,7 @@ subroutine gtptrs(gdp)
     wenlm      = gtrpnt('wenlm' , gdp)
     windsu     = gtrpnt('windsu', gdp)
     windsv     = gtrpnt('windsv', gdp)
+    windcd     = gtrpnt('windcd' , gdp)
     windu      = gtrpnt('windu' , gdp)
     windv      = gtrpnt('windv' , gdp)
     wlen       = gtrpnt('wlen'  , gdp)
@@ -1395,6 +1406,7 @@ subroutine gtptrs(gdp)
     zwl        = gtrpnt('zwl'   , gdp)
     zws        = gtrpnt('zws'   , gdp)
     zwndsp     = gtrpnt('zwndsp', gdp)
+    zwndcd     = gtrpnt('zwndcd', gdp)
     zwnddr     = gtrpnt('zwnddr', gdp)
     zairp      = gtrpnt('zairp' , gdp)
     zprecp     = gtrpnt('zprecp', gdp)    

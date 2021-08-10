@@ -16,7 +16,7 @@ function VSout=vs_use(varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -41,8 +41,8 @@ function VSout=vs_use(varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/vs_use.m $
-%   $Id: vs_use.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/vs_use.m $
+%   $Id: vs_use.m 65778 2020-01-14 14:07:42Z mourits $
 
 persistent VSKeep
 if ~isstandalone
@@ -173,6 +173,18 @@ if isempty(data_file) & isempty(def_file)
          case {'.dat','.def'}
             data_file = [filename transfercase(file_ext,'.dat')];
             def_file = [filename transfercase(file_ext,'.def')];
+         case {'.wdi','.wdo'}
+            data_file = [filename file_ext];
+            def_file = [filename transfercase(file_ext,'.wdf')];
+         case {'.wdf'}
+            wdi_file = [filename transfercase(file_ext,'.wdi')];
+            wdo_file = [filename transfercase(file_ext,'.wdo')];
+            if exist(wdi_file,'file') & ~exist(wdo_file,'file')
+               data_file = wdi_file;
+            else
+               data_file = wdo_file;
+            end
+            def_file = [filename transfercase(file_ext,'.wdf')];
          case '' % backward compatibility with *.mat files of *.dat,*.def combinations
             data_file = [filename '.dat'];
             def_file = [filename '.def'];
@@ -847,11 +859,19 @@ try
                   fprintf(vs_debug,'WARNING: Multiple definitions of ELEMENT ''%s''.\n',Name);
                end
                fprintf(1,'WARNING:\nMultiple definitions of ELEMENT ''%s''.\n',Name);
-               j=1;
+               j=j(1);
             end
             VS.CelDef(i).Elm(k)=j;
+            kf = VS.CelDef(i).Elm(1:k-1)==VS.CelDef(i).Elm(k);
+            if any(kf)
+                kf = find(kf);
+                duplicate = sprintf(' WARNING: this element duplicates element %i of this cell.',kf(1));
+                fprintf(1,'WARNING:\nElement ''%s'' duplicated in cell ''%s''.\n',Name,VS.CelDef(i).Name);
+            else
+                duplicate = '';
+            end
             if vs_debug
-               fprintf(vs_debug,'Element %2i: %3i (%s)\n',k,j,Name);
+               fprintf(vs_debug,'Element %2i: %3i (%s)%s\n',k,j,Name,duplicate);
             end
          end
       end

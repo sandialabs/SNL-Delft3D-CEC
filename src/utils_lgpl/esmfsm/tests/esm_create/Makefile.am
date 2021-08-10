@@ -13,7 +13,8 @@ INCLUDES = \
 #Libraries
 
 esm_create_LDADD = \
-	$(top_builddir)/utils_lgpl/esmfsm/packages/esmfsm/src/fsm/libESMFSM.la
+	$(top_builddir)/utils_lgpl/esmfsm/packages/esmfsm/src/fsm/libESMFSM.la \
+	-lpthread
 
 
 #	-ldl \

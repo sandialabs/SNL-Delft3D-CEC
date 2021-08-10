@@ -3,7 +3,7 @@ subroutine trab12(u         ,v         ,hrms      ,h         ,tp        , &
                 & ssusx     ,ssusy     ,ubot      ,vonkar    ,ubot_from_com)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine trab12(u         ,v         ,hrms      ,h         ,tp        , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: trab12.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/trab12.f90 $
+!  $Id: trab12.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/trab12.f90 $
 !!--description-----------------------------------------------------------------
 ! computes sediment transport according to
 ! the bed load transport formula of Soulsby;

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -21,59 +21,62 @@
 !!  of Stichting Deltares remain the property of Stichting Deltares. All
 !!  rights reserved.
 
-module stop_exit_mod
-!
-!  module declarations
-!
-!
-!  data definition module(s)
-!
-use precision_part  ! single and double precision
-!
-implicit none  ! force explicit typing
-!
-contains
+      module exeption_part
+      logical :: useexeption_part = .false.
+      end module exeption_part
+
       subroutine stop_exit( iexit )
-!
-!
-!                   Deltares (former: Deltares)
-!
-!     created            : june  '91  by  jan van beek
-!
-!     modified           : 23 july 1198 by robert vos for cmt/pmt
 !
 !     function           : stops execution if possible with return value
 !
-!     note               : watch //char(0) for c-routine
+!     logical units      : 13 - return file
 !
-!*********************************************************************
-!     system dependent routine
-!     configuration
-!
-!     unix systems
-!*********************************************************************
-!
-!     logical units      : -
-!
-!     parameters    :
+!     parameters         : -
 !
 !     name    kind     length      funct.  description
 !     ---------------------------------------------------------
 !     iexit   integer    1         input   return value
-!     messag  char*40    1         input   message to screen on stop
 !     ---------------------------------------------------------
 !
-      use wait_mod
+      use exeption_part
+
       implicit none
 
       integer           :: iexit
-      character(len=40) :: messag
 !
-!     call wait
-      if (iexit == 1) then
-         write(*,*) 'Simulation stopped because of errors - check the report'
+      if (iexit == 0) then
+         write (*,*) 'Normal end'
+      else
+         write (*,*) 'Simulation stopped because of errors - check the report'
       endif
-      stop
+
+      open  ( 13 , file = 'delpar.rtn' )
+      write ( 13 , * ) iexit
+      close ( 13 )
+
+      if (useexeption_part) call throwexception()
+
+      select case ( iexit )
+         case ( :0 )
+            stop 0
+         case (  1 )
+            stop 1
+         case (  2 )
+            stop 2
+         case (  3 )
+            stop 3
+         case (  4 )
+            stop 4
+         case (  5 )
+            stop 5
+         case (  6 )
+            stop 6
+         case (  7 )
+            stop 7
+         case (  8 )
+            stop 8
+         case default
+            stop 255
+      end select
 !
       end subroutine
-end module

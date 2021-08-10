@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dio-plt-rw.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-plt-rw.F90 $
+!  $Id: dio-plt-rw.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-plt-rw.F90 $
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!
 !!! Dio-DS-PLT-RW: Param./Loc./Time datasets
@@ -2687,7 +2687,7 @@ subroutine DioPltRewind(plt)
 #else
             ! Unix keeps original content, so remove file and reopen
             close (plt % ds % outStream % lun, status='delete')
-            open (plt % ds % outStream % lun, form = plt % ds % outStream % form, &
+            open (newunit=plt % ds % outStream % lun, form = plt % ds % outStream % form, &
                      file = plt % ds % outStream % name, action='write')
             ! write(*,*) 'Deleted/Opened ', plt % ds % outStream % name
 #endif

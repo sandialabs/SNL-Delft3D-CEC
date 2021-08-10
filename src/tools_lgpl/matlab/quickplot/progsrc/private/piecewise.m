@@ -18,7 +18,7 @@ function [mn0,mn]=piecewise(mn,mnmax)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,8 +43,8 @@ function [mn0,mn]=piecewise(mn,mnmax)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/piecewise.m $
-%   $Id: piecewise.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/piecewise.m $
+%   $Id: piecewise.m 65778 2020-01-14 14:07:42Z mourits $
 
 if isempty(mn)
     mn0 = mn;
@@ -88,12 +88,12 @@ end
 if nargin>1
     mn0(:,1) = max(1,min(mn0(:,1),mnmax(1)));
     mn0(:,2) = max(1,min(mn0(:,2),mnmax(2)));
-    mndiff = diff(mn0);
+    mndiff = diff(mn0,1,1);
     mn0(all(mndiff==0,2),:)=[];
 end
 if nargout>1
-    mndiff = diff(mn0);
-    mn = mn0([1;find(any(diff(mndiff),2))+1;size(mn0,1)],:);
+    mndiff = diff(mn0,1,1);
+    mn = mn0([1;find(any(diff(mndiff,1,1),2))+1;size(mn0,1)],:);
     if size(mn,1)==2 && isequal(mn(1,:),mn(end,:))
         mn = mn(1,:);
     end

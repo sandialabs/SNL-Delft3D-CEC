@@ -22,7 +22,7 @@ VPATH = @srcdir@
 #	test -z $(PROGRAMS) || echo "trying to strip $(PROGRAMS)"
 #	test -z $(PROGRAMS) || $(top_srcdir)/scripts/wlstrip $(PROGRAMS)
 
-ACLOCAL_AMFLAGS = -I$(top_builddir)/m4
+ACLOCAL_AMFLAGS = -I$(top_builddir)/../../m4
 
 strip: all
 	$(top_srcdir)/scripts/stripper

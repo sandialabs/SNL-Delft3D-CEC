@@ -11,7 +11,7 @@ function [Out1,Out2]=jspost(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -36,8 +36,8 @@ function [Out1,Out2]=jspost(cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/jspost.m $
-%   $Id: jspost.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/jspost.m $
+%   $Id: jspost.m 65778 2020-01-14 14:07:42Z mourits $
 
 switch lower(cmd)
     case 'open'
@@ -110,7 +110,7 @@ if ~ischar(TimeUnit)
     fclose(fpst);
     error('Error reading STU header.')
 end
-TimeUnit=deblank2(TimeUnit);
+TimeUnit=strtrim(TimeUnit);
 
 Str=S.Header{2}(41:end);
 [S.T0,S.TStep] = delwaqt0(Str);
@@ -132,7 +132,7 @@ for i=1:NPar
         fclose(fpst);
         error('Error reading name of parameter %i.',i)
     end
-    S.SubsName{i}=deblank2(Line);
+    S.SubsName{i}=strtrim(Line);
 end
 
 for i=1:NSeg
@@ -142,7 +142,7 @@ for i=1:NSeg
         fclose(fpst);
         error('Error reading name of segment %i.',i)
     end
-    S.SegmentName{i}=deblank2(Line);
+    S.SegmentName{i}=strtrim(Line);
 end
 
 if ~isempty(fscanf(fstu,' %c')) | ~feof(fstu)

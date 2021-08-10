@@ -3,14 +3,14 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
                 & icx       ,icy       ,kfsmin    ,kfsmx0    , &
                 & disint    ,dismmt    ,itdis     ,kcu       ,kcv       , &
                 & kfs       ,iwrk      ,mnksrc    ,alfas     ,xcor      , &
-                & ycor      ,dp        ,disch     , &
+                & ycor      ,dp        ,disch     ,voldis    , &
                 & disch0    ,disch1    ,rint      ,rint0     ,rint1     , &
                 & umdis     ,umdis0    ,umdis1    ,vmdis     ,vmdis0    , &
                 & vmdis1    ,bubble    ,r0        ,thick     ,relthk    , &
-                & dzs0      ,dps       ,s0        ,gdp       )
+                & dzs0      ,dps       ,s0        ,qsrcrt    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -34,8 +34,8 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: incdis.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/timedep/incdis.f90 $
+!  $Id: incdis.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/timedep/incdis.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Determine increments and updates the current time
@@ -62,6 +62,7 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
     integer               , pointer :: ltem
     integer               , pointer :: nxbub
     real(fp)              , pointer :: tstop
+    real(fp)              , pointer :: hdt
     real(fp)              , pointer :: dt
     real(fp)              , pointer :: cp
     real(fp)              , pointer :: rhow
@@ -69,6 +70,7 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
     real(fp), dimension(:), pointer :: capacity
     real(fp)              , pointer :: eps
     real(fp)              , pointer :: scalef
+    integer               , pointer :: rtcmod
     logical               , pointer :: zmodel
     logical , dimension(:), pointer :: flbub
 !
@@ -113,12 +115,14 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
     real(fp)    , dimension(nsrcd)                                            :: disch  !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(nsrcd)                                            :: disch0 !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(nsrcd)                                            :: disch1 !  Description and declaration in esm_alloc_real.f90
+    real(fp)    , dimension(2,nsrcd)                                          :: qsrcrt !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(nsrcd)                                            :: umdis  !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(nsrcd)                                            :: umdis0 !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(nsrcd)                                            :: umdis1 !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(nsrcd)                                            :: vmdis  !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(nsrcd)                                            :: vmdis0 !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(nsrcd)                                            :: vmdis1 !  Description and declaration in esm_alloc_real.f90
+    real(fp)    , dimension(nsrcd)                                            :: voldis !  Description and declaration in esm_alloc_real.f90   
     real(fp)    , dimension(kmax)                               , intent(in)  :: thick  !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(kmax)                                             :: relthk
     real(fp)    , dimension(gdp%d%nmlb:gdp%d%nmub, kmax)        , intent(in)  :: dzs0   !  Description and declaration in esm_alloc_real.f90
@@ -151,6 +155,7 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
 !! executable statements -------------------------------------------------------
 !
     tstop      => gdp%gdexttim%tstop
+    hdt        => gdp%gdnumeco%hdt
     dt         => gdp%gdexttim%dt
     itfinish   => gdp%gdinttim%itfinish
     lundis     => gdp%gdluntmp%lundis
@@ -164,6 +169,7 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
     scalef     => gdp%gdupddis%scalef
     zmodel     => gdp%gdprocs%zmodel
     flbub      => gdp%gdbubble%flbub
+    rtcmod     => gdp%gdrtc%rtcmod
     !
     timscl    = 1.0
     ddb       = gdp%d%ddbound
@@ -279,6 +285,13 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
                 rint(l, isrc) = (1.0_fp-alpha)*rint0(l, isrc) + alpha*rint1(l, isrc)
             enddo
        endif
+       !
+       ! Overrule discharge if it has been set by RTC
+       !
+       if (btest(rtcmod,dataFromRTCToFLOW) .and. qsrcrt(1,isrc)>0) then
+           disch(isrc) = qsrcrt(2,isrc)
+       endif
+       !
        if (mnksrc(7,isrc) == 6) then
           !
           ! Q-type power station:
@@ -337,5 +350,6 @@ subroutine incdis(lundia    ,sferic    ,grdang    ,timnow    ,nsrcd     , &
     !
     do isrc = 1, nst_nobub
        if (mnksrc(6, isrc) == -1 ) disch(isrc) = 0.0_fp
+       voldis(isrc) = voldis(isrc) + disch(isrc)*hdt
     enddo
 end subroutine incdis

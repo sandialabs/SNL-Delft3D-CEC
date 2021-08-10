@@ -21,8 +21,8 @@ subroutine z_adi(stage     ,j         ,nmmaxj    ,nmmax     ,kmax      , &
                & guu       ,guv       ,gvv       ,gvu       ,guz       , &
                & gvz       ,gsqs      ,gsqiu     ,gsqiv     ,taubpu    , &
                & taubpv    ,taubsu    ,taubsv    ,vicuv     ,vnu2d     , &
-               & vicww     ,rxx       ,rxy       ,ryy       ,windu     , &
-               & windv     ,patm      ,fcorio    ,tgfsep    ,wrka1     , &
+               & vicww     ,rxx       ,rxy       ,ryy       ,windsu    , &
+               & windsv    ,patm      ,fcorio    ,tgfsep    ,wrka1     , &
                & wrka2     ,wrka3     ,wrka4     ,wrka5     ,wrka6     , &
                & wrka7     ,wrka8     ,wrka15    ,wrka16    ,wrkb1     , &
                & wrkb2     ,wrkb3     ,wrkb4     ,wrkb5     ,wrkb6     , &
@@ -33,7 +33,7 @@ subroutine z_adi(stage     ,j         ,nmmaxj    ,nmmax     ,kmax      , &
                & lstsci    ,precip    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -57,8 +57,8 @@ subroutine z_adi(stage     ,j         ,nmmaxj    ,nmmax     ,kmax      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: z_adi.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_adi.f90 $
+!  $Id: z_adi.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_adi.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: ADI performs one time step of the Alternating
@@ -187,8 +187,8 @@ subroutine z_adi(stage     ,j         ,nmmaxj    ,nmmax     ,kmax      , &
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: umean   !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: vmean   !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: vnu2d   !  Description and declaration in esm_alloc_real.f90
-    real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: windu   !  Description and declaration in esm_alloc_real.f90
-    real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: windv   !  Description and declaration in esm_alloc_real.f90
+    real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: windsu  !  Description and declaration in esm_alloc_real.f90
+    real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: windsv  !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: wrka1   !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: wrka15  !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)            :: wrka16  !  Description and declaration in esm_alloc_real.f90
@@ -307,14 +307,14 @@ subroutine z_adi(stage     ,j         ,nmmaxj    ,nmmax     ,kmax      , &
                 & v0        ,u0        ,w1        ,hv        ,hu          ,dzv0        ,dzs0      , &
                 & gvv       ,guu       ,guv       ,gvu       ,gsqs        , &
                 & gvd       ,gud       ,gvz       ,guz       ,gsqiv       , &
-                & disch     ,umdis     ,kspv      ,mnksrc    ,dismmt      , &
+                & disch     ,vmdis     ,kspv      ,mnksrc    ,dismmt      , &
                 & wrkb1     ,wrkb2     ,wrkb3     ,wrkb4     ,wrkb5       , &
                 & wrkb6     ,wrkb7     ,wrkb8     ,wrkb9     ,wrkb10      , &
                 & wrkb11    ,wrkb12    ,wrkb13    ,wrkb14    ,circ2d(1,norow + 1) ,circ3d(1,1,norow + 1) , &
                 & vicuv     ,vnu2d     ,vicww     ,tgfsep    ,dps         , &
                 & dfv       ,deltav    ,tp        ,rlabda    ,fyw         ,wsbodyv   , &
                 & drhody    ,wsv       ,taubpv    ,taubsv    ,ryy         , &
-                & rxy       ,windv     ,patm      ,fcorio    ,p0          , &
+                & rxy       ,windsv    ,patm      ,fcorio    ,p0          , &
                 & ubrlsv    ,pship     ,diapl     ,rnpl      ,cfvrou      , &
                 & v1        ,s0        ,dpv       ,qyk       ,qxk         , &
                 & nocol     ,norow     ,irocol(1, norow + 1) ,nst         ,vmean       , &
@@ -370,7 +370,7 @@ subroutine z_adi(stage     ,j         ,nmmaxj    ,nmmax     ,kmax      , &
                 & wrka7     ,wrka8     ,wrka15    ,wrkb1     ,wrkb2     , &
                 & wrkb3     ,wrkb4     ,wrkb5     ,wrkb6     ,wrkb7     , &
                 & wrkb8     ,wsu       ,taubpu    ,taubsu    ,vicuv     , &
-                & vnu2d     ,vicww     ,rxx       ,rxy       ,windu     , &
+                & vnu2d     ,vicww     ,rxx       ,rxy       ,windsu    , &
                 & tp        ,rlabda    ,dfu       ,deltau    ,fxw       ,wsbodyu   , &
                 & patm      ,fcorio    ,tgfsep    ,drhodx    ,zk        , &
                 & p0        ,crbc(1, 1),idry      ,porosu    ,ubrlsu    , &
@@ -507,7 +507,7 @@ subroutine z_adi(stage     ,j         ,nmmaxj    ,nmmax     ,kmax      , &
                 & vicuv     ,vnu2d     ,vicww     ,tgfsep    ,dps         , &
                 & dfu       ,deltau    ,tp        ,rlabda    ,fxw         ,wsbodyu       , &
                 & drhodx    ,wsu       ,taubpu    ,taubsu    ,rxx         , &
-                & rxy       ,windu     ,patm      ,fcorio    ,p0          , &
+                & rxy       ,windsu    ,patm      ,fcorio    ,p0          , &
                 & ubrlsu    ,pship     ,diapl     ,rnpl      ,cfurou      , &
                 & u1        ,s0        ,dpu       ,qxk       ,qyk         , &
                 & norow     ,nocol     ,irocol(1, 1)         ,nst         ,umean       , &
@@ -556,7 +556,7 @@ subroutine z_adi(stage     ,j         ,nmmaxj    ,nmmax     ,kmax      , &
                 & wrka7     ,wrka8     ,wrka16    ,wrkb1     ,wrkb2     , &
                 & wrkb3     ,wrkb4     ,wrkb5     ,wrkb6     ,wrkb7     , &
                 & wrkb8     ,wsv       ,taubpv    ,taubsv    ,vicuv     , &
-                & vnu2d     ,vicww     ,ryy       ,rxy       ,windv     , &
+                & vnu2d     ,vicww     ,ryy       ,rxy       ,windsv    , &
                 & tp        ,rlabda    ,dfv       ,deltav    ,fyw       ,wsbodyv      , &
                 & patm      ,fcorio    ,tgfsep    ,drhody    ,zk        , &
                 & p0        ,crbc(1, norow + 1)   ,idry      ,porosv    ,ubrlsv       , &

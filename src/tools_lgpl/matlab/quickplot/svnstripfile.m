@@ -12,7 +12,7 @@ function svnstripfile(basedir)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -37,8 +37,8 @@ function svnstripfile(basedir)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/svnstripfile.m $
-%   $Id: svnstripfile.m 5635 2015-12-09 13:38:30Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/svnstripfile.m $
+%   $Id: svnstripfile.m 65778 2020-01-14 14:07:42Z mourits $
 
 d = dir(basedir);
 for i = 1:length(d)

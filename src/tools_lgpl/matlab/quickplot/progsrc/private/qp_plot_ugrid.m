@@ -3,7 +3,7 @@ function [hNew,Thresholds,Param,Parent]=qp_plot_ugrid(hNew,Parent,Param,data,Ops
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -28,8 +28,8 @@ function [hNew,Thresholds,Param,Parent]=qp_plot_ugrid(hNew,Parent,Param,data,Ops
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_plot_ugrid.m $
-%   $Id: qp_plot_ugrid.m 5564 2015-11-04 19:37:12Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_plot_ugrid.m $
+%   $Id: qp_plot_ugrid.m 65866 2020-01-26 20:25:09Z jagers $
 
 T_=1; ST_=2; M_=3; N_=4; K_=5;
 
@@ -70,7 +70,6 @@ if isfield(data,'XYZ')
     data.Y = data.XYZ(:,:,:,2);
 end
 
-%data = qp_dimsqueeze(data,Ops.axestype,multiple,DimFlag,Props);
 switch NVal
     
     case {0,0.5}
@@ -79,29 +78,45 @@ switch NVal
                 %
                 % edges
                 %
-                if isfield(data,'EdgeNodeConnect')
-                    EdgeNodeConnect = data.EdgeNodeConnect;
+                if isfield(data,'EdgeGeometry') && ~isempty(data.EdgeGeometry)
+                    NP = cellfun(@numel,data.EdgeGeometry.X);
+                    TNP = sum(NP+1)-1;
+                    X = NaN(TNP,1);
+                    Y = X;
+                    offset = 0;
+                    for i = 1:length(data.EdgeGeometry.X)
+                        X(offset+(1:NP(i))) = data.EdgeGeometry.X{i};
+                        Y(offset+(1:NP(i))) = data.EdgeGeometry.Y{i};
+                        offset = offset+NP(i)+1;
+                    end
+                    %
+                    Xp = [];
+                    Yp = [];
                 else
-                    iConnect = ceil(([0 0:2*nc-2])/2+0.1);
-                    EdgeNodeConnect = FaceNodeConnect(:,iConnect);
-                    ncP = sum(~isnan(FaceNodeConnect),2);
-                    EdgeNodeConnect(:,1) = FaceNodeConnect(sub2ind(size(FaceNodeConnect),(1:size(FaceNodeConnect,1))',ncP));
-                    EdgeNodeConnect = unique(sort(reshape(EdgeNodeConnect',[2 numel(FaceNodeConnect)]),1)','rows');
-                    EdgeNodeConnect(any(isnan(EdgeNodeConnect),2),:) = [];
+                    if isfield(data,'EdgeNodeConnect')
+                        EdgeNodeConnect = data.EdgeNodeConnect;
+                    else
+                        iConnect = ceil(([0 0:2*nc-2])/2+0.1);
+                        EdgeNodeConnect = FaceNodeConnect(:,iConnect);
+                        ncP = sum(~isnan(FaceNodeConnect),2);
+                        EdgeNodeConnect(:,1) = FaceNodeConnect(sub2ind(size(FaceNodeConnect),(1:size(FaceNodeConnect,1))',ncP));
+                        EdgeNodeConnect = unique(sort(reshape(EdgeNodeConnect',[2 numel(FaceNodeConnect)]),1)','rows');
+                        EdgeNodeConnect(any(isnan(EdgeNodeConnect),2),:) = [];
+                    end
+                    %
+                    xy = EdgeNodeConnect(:,[1 2 2])';
+                    xy = xy(:);
+                    X = data.X(xy);
+                    Y = data.Y(xy);
+                    X(3:3:end) = NaN;
+                    Y(3:3:end) = NaN;
+                    %
+                    % points without edge
+                    %
+                    ip = find(~ismember(1:length(data.X),xy));
+                    Xp = data.X(ip);
+                    Yp = data.Y(ip);
                 end
-                %
-                xy = EdgeNodeConnect(:,[1 2 2])';
-                xy = xy(:);
-                X = data.X(xy);
-                Y = data.Y(xy);
-                X(3:3:end) = NaN;
-                Y(3:3:end) = NaN;
-                %
-                % points without edge
-                %
-                ip = find(~ismember(1:length(data.X),xy));
-                Xp = data.X(ip);
-                Yp = data.Y(ip);
                 if FirstFrame
                     hNew=line(1,1, ...
                         'color',Ops.colour, ...
@@ -237,15 +252,67 @@ switch NVal
                 hNew=gentext(hNew,Ops,Parent,'Plot not defined');
         end
         
-    case {1,5}
+    case {1,5,6}
         switch axestype
             case {'X-Y','Lon-Lat'}
-                hNew = qp_scalarfield(Parent,hNew,Ops.presentationtype,'UGRID',data,Ops);
-                if strcmp(Ops.colourbar,'none')
-                    qp_title(Parent,{PName,TStr},'quantity',Quant,'unit',Units,'time',TStr)
+                if isfield(data,'EdgeGeometry') && ~isempty(data.EdgeGeometry)
+                    NP = cellfun(@numel,data.EdgeGeometry.X);
+                    uNP = unique(NP);
+                    for i = length(uNP):-1:1
+                        if uNP(i)==1
+                            continue
+                        end
+                        j = NP==uNP(i);
+                        x = cat(2,data.EdgeGeometry.X{j});
+                        y = cat(2,data.EdgeGeometry.Y{j});
+                        switch data.ValLocation
+                            case 'EDGE'
+                                v = data.Val(j);
+                                v = repmat(v',uNP(i),1);
+                                edgecolor = 'flat';
+                            case 'NODE'
+                                j0 = find(j);
+                                v = zeros(size(x));
+                                for ij = length(j0):-1:1
+                                    d = pathdistance(x(:,ij),y(:,ij));
+                                    dataNodes = data.Val(data.EdgeNodeConnect(j0(ij),:));
+                                    v(:,ij) = interp1([0;d(end)],dataNodes,d);
+                                end
+                                edgecolor = 'interp';
+                        end
+                        faces = repmat(numel(x)+1,fliplr(size(x))+[0 1]);
+                        faces(:,1:end-1) = reshape(1:numel(x),size(x))';
+                        v = reshape(v,[numel(x) 1]);
+                        hNew(i) = patch('parent',Parent,'vertices',[x(:) y(:);NaN NaN],'faces',faces,'facevertexcdata',[v;NaN],'edgecolor',edgecolor,'facecolor','none','linewidth',Ops.linewidth,'linestyle',Ops.linestyle,'marker',Ops.marker,'markersize',Ops.markersize,'markeredgecolor',Ops.markercolour,'markerfacecolor',Ops.markerfillcolour);
+                    end
                 else
-                    qp_title(Parent,{TStr},'quantity',Quant,'unit',Units,'time',TStr)
+                    hNew = qp_scalarfield(Parent,hNew,Ops.presentationtype,'UGRID',data,Ops);
                 end
+                if isempty(Selected{K_})
+                    str=PName;
+                    lyr={};
+                else
+                    lyr = qp_layer(Selected{K_});
+                    str = sprintf('%s in %s',PName,lyr);
+                    lyr = {lyr};
+                end
+                %
+                if strcmp(Ops.colourbar,'none')
+                    tit = {str};
+                else
+                    tit = lyr;
+                end
+                if ~isempty(stn)
+                    tit{end+1}=stn;
+                end
+                if ~isempty(TStr)
+                    tit{end+1}=TStr;
+                end
+                if length(tit)>2
+                    tit{1}=[tit{1} ' at ' tit{2}];
+                    tit(2)=[];
+                end
+                qp_title(Parent,tit,'quantity',Quant,'unit',Units,'time',TStr)
                 
             case {'Distance-Val','X-Val','X-Z','X-Time','Time-X'}
                 if multiple(K_)
@@ -335,54 +402,79 @@ switch NVal
                         qp_title(Parent,{TStr},'quantity',Quant,'unit',Units,'time',TStr)
                     end
                 else
-                    %Ops.plotcoordinate='(x,y)';
+                    switch data.ValLocation
+                        case 'FACE'
+                            Skip = isnan(data.FaceNodeConnect);
+                            nNd = sum(~Skip,2);
+                            FNC = data.FaceNodeConnect;
+                            FNC(Skip) = 1;
+                            x = data.X(FNC);
+                            x(Skip) = 0;
+                            x = sum(x,2)./nNd;
+                            y = data.Y(FNC);
+                            y(Skip) = 0;
+                            y = sum(y,2)./nNd;
+                            val = data.Val;
+                        case 'EDGE'
+                            inode = zeros(length(data.EdgeNodeConnect)+1,1);
+                            if ismember(data.EdgeNodeConnect(1,1),data.EdgeNodeConnect(2,:)) && ~ismember(data.EdgeNodeConnect(1,2),data.EdgeNodeConnect(2,:))
+                                inode(1) = data.EdgeNodeConnect(1,2);
+                                inode(2:end) = data.EdgeNodeConnect(:,1);
+                            elseif ~ismember(data.EdgeNodeConnect(1,1),data.EdgeNodeConnect(2,:)) && ismember(data.EdgeNodeConnect(1,2),data.EdgeNodeConnect(2,:))
+                                inode(1) = data.EdgeNodeConnect(1,1);
+                                inode(2:end) = data.EdgeNodeConnect(:,2);
+                            end
+                            x = data.X(inode);
+                            if isfield(data,'Y')
+                                y = data.Y(inode);
+                            else
+                                y = [];
+                            end
+                            val = data.Val;
+                        case 'NODE'
+                            x = data.X;
+                            if isfield(data,'Y')
+                                y = data.Y;
+                            else
+                                y = [];
+                            end
+                            val = data.Val;
+                    end
+                    z = [];
                     switch Ops.plotcoordinate
                         case 'x coordinate'
-                            data.X(isnan(data.Val))=NaN;
-                            x=data.X;
-                            y=data.Val;
-                            z=zeros(size(x));
+                            if numel(val)==numel(x)
+                                x(isnan(val)) = NaN;
+                            end
+                            y = val;
                         case 'y coordinate'
-                            data.Y(isnan(data.Val))=NaN;
-                            x=data.Y;
-                            y=data.Val;
-                            z=zeros(size(x));
+                            if numel(val)==numel(y)
+                                y(isnan(val)) = NaN;
+                            end
+                            x = y;
+                            y = val;
                         case '(x,y)'
-                            data.X(isnan(data.Val))=NaN;
-                            data.Y(isnan(data.Val))=NaN;
-                            x=data.X;
-                            y=data.Y;
-                            z=data.Val;
+                            if numel(val)==numel(x)
+                                x(isnan(val)) = NaN;
+                                y(isnan(val)) = NaN;
+                            end
+                            z = val;
                         otherwise %case {'path distance','reverse path distance'}
-                            %data.X(isnan(data.Val))=NaN;
-                            xx=data.X;
-                            if isfield(data,'Y')
-                                %data.Y(isnan(data.Val))=NaN;
-                                yy=data.Y;
-                            else
-                                yy=0*xx;
+                            if strcmp(Ops.plotcoordinate,'reverse path distance')
+                                x = rot90(x,2);
+                                y = rot90(y,2);
                             end
-                            if isfield(data,'Z')
-                                %data.Z(isnan(data.Val))=NaN;
-                                zz=data.Z;
+                            if isfield(data,'XUnits') && strcmp(data.XUnits,'deg') % always x and y
+                                x = pathdistance(x,y,'geographic');
+                            elseif ~isempty(y)
+                                x = pathdistance(x,y);
                             else
-                                zz=0*xx;
+                                x = pathdistance(x);
                             end
                             if strcmp(Ops.plotcoordinate,'reverse path distance')
-                                xx=flipud(fliplr(xx));
-                                yy=flipud(fliplr(yy));
-                                zz=flipud(fliplr(zz));
+                                x = rot90(x,2);
                             end
-                            if isfield(data,'XUnits') && strcmp(data.XUnits,'deg')
-                                x=pathdistance(xx,yy,'geographic');
-                            else
-                                x=pathdistance(xx,yy);
-                            end
-                            if strcmp(Ops.plotcoordinate,'reverse path distance')
-                                x=flipud(fliplr(x));
-                            end
-                            y=data.Val;
-                            z=zeros(size(x));
+                            y = val;
                     end
                     if length(data.Time)>1
                         nx = numel(x);
@@ -430,6 +522,27 @@ switch NVal
                         end
                     else
                         if strcmp(Ops.facecolour,'none')
+                            if length(y)==length(x)-1
+                                x = [x(1:end-1)'
+                                    x(2:end)'];
+                                x = x(:);
+                                y = [y(:)'
+                                    y(:)'];
+                                y = y(:);
+                            elseif length(z)==length(x)-1
+                                x = [x(1:end-1)'
+                                    x(2:end)'];
+                                x = x(:);
+                                y = [y(1:end-1)'
+                                    y(2:end)'];
+                                y = y(:);
+                                z = [z(:)'
+                                    z(:)'];
+                                z = z(:);
+                            end
+                            if isempty(z)
+                                z = zeros(size(x));
+                            end
                             if FirstFrame
                                 hNew=line(x,y,z, ...
                                     'parent',Parent, ...
@@ -876,9 +989,9 @@ switch NVal
                     str=PName;
                     lyr={};
                 else
-                    lyr=sprintf('layer %i',Selected{K_});
-                    str=sprintf('%s in %s',PName,lyr);
-                    lyr={lyr};
+                    lyr = qp_layer(Selected{K_});
+                    str = sprintf('%s in %s',PName,lyr);
+                    lyr = {lyr};
                 end
                 if strcmp(Ops.colourbar,'none')
                     qp_title(Parent,{str,TStr},'quantity',Quant,'unit',Units,'time',TStr)

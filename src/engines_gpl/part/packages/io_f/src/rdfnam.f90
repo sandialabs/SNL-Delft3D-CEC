@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -98,7 +98,7 @@
 !       input file doesn't exist
 
         write(*, 99002) ifnam
-        call srstop(1)
+        call stop_exit(1)
       endif
 
 !       note:
@@ -202,7 +202,7 @@
       return
 
  1000 write ( *, *) ' Error : reading the input file: ', fnam(1)
-      call srstop(1)
+      call stop_exit(1)
       return
 !
 !     formats

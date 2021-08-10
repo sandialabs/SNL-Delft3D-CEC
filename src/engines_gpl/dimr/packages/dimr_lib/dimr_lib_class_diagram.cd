@@ -1,0 +1,322 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Dimr">
+    <Position X="6" Y="2" Width="3.25" />
+    <NestedTypes>
+      <Enum Name="Dimr::__unnamed_enum_01a8_5" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>include\dimr.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>EAACACIQRQABTABGAAAADECCEgCIAAYAEIoWEwDEaJA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="clock" />
+      <Field Name="log" />
+      <Field Name="config" />
+      <Field Name="control" />
+      <Field Name="componentsList" />
+      <Field Name="couplersList" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Clock" Collapsed="true">
+    <Position X="10.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAACAABAAAAAAgAAAAACAAAAAAAAAAAAAACgA=</HashCode>
+      <FileName>include\clock.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="XmlTree" Collapsed="true">
+    <Position X="10.5" Y="10.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAQAAEAABAEAkAZAJAQAIEFAAAAEAAIIghAAAABMACE=</HashCode>
+      <FileName>include\xmltree.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Log" Collapsed="true">
+    <Position X="10.5" Y="6.25" Width="1.5" />
+    <AssociationLine Name="clock" Type="Clock" FixedFromPoint="true">
+      <Path>
+        <Point X="11.25" Y="6.25" />
+        <Point X="11.25" Y="5.562" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.11" Y="0.24" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAgQFgAAQAwAC4CCgAABCUYACQgIgLMIAAIiAFkkgAg=</HashCode>
+      <FileName>include\log.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="clock" />
+    </ShowAsAssociation>
+  </Class>
+  <Struct Name="dimr_component">
+    <Position X="18.5" Y="5.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AICCAAAEQQEIAAAYhQAAAACAoAGFAAgAAIBAAACAAQA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="DIMR_COMPONENTS">
+    <Position X="14.5" Y="7.25" Width="1.5" />
+    <AssociationLine Name="components" Type="dimr_component">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.206" Y="0.115" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="components" />
+    </ShowAsAssociation>
+  </Struct>
+  <Struct Name="dimr_couple_item">
+    <Position X="18.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAIQAAAAAAAAQAAQQAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="dimr_coupler">
+    <Position X="16" Y="2" Width="1.5" />
+    <AssociationLine Name="sourceComponent" Type="dimr_component">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.121" Y="0.081" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="targetComponent" Type="dimr_component">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.163" Y="0.103" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAAAAAAgAAAAIAAAECAIAAAIAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="sourceComponent" />
+      <Field Name="targetComponent" />
+      <Field Name="items" />
+    </ShowAsAssociation>
+  </Struct>
+  <Struct Name="DIMR_COUPLERS" Collapsed="true">
+    <Position X="13.25" Y="9" Width="1.5" />
+    <AssociationLine Name="couplers" Type="dimr_coupler" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="14.062" Y="9" />
+        <Point X="14.062" Y="3.305" />
+        <Point X="14.479" Y="3.305" Type="JumpStart" />
+        <Point X="14.646" Y="3.305" Type="JumpEnd" />
+        <Point X="16" Y="3.305" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAQAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="couplers" />
+    </ShowAsAssociation>
+  </Struct>
+  <Struct Name="dimr_unit">
+    <Position X="13.25" Y="2" Width="1.5" />
+    <AssociationLine Name="component" Type="dimr_component" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="14.562" Y="2.868" />
+        <Point X="14.562" Y="3.53" />
+        <Point X="14.573" Y="3.53" />
+        <Point X="14.573" Y="4.875" />
+        <Point X="16.334" Y="4.875" Type="JumpStart" />
+        <Point X="16.5" Y="4.875" Type="JumpEnd" />
+        <Point X="16.751" Y="4.875" Type="JumpStart" />
+        <Point X="16.917" Y="4.875" Type="JumpEnd" />
+        <Point X="19.5" Y="4.875" />
+        <Point X="19.5" Y="5.25" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.074" Y="0.441" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="component" />
+      <Field Name="coupler" />
+    </ShowAsAssociation>
+  </Struct>
+  <Struct Name="dimr_control_block">
+    <Position X="10.5" Y="2" Width="2" />
+    <AssociationLine Name="unit" Type="dimr_unit">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.142" Y="0.086" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgQAAAEACAAAgEAAABAACAAAAAABAAIAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="unit" />
+      <Field Name="subBlocks" />
+    </ShowAsAssociation>
+  </Struct>
+  <Struct Name="keyValueLL" Collapsed="true">
+    <Position X="25.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAEAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\xmltree.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="BMI_DIMR_SET_LOGGER" Collapsed="true">
+    <Position X="26" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_INITIALIZE" Collapsed="true">
+    <Position X="23" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_UPDATE" Collapsed="true">
+    <Position X="28" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_FINALIZE" Collapsed="true">
+    <Position X="22.5" Y="6.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_GETSTARTTIME" Collapsed="true">
+    <Position X="22" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_GETENDTIME" Collapsed="true">
+    <Position X="24.5" Y="10.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_GETTIMESTEP" Collapsed="true">
+    <Position X="22.25" Y="10.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_GETCURRENTTIME" Collapsed="true">
+    <Position X="22" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_GETATTRIBUTE" Collapsed="true">
+    <Position X="22" Y="9.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_GETVAR" Collapsed="true">
+    <Position X="26.5" Y="10.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="BMI_SETVAR" Collapsed="true">
+    <Position X="24" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="dimr_components" Collapsed="true">
+    <Position X="10.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+    <AliasOfLine Type="DIMR_COMPONENTS" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="14.5" Y="7.863" />
+        <Point X="14.145" Y="7.863" Type="JumpStart" />
+        <Point X="13.979" Y="7.863" Type="JumpEnd" />
+        <Point X="12" Y="7.863" />
+        <Point X="12" Y="7.75" />
+      </Path>
+    </AliasOfLine>
+  </Typedef>
+  <Typedef Name="dimr_couplers" Collapsed="true">
+    <Position X="10.5" Y="9" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="HINSTANCE" Collapsed="true">
+    <Position X="23.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>c:\Program Files (x86)\Windows Kits\8.1\Include\shared\wtypes.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="MPI_Comm" Collapsed="true">
+    <Position X="26" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\carniato\LUCA\ENGINES\delft3d\delft3d\src\third_party_open\mpich2\include\mpi.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Enum Name="__unnamed_enum_01a8_1" Collapsed="true">
+    <Position X="26.75" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABAEAAAgAAAAAAAAAAAAAABACAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="__unnamed_enum_01a8_2" Collapsed="true">
+    <Position X="27.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAgAAAACCAABAAAAAAAAAAAAAAAAAAMAAAgAQAAAI=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="__unnamed_enum_01a8_3" Collapsed="true">
+    <Position X="28.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAgAAEAAAAAAACAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="__unnamed_enum_01a8_4" Collapsed="true">
+    <Position X="27.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>include\dimr.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

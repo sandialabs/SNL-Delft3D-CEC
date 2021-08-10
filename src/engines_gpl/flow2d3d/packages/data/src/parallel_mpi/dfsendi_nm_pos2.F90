@@ -4,7 +4,7 @@
 subroutine dfsendi_nm_pos2 ( field, work, worksize, ks, ke, request, tag, gdp )
 !----- GPL ---------------------------------------------------------------------
 !
-!  Copyright (C)  Stichting Deltares, 2011-2015.
+!  Copyright (C)  Stichting Deltares, 2011-2020.
 !
 !  This program is free software: you can redistribute it and/or modify
 !  it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ subroutine dfsendi_nm_pos2 ( field, work, worksize, ks, ke, request, tag, gdp )
 !  Stichting Deltares. All rights reserved.
 !
 !-------------------------------------------------------------------------------
-!  $Id: dfsendi_nm_pos2.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/parallel_mpi/dfsendi_nm_pos2.F90 $
+!  $Id: dfsendi_nm_pos2.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/parallel_mpi/dfsendi_nm_pos2.F90 $
 !!--description-----------------------------------------------------------------
 !
 !   Updates field array of type single precision through exchanging halo values
@@ -136,14 +136,14 @@ subroutine dfsendi_nm_pos2 ( field, work, worksize, ks, ke, request, tag, gdp )
        itag = tag
        !
 #ifdef HAVE_MPI
-       call mpi_isend ( work(1,inb,1), novlu*ksiz, MPI_INTEGER, idom-1, itag, MPI_COMM_WORLD, request(inb,1), ierr )
+       call mpi_isend ( work(1,inb,1), novlu*ksiz, MPI_INTEGER, idom-1, itag, engine_comm_world, request(inb,1), ierr )
        if ( ierr /= MPI_SUCCESS ) then
           write (msgstr,'(a,i5,a,i3.3)') 'MPI produces some internal error - return code is ',ierr,' and node number is ',inode
           call prterr(lundia, 'U021', trim(msgstr))
           call d3stop(1, gdp)
        endif
 
-       call mpi_irecv ( work(1,inb,2), novlu*ksiz, MPI_INTEGER, idom-1, itag, MPI_COMM_WORLD, request(inb,2), ierr )
+       call mpi_irecv ( work(1,inb,2), novlu*ksiz, MPI_INTEGER, idom-1, itag, engine_comm_world, request(inb,2), ierr )
        if ( ierr /= MPI_SUCCESS ) then
           write (msgstr,'(a,i5,a,i3.3)') 'MPI produces some internal error - return code is ',ierr,' and node number is ',inode
           call prterr(lundia, 'U021', trim(msgstr))

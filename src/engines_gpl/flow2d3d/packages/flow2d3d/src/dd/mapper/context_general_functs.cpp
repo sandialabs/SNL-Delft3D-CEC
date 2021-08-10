@@ -1,6 +1,6 @@
 //---- GPL ---------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -521,7 +521,7 @@ int D3dFlowContext::AttachContextVar(
     }
     else
     {
-        ptr = ESM_Alloc ( aContextId, name, 0 );
+        ptr = ESM_Alloc ( aContextId, name, (size_t)(0) );
         if ( ptr == NULL )
         {
             throw new Exception (true, "Var (%s) not attached to Context (%d)", name, aContextId);

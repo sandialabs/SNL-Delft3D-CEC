@@ -18,7 +18,7 @@ function [Settings,fn]=md_print(varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,8 +43,8 @@ function [Settings,fn]=md_print(varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/md_print.m $
-%   $Id: md_print.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/md_print.m $
+%   $Id: md_print.m 65778 2020-01-14 14:07:42Z mourits $
 
 %  Painters   'Printer Name'         Platforms    COLOR    MultiPage
 %  COLOR=0 Never
@@ -114,14 +114,6 @@ else
         getsettings = 1;
         figlist = varargin{2};
         nArgParsed = 2;
-    elseif ischar(figlist)
-        %
-        % Deal with uicontrol callbacks ...
-        %
-        UD=get(gcbf,'userdata');
-        UD{end+1}=figlist;
-        set(gcbf,'userdata',UD);
-        return
     end
 end
 
@@ -141,7 +133,7 @@ end
 if ischar(LocSettings.PrtID)
     LocSettings.PrtID=ustrcmpi(LocSettings.PrtID,PL(:,2));
 elseif LocSettings.PrtID>=0
-    error('Please replace PrtID number by printer name.');
+    error('Please replace PrtID number by printer name.')
 end
 
 if isfield(LocSettings,'SelectFrom')
@@ -166,9 +158,10 @@ else
     fn='';
 end
 
-i=0;
-tempfil='';
+i = 0;
+tempfil = '';
 pagenr = 1;
+Ex = [];
 while i<length(figlist)
     i=i+1;
     if ishandle(figlist(i))
@@ -320,8 +313,8 @@ while i<length(figlist)
                                 end
                                 pagenr = pagenr+1;
                             end
-                        catch
-                            ui_message('error','error encountered creating %s:%s',fn,lasterr);
+                        catch Ex
+                            %rethrow the error after resetting a few things ...
                         end
                         if ~isempty(normtext)
                             set(normtext,'fontunits','normalized')
@@ -336,8 +329,8 @@ while i<length(figlist)
                     if ischar(fn)
                         try
                             hgsave(figlist(i),fn);
-                        catch
-                            ui_message('error','error encountered creating %s:%s',fn,lasterr);
+                        catch Ex
+                            %rethrow the error after resetting a few things ...
                         end
                     end
                 case 'QUICKPLOT session file'
@@ -351,8 +344,8 @@ while i<length(figlist)
                             SER = qp_session('serialize',SES);
                             SER = qp_session('make_expandables',SER,{'filename','domain'});
                             qp_session('save',SER,fn)
-                        catch
-                            ui_message('error','error encountered creating %s:%s',fn,lasterr);
+                        catch Ex
+                            %rethrow the error after resetting a few things ...
                         end
                     end
                     i = length(figlist); % all done
@@ -391,8 +384,8 @@ while i<length(figlist)
                         end
                         set(figlist(i),'inverthardcopy',ih);
                         cd(ccd);
-                    catch
-                        ui_message('error','error encountered printing to %s:%s',Printer,lasterr);
+                    catch Ex
+                        %rethrow the error after resetting a few things ...
                     end
             end
             if nargout>0
@@ -406,9 +399,17 @@ while i<length(figlist)
             if ~LocSettings.AllFigures
                 LocSettings.PrtID=-1;
             end
+            if ~isempty(Ex)
+                rethrow(Ex)
+            end
         end
     end
 end
+
+function md_print_callback(obj,event,arg)
+UD=get(gcbf,'userdata');
+UD{end+1}=arg;
+set(gcbf,'userdata',UD);
 
 function [Settings,FigID]=Local_ui(PL,CanApplyAll,Settings,SelectFrom,FigID)
 persistent PrtID Method DPI ApplyAll Clr InvertHardcopy PageLabels
@@ -486,14 +487,14 @@ GUI.Cancel = uicontrol('style','pushbutton', ...
     'position',rect, ...
     'string','Cancel', ...
     'parent',fig, ...
-    'callback','md_print cancel');
+    'callback',{@md_print_callback 'cancel'});
 
 rect(1) = (Fig_Width+XX.Margin)/2;
 GUI.OK=uicontrol('style','pushbutton', ...
     'position',rect, ...
     'string','OK', ...
     'parent',fig, ...
-    'callback','md_print OK');
+    'callback',{@md_print_callback 'OK'});
 
 rect(1) = XX.Margin;
 if CanApplyAll
@@ -507,7 +508,7 @@ if CanApplyAll
         'string','Apply to All Remaining Figures', ...
         'backgroundcolor',XX.Clr.LightGray, ...
         'enable','on', ...
-        'callback','md_print ApplyAll');
+        'callback',{@md_print_callback 'ApplyAll'});
 end
 
 if PL{PrtID,6}
@@ -538,7 +539,7 @@ GUI.PLabels=uicontrol('style','popupmenu', ...
     'string',{'No Labels','Page Numbers','Figure Names'}, ...
     'backgroundcolor',clr, ...
     'enable',enab, ...
-    'callback','md_print PageLabels');
+    'callback',{@md_print_callback 'PageLabels'});
 
 rect(1) = XX.Margin;
 rect(2) = rect(2)+rect(4);
@@ -551,7 +552,7 @@ GUI.InvHard=uicontrol('style','checkbox', ...
     'string','White Background and Black Axes', ...
     'backgroundcolor',XX.Clr.LightGray, ...
     'enable','on', ...
-    'callback','md_print InvertHardcopy');
+    'callback',{@md_print_callback 'InvertHardcopy'});
 
 rect(2) = rect(2)+rect(4);
 rect(3) = Fig_Width-2*XX.Margin;
@@ -563,7 +564,7 @@ GUI.Color=uicontrol('style','checkbox', ...
     'horizontalalignment','left', ...
     'value',Clr, ...
     'enable','on', ...
-    'callback','md_print Color');
+    'callback',{@md_print_callback 'Color'});
 
 rect(1) = XX.Margin;
 rect(2) = rect(2)+rect(4)+XX.Margin;
@@ -576,7 +577,7 @@ GUI.OpenGL=uicontrol('style','radiobutton', ...
     'value',Method==3, ...
     'backgroundcolor',XX.Clr.LightGray, ...
     'enable','on', ...
-    'callback','md_print OpenGL');
+    'callback',{@md_print_callback 'OpenGL'});
 
 rect(1) = rect(1)+rect(3)+XX.Margin;
 rect(3) = ResWidth;
@@ -587,7 +588,7 @@ GUI.Resol=uicontrol('style','edit', ...
     'horizontalalignment','right', ...
     'backgroundcolor',XX.Clr.LightGray, ...
     'enable','off', ...
-    'callback','md_print DPI');
+    'callback',{@md_print_callback 'DPI'});
 
 rect(1) = rect(1)+rect(3)+XX.Margin;
 rect(3) = Fig_Width-(4*XX.Margin+ZBufWidth+ResWidth);
@@ -617,7 +618,7 @@ GUI.ZBuf=uicontrol('style','radiobutton', ...
     'string','ZBuffer', ...
     'backgroundcolor',XX.Clr.LightGray, ...
     'enable','on', ...
-    'callback','md_print Zbuffer');
+    'callback',{@md_print_callback 'Zbuffer'});
 
 rect(1) = XX.Margin;
 rect(2) = rect(2)+rect(4);
@@ -630,7 +631,7 @@ GUI.Painter=uicontrol('style','radiobutton', ...
     'string','Painters (864 DPI)', ...
     'backgroundcolor',XX.Clr.LightGray, ...
     'enable','on', ...
-    'callback','md_print Painters');
+    'callback',{@md_print_callback 'Painters'});
 
 rect(1) = XX.Margin;
 rect(2) = rect(2)+rect(4);
@@ -655,7 +656,7 @@ GUI.Opt=uicontrol('style','pushbutton', ...
     'horizontalalignment','left', ...
     'backgroundcolor',XX.Clr.LightGray, ...
     'enable','off', ...
-    'callback','md_print Options');
+    'callback',{@md_print_callback 'Options'});
 
 rect(1) = XX.Margin;
 rect(2) = rect(2)+rect(4)+XX.Margin;
@@ -680,7 +681,7 @@ GUI.Printer=uicontrol('style','popupmenu', ...
     'horizontalalignment','left', ...
     'backgroundcolor',XX.Clr.White, ...
     'enable','on', ....
-    'callback','md_print Printer');
+    'callback',{@md_print_callback 'Printer'});
 
 if Reselect
     rect(1) = 2*XX.Margin+TextLabel;
@@ -701,7 +702,7 @@ if Reselect
         'horizontalalignment','left', ...
         'backgroundcolor',XX.Clr.White, ...
         'enable','on', ....
-        'callback','md_print Figure');
+        'callback',{@md_print_callback 'Figure'});
 
     rect(1) = XX.Margin;
     rect(2) = rect(2)+rect(4)-XX.Txt.Height;
@@ -870,13 +871,13 @@ function add_bookmark(fname,bookmark_text,append)
 % Read in the file
 fh = fopen(fname, 'r');
 if fh == -1
-    error('File %s not found.', fname);
+    error('File %s not found.', fname)
 end
 try
     fstrm = fread(fh, '*char')';
-catch ex
+catch Ex
     fclose(fh);
-    rethrow(ex);
+    rethrow(Ex)
 end
 fclose(fh);
 
@@ -892,13 +893,13 @@ fstrm = [fstrm(1:lastpage-1) strrep(fstrm(lastpage:end), '%%EndPageSetup', sprin
 % Write out the updated file
 fh = fopen(fname, 'w');
 if fh == -1
-    error('Unable to open %s for writing.', fname);
+    error('Unable to open %s for writing.', fname)
 end
 try
     fwrite(fh, fstrm, 'char*1');
-catch ex
+catch Ex
     fclose(fh);
-    rethrow(ex);
+    rethrow(Ex)
 end
 fclose(fh);
 
@@ -925,6 +926,8 @@ switch Type
             else
                 set(GUI.ZBuf,'value',1)
             end
+        else
+            set(GUI.OpenGL,'value',1)
         end
     otherwise
         set(GUI.Painter,'value',0,'enable','on')

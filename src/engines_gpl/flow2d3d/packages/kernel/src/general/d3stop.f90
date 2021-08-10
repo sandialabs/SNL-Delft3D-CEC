@@ -1,7 +1,7 @@
 subroutine d3stop(iexit, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine d3stop(iexit, gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: d3stop.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/general/d3stop.f90 $
+!  $Id: d3stop.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/general/d3stop.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Terminates execution wit error code.
@@ -56,14 +56,14 @@ subroutine d3stop(iexit, gdp)
     !
     integer                       , pointer :: lundia
     logical                       , pointer :: wave
-    logical                       , pointer :: waveol
+    integer                       , pointer :: waveol
     logical                       , pointer :: mudlay
     logical                       , pointer :: mudwave
     logical                       , pointer :: coupleact
     logical                       , pointer :: couplemod
     logical                       , pointer :: sbkol
     integer                       , pointer :: numdomains
-    logical                       , pointer :: rtcact
+    integer                       , pointer :: rtcact
     integer                       , pointer :: rtc_domainnr
 !
 ! Global variables
@@ -106,7 +106,7 @@ subroutine d3stop(iexit, gdp)
     ! Check if RTC-connection is active and if so
     ! send (negative) status to shut down RTC
     !
-    if (rtcact .and. rtc_domainnr == 1) then
+    if (rtcact==RTCmodule .and. rtc_domainnr==1) then
        call syncflowrtc_close
     endif
     !
@@ -128,7 +128,7 @@ subroutine d3stop(iexit, gdp)
     ! Check if Wave-connection is active and if so send (negative) status
     ! to shut down Wave.
     !
-    if (waveol) then
+    if (waveol==2) then
        ierror = flow_to_wave_command(flow_wave_comm_finalize, &
                                    & numdomains, mudlay, -1)
     endif
@@ -165,5 +165,6 @@ subroutine d3stop(iexit, gdp)
     !
     ! Terminate now
     !
-    call cstop(iexit, char(0))
+    ! call cstop(iexit, char(0))
+    call throwexception()
 end subroutine d3stop

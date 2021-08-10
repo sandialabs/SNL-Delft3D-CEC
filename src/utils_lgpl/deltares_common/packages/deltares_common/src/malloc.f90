@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,14 +24,14 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: malloc.f90 4726 2015-02-25 08:48:01Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common/src/malloc.f90 $
+!  $Id: malloc.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common/src/malloc.f90 $
 !> Utility routines for memory (re)allocation.
 module m_alloc
 implicit none
 private 
 
-public realloc, reallocP, reallocCharacter, aerr
+public realloc, reallocP, aerr
 
 ! TODO: Handle nondefault kinds properly? [AvD]
 
@@ -118,6 +118,7 @@ interface realloc
    module procedure reallocLogical2
    module procedure reallocLogical3
    module procedure reallocLogical4
+   module procedure reallocByte2
 end interface
 
 !> Reallocates memory for an existing \a pointer array. behaviour and arguments
@@ -3320,5 +3321,79 @@ subroutine reallocLogical4(arr, uindex, lindex, stat, fill, shift, keepExisting)
    if (present(stat)) stat = localErr
 end subroutine reallocLogical4
 
+!===============================================================================
+subroutine reallocByte2(arr, uindex, lindex, stat, fill, shift, keepExisting)
+   implicit none
+   integer(kind=1), allocatable, intent(inout)  :: arr(:,:)
+   integer, intent(in)                          :: uindex(2)
+   integer, intent(in), optional                :: lindex(2)
+   integer, intent(out), optional               :: stat
+   integer, intent(in), optional                :: fill
+   integer, intent(in), optional                :: shift(2)
+   logical, intent(in), optional                :: keepExisting
+
+   integer(kind=1), allocatable                 :: b(:,:)
+   integer        :: uind(2), lind(2), muind(2), mlind(2), lindex_(2), shift_(2)
+   integer        :: i1,i2
+   integer        :: localErr
+   logical        :: docopy
+   logical        :: equalSize
+
+   if (present(lindex)) then
+      lindex_ = lindex
+   else
+      lindex_ = (/ 1, 1 /)
+   endif
+
+   if (present(shift)) then
+      shift_ = shift
+   else
+      shift_ = (/ 0, 0 /)
+   endif
+
+   if (present(keepExisting)) then
+      docopy = keepExisting
+   else
+      docopy = .true.
+   end if
+
+   if (present(stat)) stat = 0
+   localErr = 0
+   if (allocated(arr)) then
+      uind = ubound(arr)
+      lind = lbound(arr)
+      equalSize = all(uindex == uind) .and. all(lindex_ == lind)
+      if (equalSize .and. (docopy .or. .not. present(fill)) .and. all(shift_==0)) then
+         goto 999 ! output=input
+      end if
+!
+      if (docopy) then
+         mlind = max(lind + shift_, lindex_)
+         muind = min(uind + shift_, uindex)
+         allocate (b(mlind(1):muind(1),mlind(2):muind(2)))
+            do i2 = mlind(2),muind(2)
+               do i1 = mlind(1),muind(1)
+                   b(i1,i2) = arr(i1-shift_(1),i2-shift_(2))
+               enddo
+            enddo
+      endif
+      if (.not.equalSize) deallocate(arr, stat = localErr)
+   endif
+   if (.not.allocated(arr) .and. localErr==0) then
+       allocate(arr(lindex_(1):uindex(1),lindex_(2):uindex(2)), stat = localErr)
+   endif
+   if (present(fill) .and. localErr==0) arr = fill
+   if (allocated(b) .and. localErr==0 .and. size(b)>0) then
+      do i2 = mlind(2),muind(2)
+         do i1 = mlind(1),muind(1)
+             arr(i1,i2) = b(i1,i2)
+         enddo
+      enddo
+      deallocate(b, stat = localErr)
+   endif
+999 continue
+   if (present(stat)) stat = localErr
+end subroutine reallocByte2
+!
 
 end module m_alloc

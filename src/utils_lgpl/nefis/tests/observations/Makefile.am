@@ -7,7 +7,7 @@
 #-------------------------------------------------------------------------------
 
 include $(top_srcdir)/common.am
-bin_PROGRAMS = observ
+noinst_PROGRAMS = observ
 
 observ_SOURCES = \
 	observ.f

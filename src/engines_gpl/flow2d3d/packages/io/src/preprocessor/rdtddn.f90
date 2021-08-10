@@ -4,7 +4,7 @@ subroutine rdtddn(lundia    ,lunout    ,lunrd     ,error     ,filout    , &
                 & disint    ,parnam    ,parunt    ,bubble    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +28,8 @@ subroutine rdtddn(lundia    ,lunout    ,lunrd     ,error     ,filout    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdtddn.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/preprocessor/rdtddn.f90 $
+!  $Id: rdtddn.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/preprocessor/rdtddn.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: This general purpose routine reads the time depen-
@@ -51,7 +51,6 @@ subroutine rdtddn(lundia    ,lunout    ,lunrd     ,error     ,filout    , &
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
     integer                    , pointer :: itdate
-    real(fp)                   , pointer :: tstop
     real(fp)                   , pointer :: dt
     real(fp)                   , pointer :: tunit
     character*20, dimension(:) , pointer :: keywrd
@@ -124,7 +123,6 @@ subroutine rdtddn(lundia    ,lunout    ,lunrd     ,error     ,filout    , &
     fmtdis  => gdp%gdfmtdis%fmtdis
     keywrd  => gdp%gdkeywtd%keywrd
     itdate  => gdp%gdexttim%itdate
-    tstop   => gdp%gdexttim%tstop
     dt      => gdp%gdexttim%dt
     tunit   => gdp%gdexttim%tunit
     !

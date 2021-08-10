@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -39,6 +39,7 @@
  *  - GNF_GetFileContents(): Read the NEFIS file and get a table of contents
  *  - GNF_GetStringBuffer(): Get a string buffer from the file
  *  - GNF_GetRealBuffer():   Get a real buffer from the file
+ *  - GNF_GetDoubleBuffer(): Get a double-precision real buffer from the file
  *  - GNF_GetIntBuffer():    Get an integer buffer from the file
  *  - GNF_CheckParameters(): Get the number of parameters
  *  - GNF_CheckTimes():      Get the number of times
@@ -174,12 +175,15 @@ static NefisFileInfoPtr  file_info_array[MAXNFFILES] ; /* Store all the file inf
 static TInt4             no_file_info_used =  0      ; /* Number currently stored */
 static TInt4             previous_file     = -1      ; /* Index of previous file - used for caching */
 static TReal4           *gnf_real_buffer   = NULL    ; /* Cached reals */
+static TReal8           *gnf_double_buffer = NULL    ; /* Cached double-precision reals */
 static TInt4            *gnf_int_buffer    = NULL    ; /* Cached integers */
 static TChar            *gnf_char_buffer   = NULL    ; /* Cached character strings */
 static TInt4             gnf_real_idx      =  0      ; /* Index of cached real element */
+static TInt4             gnf_double_idx    =  0      ; /* Index of cached double-precision real element */
 static TInt4             gnf_int_idx       =  0      ; /* Index of cached integer element */
 static TInt4             gnf_char_idx      =  0      ; /* Index of cached character element */
 static TInt4             gnf_real_cell[15]           ; /* Cells of cached real element */
+static TInt4             gnf_double_cell[15]         ; /* Cells of cached double-precision real element */
 static TInt4             gnf_int_cell[15]            ; /* Cells of cached integer element */
 static TInt4             gnf_char_cell[15]           ; /* Cells of cached character element */
 
@@ -797,17 +801,144 @@ TVoid
        }
    }
 
-   free( gnf_real_buffer ) ;
-   gnf_real_buffer = (TReal4 *) malloc( buflen ) ;
-
-   gnf_real_idx = idx ;
-   memcpy( gnf_real_cell, cell_index, sizeof(gnf_real_cell) );
 
    ierror = Getelt( file_info->datfds,
                     item->group_name, item->elem_name,
                     uindex[0], usrord, &buflen, (*buffer) ) ;
 
-   memcpy( gnf_real_buffer, *buffer, buflen ) ;
+   if ( ierror == 0 )
+   {
+      free( gnf_real_buffer ) ;
+      gnf_real_buffer = (TReal4 *) malloc( buflen ) ;
+
+      gnf_real_idx = idx ;
+      memcpy( gnf_real_cell, cell_index, sizeof(gnf_real_cell) );
+
+      memcpy( gnf_real_buffer, *buffer, buflen ) ;
+   }
+   else
+   {
+      free( *buffer ) ;
+      *buffer = NULL ;
+   }
+
+/* printf( "error (%s/%s): %d\n",
+                    item->group_name, item->elem_name, ierror ) ; */
+}
+
+/* -------------------------------------------------------------------
+    Function: GNF_GetDoubleBuffer()
+    Author:   Arjen Markus
+    Purpose:  Get a double-precision real buffer from the file
+    Context:  Used by various routines
+    Pseudo Code:
+              Allocate space for the buffer. Get it via the NEFIS
+              routines.
+    Note:
+              The cell index is to be filled according to the
+              conventions of NEFIS, with the sole exception of
+              the counting starting at 0, in the C like way.
+              More concretely:
+              - cell_index[0][0] = the first index (of the first
+                                   dimension)
+              - cell_index[0][1] = the last index (of the first
+                                   dimension)
+              - cell_index[0][2] = the step size (for the first
+                                   dimension)
+              - ... (if needed)  = similarly for the other dimensions
+              The buffer is allocated and must be freed when no
+              longer needed. This guarantees that enough memory
+              is available. (It may seem a slow algorithm, when you
+              retrieve a small buffer many times, but I/O is even slower
+              of course in most cases.)
+------------------------------------------------------------------- */
+
+TVoid
+   GNF_GetDoubleBuffer(
+      NefisFileInfoPtr      file_info,        /* I   Contents of the file     */
+      TInt4                 idx,              /* I   Index of the element     */
+      TInt4               * cell_index,       /* I   Indices of the cell to
+                                                     retrieve                 */
+      TReal8             ** buffer,           /* O   Allocated buffer         */
+      TInt4               * elem_size,        /* O   Size of individual
+                                                     elements (number of reals) */
+      TInt4               * number_cells   )  /* O   Number of cells retrieved */
+{
+   NefisItemInfoPtr   item         ;
+   BInt4              ierror       ;
+   TInt4              buflen       ;
+   TInt4              i            ;
+   TInt4              nd           ;
+   TInt4              uindex[5][3] ;
+   TInt4              usrord[5]    ;
+
+/*   printf( "GNF_GetRealBuffer\n" ) ; */
+   item = &file_info->items[idx] ;
+
+   for ( i = 0 ; i < 5 ; i ++ )
+   {
+      uindex[i][0] = 0 ;
+      uindex[i][1] = 0 ;
+      uindex[i][2] = 0 ;
+   }
+
+   usrord[0]    = 1 ;
+   usrord[1]    = 2 ;
+   usrord[2]    = 3 ;
+   usrord[3]    = 4 ;
+   usrord[4]    = 5 ;
+
+   /* Allocate the buffer
+   */
+   (*elem_size) = 1 ;
+   for ( i = 0 ; i < item->elem_ndim ; i ++ )
+   {
+      (*elem_size) *= item->elem_dims[i] ;
+   }
+
+   (*number_cells) = 1 ;
+   for ( i = 0 ; i < item->group_ndim ; i ++ )
+   {
+      uindex[i][0]    = cell_index[3*i+0] + 1 ;
+      if ( cell_index[3*i+1] != ALL_CELLS )
+      {
+         uindex[i][1]    = cell_index[3*i+1] + 1 ;
+      }
+      else
+      {
+         uindex[i][1]    = item->group_dims[i] ;
+      }
+      uindex[i][2]    = cell_index[3*i+2]     ;
+
+      nd              =  1 + ( uindex[i][1] - uindex[i][0] )
+                                / uindex[i][2] ;
+      (*number_cells) *= nd ;
+   }
+
+   buflen  = sizeof(TReal8) * (*number_cells) * (*elem_size) ;
+   *buffer = (TReal8 *) malloc( buflen ) ;
+
+   /* Was it cached? */
+   if ( gnf_double_buffer != NULL )
+   {
+       if ( GNF_CheckCache( 0, idx, cell_index ) )
+       {
+           memcpy( *buffer, gnf_double_buffer, buflen ) ;
+           return ;
+       }
+   }
+
+   free( gnf_double_buffer ) ;
+   gnf_double_buffer = (TReal8 *) malloc( buflen ) ;
+
+   gnf_double_idx = idx ;
+   memcpy( gnf_double_cell, cell_index, sizeof(gnf_double_cell) );
+
+   ierror = Getelt( file_info->datfds,
+                    item->group_name, item->elem_name,
+                    uindex[0], usrord, &buflen, (*buffer) ) ;
+
+   memcpy( gnf_double_buffer, *buffer, buflen ) ;
 
 /* printf( "error (%s/%s): %d\n",
                     item->group_name, item->elem_name, ierror ) ; */

@@ -65,7 +65,7 @@ function [Out1,Out2]=delwaq(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -90,8 +90,8 @@ function [Out1,Out2]=delwaq(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/delwaq.m $
-%   $Id: delwaq.m 5023 2015-04-29 12:31:57Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/delwaq.m $
+%   $Id: delwaq.m 65778 2020-01-14 14:07:42Z mourits $
 
 switch lower(cmd)
     case 'open'
@@ -263,7 +263,7 @@ try
             ~all(ismember(SubsNames(:),char([0 32:126 160:255])))
         error('Invalid substance names.');
     end
-    S.SubsName=deblank2(cellstr(SubsNames));
+    S.SubsName=strtrim(cellstr(SubsNames));
     %
     % In case of an unformatted file, verify dimensions.
     %

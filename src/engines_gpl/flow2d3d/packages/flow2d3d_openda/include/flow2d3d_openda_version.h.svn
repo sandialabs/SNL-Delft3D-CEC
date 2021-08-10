@@ -22,20 +22,22 @@
 
 /*=================================================== DO NOT MAKE CHANGES BELOW THIS LINE ===================================================================== */
 
-static char modname_version       [] = {modname_major"."modname_minor"."modname_revision"."modname_build};
-static char modname_version_short [] = {modname_major"."modname_minor};
-static char modname_version_full  [] = {modname_company", "modname_program" Version "modname_major"."modname_minor"."modname_revision"."modname_build", "__DATE__", "__TIME__""};
+static char modname_version       [] = {modname_major "." modname_minor "." modname_revision "." modname_build};
+static char modname_version_short [] = {modname_major "." modname_minor};
+static char modname_version_full  [] = {modname_company ", " modname_program " Version " modname_major "." modname_minor "." modname_revision "." modname_build ", " __DATE__ ", " __TIME__ ""};
 
 #if HAVE_CONFIG_H
 #   include "config.h"
 #   define STDCALL  /* nothing */
 #   define GETSHORTVERSIONSTRING FUNC_CAT( FC_FUNC(getshortversionstring,GETSHORTVERSIONSTRING), F90_MOD_NAME)
 #   define GETFULLVERSIONSTRING FUNC_CAT( FC_FUNC(getfullversionstring,GETFULLVERSIONSTRING), F90_MOD_NAME)
+#   define GETVERSIONIDSTRING FUNC_CAT( FC_FUNC(getversionidstring,GETVERSIONIDSTRING), F90_MOD_NAME)
 #else
 // WIN32
 #   define STDCALL  /* nothing */
 #   define GETSHORTVERSIONSTRING FUNC_CAT( GETSHORTVERSIONSTRING_, F90_MOD_NAME)
 #   define GETFULLVERSIONSTRING FUNC_CAT( GETFULLVERSIONSTRING_, F90_MOD_NAME)
+#   define GETVERSIONIDSTRING FUNC_CAT( GETVERSIONIDSTRING_, F90_MOD_NAME)
 #endif
 
 
@@ -45,6 +47,7 @@ extern "C" {
 
 void   STDCALL GETSHORTVERSIONSTRING( char *, int );
 void   STDCALL GETFULLVERSIONSTRING( char *, int );
+void   STDCALL GETVERSIONIDSTRING( char *, int );
 
 #if (defined(__cplusplus)||defined(_cplusplus))
 }

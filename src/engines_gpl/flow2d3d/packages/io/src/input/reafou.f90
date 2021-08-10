@@ -2,7 +2,7 @@ subroutine reafou(error     ,lundia    ,lunfou    ,filfou    ,kmax      , &
                 & lstsc     ,lsal      ,ltem      ,nofou     ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine reafou(error     ,lundia    ,lunfou    ,filfou    ,kmax      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: reafou.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/reafou.f90 $
+!  $Id: reafou.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/reafou.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Read fourier input file and stores the

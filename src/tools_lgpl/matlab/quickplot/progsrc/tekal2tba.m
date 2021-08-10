@@ -13,7 +13,7 @@ function tba = tekal2tba(Tekal)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -38,8 +38,8 @@ function tba = tekal2tba(Tekal)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/tekal2tba.m $
-%   $Id: tekal2tba.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/tekal2tba.m $
+%   $Id: tekal2tba.m 65778 2020-01-14 14:07:42Z mourits $
 
 if ischar(Tekal)
     Tekal = tekal('open',Tekal);
@@ -102,7 +102,7 @@ for t = 1:nfld
         per = sscanf(C{i},'%*[^A]Analysed period%*[^:]: %f, %f',[1 2]);
         tz  = sscanf(C{i},'%*[^T]Time zone%*[^:]: %100c',1);
         qnt = sscanf(C{i},'%*[^>]>>%[^<]<<',1);
-        qnt = deblank2(qnt);
+        qnt = strtrim(qnt);
         %
         if ~isempty(cmp)
             component(t).Name = cmp;

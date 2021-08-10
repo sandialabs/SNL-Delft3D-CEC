@@ -8,7 +8,7 @@ function make_all
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -33,13 +33,20 @@ function make_all
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/make_all.m $
-%   $Id: make_all.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/make_all.m $
+%   $Id: make_all.m 65778 2020-01-14 14:07:42Z mourits $
 
+if ~license('checkout','compiler')
+    error('Compiler license currently not available.')
+end
 curdir = pwd;
 sourcedir=[curdir,filesep,'progsrc'];
 qpversion=read_identification(sourcedir,'d3d_qp.m');
 T=now;
 make_quickplot(curdir,qpversion,T)
 make_ecoplot(curdir,qpversion,T)
-make_d3dmatlab(curdir,qpversion,T)
+c=computer;
+if c(end-1:end)=='64'
+   make_d3dmatlab(curdir,qpversion,T)
+end
+make_delwaq2raster(curdir,qpversion,T)

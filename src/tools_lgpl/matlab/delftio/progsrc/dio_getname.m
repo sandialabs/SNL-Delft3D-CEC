@@ -7,7 +7,7 @@ function out = dio_getname(dsh)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                 
+%   Copyright (C) 2011-2020 Stichting Deltares.                                 
 %                                                                               
 %   This library is free software; you can redistribute it and/or               
 %   modify it under the terms of the GNU Lesser General Public                  
@@ -32,8 +32,8 @@ function out = dio_getname(dsh)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/delftio/progsrc/dio_getname.m $
-%   $Id: dio_getname.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/delftio/progsrc/dio_getname.m $
+%   $Id: dio_getname.m 65778 2020-01-14 14:07:42Z mourits $
 
 Name = dio_core('getname',dsh);
 if nargout==0

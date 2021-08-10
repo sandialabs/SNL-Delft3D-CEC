@@ -1,7 +1,7 @@
 module m_rdstm
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ module m_rdstm
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdstm.f90 4750 2015-03-03 10:13:11Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_io/src/rdstm.f90 $
+!  $Id: rdstm.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_io/src/rdstm.f90 $
 !-------------------------------------------------------------------------------
 
 use morphology_data_module
@@ -50,6 +50,7 @@ type stmtype
     type(morpar_type)                        , pointer     :: morpar
     type(bedcomp_data)                       , pointer     :: morlyr
     type(trapar_type)                        , pointer     :: trapar
+    type(t_nodereldata)                      , pointer     :: nrd
     integer                                                :: lsedsus
     integer                                                :: lsedtot
     real(fp)      , dimension(:), allocatable              :: facdss
@@ -59,7 +60,9 @@ end type stmtype
 
 contains
 
-subroutine rdstm(stm, griddim, filsed, filmor, filtrn, lundia, lsal, ltem, ltur, lsec, julrefday, nambnd, error)
+subroutine rdstm(stm, griddim, filsed, filmor, filtrn, &
+               & lundia, lsal, ltem, ltur, lsec, lfbedfrm, &
+               & julrefday, dtunit, nambnd, error)
 !!--description-----------------------------------------------------------------
 !
 ! Read sediment transport and morphology data from filsed, filemor and filtrn
@@ -68,6 +71,7 @@ subroutine rdstm(stm, griddim, filsed, filmor, filtrn, lundia, lsal, ltem, ltur,
 !!--declarations----------------------------------------------------------------
     use grid_dimens_module
     use properties ! includes tree_structures
+    use m_ini_noderel ! for node relation definitions
     !
     implicit none
 !
@@ -83,8 +87,10 @@ subroutine rdstm(stm, griddim, filsed, filmor, filtrn, lundia, lsal, ltem, ltur,
     integer                     , intent(in)  :: ltem
     integer                     , intent(in)  :: ltur
     integer                     , intent(in)  :: lsec
+    logical                     , intent(in)  :: lfbedfrm
     integer                     , intent(in)  :: julrefday
     character(20) , dimension(:), intent(in)  :: nambnd
+    character(*)                , intent(in)  :: dtunit
     logical                     , intent(out) :: error
 !
 ! Local variables
@@ -111,6 +117,7 @@ subroutine rdstm(stm, griddim, filsed, filmor, filtrn, lundia, lsal, ltem, ltur,
     allocate(stm%morpar , stat = istat)
     allocate(stm%trapar , stat = istat)
     allocate(stm%morlyr , stat = istat)
+    allocate(stm%nrd    , stat = istat)
     !
     call nullsedpar(stm%sedpar)
     call nullmorpar(stm%morpar)
@@ -136,7 +143,7 @@ subroutine rdstm(stm, griddim, filsed, filmor, filtrn, lundia, lsal, ltem, ltur,
     !
     lstsci = max(0,lsal,ltem) + stm%lsedsus
     !
-    allocate(stm%facdss(stm%lsedsus)   , stat = istat)
+    allocate(stm%facdss(stm%lsedsus), stat = istat)
     allocate(stm%namcon(lstsci+ltur), stat = istat)
     !
     if (lsal>0) then
@@ -167,7 +174,12 @@ subroutine rdstm(stm, griddim, filsed, filmor, filtrn, lundia, lsal, ltem, ltur,
                & stm%lsedtot, lstsci, ltur, stm%namcon, &
                & stm%iopsus, nmlb, nmub, filsed, &
                & sedfil_tree, stm%sedpar, stm%trapar, griddim)
+    if (error) goto 999
+    ! 
+    !  For 1D branches read the node relation definitions
     !
+    call ini_noderel(stm%nrd, stm%sedpar, stm%lsedtot)
+    !     
     ! Read morphology parameters
     !
     ! morpar filled by rdmor
@@ -176,9 +188,10 @@ subroutine rdstm(stm, griddim, filsed, filmor, filtrn, lundia, lsal, ltem, ltur,
     ! fwfac set by rdmor
     !
     call rdmor  (lundia, error, filmor, lsec, stm%lsedtot, &
-               & stm%lsedsus, nmaxus, nto, nambnd, julrefday, morfil_tree, &
+               & stm%lsedsus, nmaxus, nto, lfbedfrm, nambnd, julrefday, morfil_tree, &
                & stm%sedpar, stm%morpar, stm%fwfac, stm%morlyr, &
                & griddim)
+    if (error) goto 999
     !
     ! Some other parameters are transport formula specific. Use the value
     ! historically specified in mor file as default.
@@ -214,7 +227,7 @@ subroutine rdstm(stm, griddim, filsed, filmor, filtrn, lundia, lsal, ltem, ltur,
     ! Echo morphology parameters
     !
     call echomor(lundia, error, lsec, stm%lsedtot, nto, &
-               & nambnd, stm%sedpar, stm%morpar)
+               & nambnd, stm%sedpar, stm%morpar, dtunit)
     !
 999 continue
     !
@@ -230,6 +243,7 @@ function clrstm(stm) result(istat)
 !
 !!--declarations----------------------------------------------------------------
     use morphology_data_module
+    use m_ini_noderel
     implicit none
 !
 ! Call variables
@@ -244,10 +258,26 @@ function clrstm(stm) result(istat)
 !! executable statements -------------------------------------------------------
 !
     istat = 0
-    call clrsedpar(istat, stm%sedpar)
-    if (istat==0) call clrmorpar(istat, stm%morpar)
-    if (istat==0) call clrtrapar(istat, stm%trapar)
-    if (istat==0) istat = clrmorlyr(stm%morlyr)
+    if (associated(stm%sedpar)) then
+        call clrsedpar(istat, stm%sedpar)
+        deallocate(stm%sedpar, STAT = istat)
+    endif
+    if (associated(stm%morpar) .and. istat==0) then
+        call clrmorpar(istat, stm%morpar)
+        deallocate(stm%morpar, STAT = istat)
+    endif
+    if (associated(stm%trapar) .and. istat==0) then
+        call clrtrapar(istat, stm%trapar)
+        deallocate(stm%trapar, STAT = istat)
+    endif
+    if (associated(stm%morlyr) .and. istat==0) then
+        istat = clrmorlyr(stm%morlyr)
+        deallocate(stm%morlyr, STAT = istat)
+    endif
+    if (associated(stm%nrd) .and. istat==0) then
+        call clr_noderel(istat, stm%nrd)
+        deallocate(stm%nrd, STAT = istat)
+    endif
 end function clrstm
 
 end module m_rdstm

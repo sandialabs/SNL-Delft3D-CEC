@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -34,7 +34,6 @@ use precision_part               ! single/double precision
 !
 use openfl_mod              ! explicit interface
 use grid_search_mod         ! explicit interface
-use stop_exit_mod           ! explicit interface
 !
 implicit none               ! force explicit typing
 !
@@ -198,7 +197,8 @@ contains
 !
 !               tmingo = 0.5*(chi0+chi1)*tmin1
              else
-                stop ' This option for ipc is not implemented '
+                write (*,*) ' This option for ipc is not implemented '
+                call stop_exit(1)
              endif
 !
 !     corrected position differs from predicted one and becomes:

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -44,7 +44,7 @@
 
 !     logical unit numbers  : lun
 
-!     subroutines called    : srstop
+!     subroutines called    : stop_exit
 
 !     functions   called    : none.
 
@@ -96,7 +96,7 @@
           write (lun2, *) ' Error 4201. Dimensioning does not match!'
           write (lun2, *) '             nmax,mmax,lgrid-table:   ', nmax , mmax
           write (lun2, *) '             nmax,mmax,cco-file   :   ', nmaxc, mmaxc
-          call srstop(1)
+          call stop_exit(1)
       endif
       
 !     skip header
@@ -111,7 +111,7 @@
 
       if ( iocond .gt. 0 ) write (lun2, *) ' Error 4202. Reading cco-file:', fnam
       if ( iocond .lt. 0 ) write (lun2, *) ' Error 4203. Unexpected end cco-file:', fnam
-      if ( iocond .ne. 0 ) call srstop(1)
+      if ( iocond .ne. 0 ) call stop_exit(1)
       write (lun2,'(a,a)') '  Succesful reading of the TELMAC-CCO file : ',fnam(1:len_trim(fnam))
 
 !     end of routine

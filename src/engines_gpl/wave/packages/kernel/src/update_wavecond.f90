@@ -1,7 +1,7 @@
 module update_waves
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ module update_waves
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: update_wavecond.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/kernel/src/update_wavecond.f90 $
+!  $Id: update_wavecond.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/kernel/src/update_wavecond.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -44,6 +44,7 @@ contains
 subroutine update_wavecond(sr,wavetime)
    use swan_input
    use wave_data
+   use table_handles
    !
    implicit none
    !
@@ -52,7 +53,6 @@ subroutine update_wavecond(sr,wavetime)
    !
    integer                    :: i
    integer, dimension(7)      :: isdir
-   integer, external          :: new_lun
    integer                    :: namlen
    integer                    :: nwavec
    integer                    :: nwav
@@ -84,8 +84,7 @@ subroutine update_wavecond(sr,wavetime)
    if (unibest) then
       if (luniwp < 0) then
          ! Open md-vwac file first time only
-         luniwp     = new_lun()
-         open (unit = luniwp, file = filnam)
+         open (newunit = luniwp, file = filnam)
          call skcoma(luniwp    )
          read (luniwp, '(A)') model
          !
@@ -102,7 +101,7 @@ subroutine update_wavecond(sr,wavetime)
               & 'md-unib.', sr%casl, ' ( ', nwavec,         &
               & ') not equal to number ',                &
               & 'of tide steps (', sr%nttide, ')'
-            stop
+            call wavestop(1, ' Error : number of steps on md-unib file not equal to number of tide steps')
          endif
          ! Set options to match UNIBEST input
          !
@@ -161,7 +160,7 @@ subroutine update_wavecond(sr,wavetime)
         !sr%wfil     = windfln
         !sr%zeta     = zeta
          write(*,*) 'Option varbound not implemented yet!'
-         stop
+         call wavestop(1, 'Option varbound not implemented yet!')
         !call setswn_var(sr%nnest, dist, hsig, tpeak, wavedir, ms, sr%swani, sr%swanr, windfln)
       else
          call skcoma(luniwp    )
@@ -395,7 +394,6 @@ subroutine varcon(fname     ,timmin    ,result    ,isdir     ,nres )
     integer                        :: iuntim
     integer                        :: ncol
     integer                        :: nt
-    integer, external              :: new_lun
     real                           :: a
     real                           :: b
     real                           :: facrad
@@ -410,14 +408,13 @@ subroutine varcon(fname     ,timmin    ,result    ,isdir     ,nres )
 !
     pi = 4.*atan(1.)
     facrad = pi/180.
-    iuntim = new_lun()
-    open (iuntim, file = fname, err = 999)
+    open (newunit = iuntim, file = fname, err = 999)
   100 continue
     read (iuntim, '(A)') blname
     if (blname(1:1)=='*') goto 100
     read (iuntim, *) nt, ncol
     if (ncol<nres + 1) then
-       stop 'Not enough columns in file'
+       call wavestop(1, 'Not enough columns in file')
     endif
     read (iuntim, *, err = 998) t1, (buff1(i), i = 1, nres)
     !
@@ -436,7 +433,7 @@ subroutine varcon(fname     ,timmin    ,result    ,isdir     ,nres )
           enddo
        else
           if (t2<=t1) then
-             stop ' Varcon - time series not monotonous'
+             call wavestop(1, ' Varcon - time series not monotonous')
           endif
           b = (timmin - t1)/(t2 - t1)
           a = 1.0 - b
@@ -488,10 +485,10 @@ subroutine varcon(fname     ,timmin    ,result    ,isdir     ,nres )
     !
   998 continue
     write (*, *) ' Varcon - Error reading file ', fname
-    stop
+    call wavestop(1, ' Varcon - Error reading file '//trim(fname))
   999 continue
     write (*, *) ' Varcon - Error opening file ', fname
-    stop
+    call wavestop(1, ' Varcon - Error opening file '//trim(fname))
 end subroutine varcon
 
 

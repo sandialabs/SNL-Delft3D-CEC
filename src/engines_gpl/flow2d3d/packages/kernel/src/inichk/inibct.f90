@@ -4,7 +4,7 @@ subroutine inibct(lundia    ,error     ,runid     , &
                 & hydrbc    ,bubble    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +28,8 @@ subroutine inibct(lundia    ,error     ,runid     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: inibct.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/inibct.f90 $
+!  $Id: inibct.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/inibct.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Reads the time dependent data from file for the
@@ -99,10 +99,10 @@ subroutine inibct(lundia    ,error     ,runid     , &
     character(20)                            :: cntent ! String with <contence> input
     character(20)                            :: namhlp
     character(256)                           :: filnam ! Help var. for file name 
-    character(36)  , dimension(1 + 2*mxkmax) :: parnam ! Number of parameter records in time dependent direct access files for BCT 
+    character(36)  , dimension(1 + 2*kmax)   :: parnam ! Number of parameter records in time dependent direct access files for BCT 
     character(36)  , dimension(6)            :: defpar ! Default parameter 
     character(6)                             :: typtst ! Data string to test type of boundary 
-    character(5000)                          :: record ! Record for BCT file 
+    character(kmax*24*2 + 48)                :: record ! Record for BCT file 
     !
     data typtst/'ZCQRTN'/
 !

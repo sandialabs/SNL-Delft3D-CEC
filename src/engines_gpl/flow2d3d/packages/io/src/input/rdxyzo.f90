@@ -5,7 +5,7 @@ subroutine rdxyzo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                 & nmax      ,xcor      ,ycor      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine rdxyzo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdxyzo.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdxyzo.f90 $
+!  $Id: rdxyzo.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdxyzo.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Initialises local en global parameters for the
@@ -115,7 +115,7 @@ subroutine rdxyzo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     logical                          :: nodef    ! Flag set to YES if default value may NOT be applied in case var. read is empty (ier <= 0, or nrread < nlook)
     real(fp)                         :: rdef     ! Help var. containing default value(s) for real variable
     real(fp)                         :: rmissval
-    real(fp)     , dimension(mxkmax) :: rval     ! Help array (real) where the data, recently read from the MD-file, are stored temporarily
+    real(fp)     , dimension(kmax)   :: rval     ! Help array (real) where the data, recently read from the MD-file, are stored temporarily
     character(1)                     :: cdef     ! Default value for chulp
     character(11)                    :: fmtdef   ! Default file format (usually=blank)
     character(11)                    :: fmttmp   ! Character string defining the format of the curvi-linear grid file, file will be read formatted

@@ -3,7 +3,7 @@ function hNew=genfaces(hOld,Ops,Parent,Val,X,Y,Z)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function hNew=genfaces(hOld,Ops,Parent,Val,X,Y,Z)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/genfaces.m $
-%   $Id: genfaces.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/genfaces.m $
+%   $Id: genfaces.m 65778 2020-01-14 14:07:42Z mourits $
 
 special_edges = 0;
 if nargin==4
@@ -100,13 +100,27 @@ else
         %
         % ---> X and Y
         %
-        faces=reshape(1:numel(Y),size(Y));
-        if isequal(size(Y),size(Val)+1)
+        nX = size(X,1);
+        nZ = size(Y,2);
+        if isequal(size(Val),[nX-1 nZ-1]) && isequal(size(Y),[nX nZ])
+            % Val at centre, X and Y defined at corners
+            faces=reshape(1:numel(Y),size(Y));
             faces=faces(1:end-1,1:end-1);
             faces=faces(:);
             xv=[X(:) Y(:)];
             fv=[faces faces+1 faces+size(X,1)+1 faces+size(X,1)];
-        else
+        elseif isequal(size(Val),[nX-1 nZ-1]) && isequal(size(Y),[nX-1 nZ])
+            faces=reshape(1:numel(Y),size(Y));
+            faces=faces(:,1:end-1);
+            faces=faces(:);
+            X0=X(1:end-1,:);
+            X1=X(2:end,:);
+            xv=[X0(:) Y(:); X1(:) Y(:)];
+            fv=[faces faces+numel(X0) faces+size(X0,1)+numel(X0) faces+size(X0,1)];
+        elseif isequal(size(Val),[nX-1 nZ]) && isequal(size(Y),[nX-1 nZ])
+            Y = (Y(:,[1:end end]) + Y(:,[1 1:end]))/2;
+            X(:,end+1) = X(:,end);
+            faces=reshape(1:numel(Y),size(Y));
             faces=faces(:,1:end-1);
             faces=faces(:);
             X0=X(1:end-1,:);
@@ -139,7 +153,7 @@ else
     end
     %
     if isempty(hOld)
-        if isempty(Ops.colourmap)
+        if isempty(Ops.colourmap) && ~strcmp(Ops.presentationtype,'grid')
             fv=fv(~isnan(cv) & cv~=0,:);
             hNew=patch('vertices',xv, ...
                 'faces',fv, ...
@@ -172,7 +186,7 @@ else
                     'facecolor',facecolor);
             end
         end
-        if strcmp(Ops.presentationtype,'patches with lines')
+        if strcmp(Ops.presentationtype,'patches with lines') || strcmp(Ops.presentationtype,'grid')
             if special_edges
                 ln = fv(:,[2 3 3])';
                 %
@@ -198,7 +212,7 @@ else
         end
     else
         hNew=hOld;
-        if isempty(Ops.colourmap)
+        if isempty(Ops.colourmap) && ~strcmp(Ops.presentationtype,'grid')
             fv=fv(~isnan(cv) & cv~=0,:);
             set(hNew,'vertices',xv, ...
                 'faces',fv)

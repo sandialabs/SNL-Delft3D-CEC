@@ -5,8 +5,8 @@
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="..\..\lib\$(ConfigurationName)\static" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static" WarnInterfaces="true" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
-				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" HeapArrays="1" AdditionalIncludeDirectories="../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static" WarnInterfaces="true" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLibrarianTool" IgnoreDefaultLibraryNames="LIBCMT.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -15,8 +15,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="..\..\lib\$(ConfigurationName)\static" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" HeapArrays="1" AdditionalIncludeDirectories="../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLibrarianTool" IgnoreDefaultLibraryNames="LIBCMT.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -25,8 +25,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="../../lib/$(PlatformName)\$(ConfigurationName)\static" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../../../../utils_lgpl/deltares_common/lib/$(PlatformName)\$(ConfigurationName)/static" WarnInterfaces="true" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
-				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" HeapArrays="1" AdditionalIncludeDirectories="../../../../utils_lgpl/deltares_common/lib/$(PlatformName)\$(ConfigurationName)/static" WarnDeclarations="true" WarnUnusedVariables="true" WarnInterfaces="true" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLibrarianTool" IgnoreDefaultLibraryNames="LIBCMT.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -35,8 +35,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="../../lib/$(PlatformName)\$(ConfigurationName)\static" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="../../../../utils_lgpl/deltares_common/lib/$(PlatformName)\$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" HeapArrays="1" AdditionalIncludeDirectories="../../../../utils_lgpl/deltares_common/lib/$(PlatformName)\$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLibrarianTool" IgnoreDefaultLibraryNames="LIBCMT.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -101,15 +101,6 @@
 				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration></File>
-		<File RelativePath=".\src\meteo\openexistingfile_meteo.f90">
-			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration>
-			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration>
-			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration>
-			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration></File>
 		<File RelativePath=".\src\meteo\readmeteoheader.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration>
@@ -119,6 +110,9 @@
 				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration></File></Filter>
+		<File RelativePath=".\src\ec_alloc.f90"/>
+		<File RelativePath=".\src\ec_astro.f90"/>
+		<File RelativePath=".\src\ec_basic_interpolation.f90"/>
 		<File RelativePath=".\src\ec_bccollect.f90"/>
 		<File RelativePath=".\src\ec_bcreader.f90"/>
 		<File RelativePath="src\ec_connection.f90"/>
@@ -132,7 +126,11 @@
 		<File RelativePath="src\ec_message.f90"/>
 		<File RelativePath="src\ec_module.f90"/>
 		<File RelativePath=".\src\ec_netcdf_timeseries.f90"/>
-		<File RelativePath="src\ec_parameters.f90"/>
+		<File RelativePath="src\ec_parameters.F90">
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
 		<File RelativePath="src\ec_provider.F90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
@@ -143,7 +141,7 @@
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
 		<File RelativePath="src\ec_quantity.f90"/>
-		<File RelativePath=".\src\ec_stringbuffer.f90"/>
+		<File RelativePath=".\src\ec_spatial_extrapolation.f90"/>
 		<File RelativePath=".\src\ec_support.f90"/>
 		<File RelativePath="src\ec_typedefs.f90"/>
 		<File RelativePath=".\src\transform_shiftedpole.f90"/></Filter></Files>

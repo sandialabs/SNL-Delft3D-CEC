@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -112,7 +112,7 @@
 !     Local declarations
 !
       DIMENSION     LOC(3)
-      REAL*8        AFACT    , A1    , A2    , D_BEG    , D_END
+      REAL*8        AFACT    , A1    , A2    , D_BEG    , D_END , DUMMY
       CHARACTER*3   CDUMMY
 !
 !     COMMON  /  SYSI   /   System timers
@@ -331,15 +331,15 @@
          IF ( DRAR(K6) .LT. A1 ) I2 = 1
 !  errors and warnings
          IF ( DRAR(K5) .GT. A1 ) THEN
-            CALL GREGOR ( DRAR(K5), IY1, IM1, ID1, IH1, IN1, IS1)
-            CALL GREGOR ( A1      , IY2, IM2, ID2, IH2, IN2, IS2)
+            CALL GREGOR ( DRAR(K5), IY1, IM1, ID1, IH1, IN1, IS1, DUMMY)
+            CALL GREGOR ( A1      , IY2, IM2, ID2, IH2, IN2, IS2, DUMMY)
             WRITE ( LUNUT , 1030 )  IY1, IM1, ID1, IH1, IN1, IS1,
      *                              IY2, IM2, ID2, IH2, IN2, IS2
             iwar = iwar + 1
          ENDIF
          IF ( DRAR(K6) .LT. A2 ) THEN
-            CALL GREGOR ( DRAR(K6), IY1, IM1, ID1, IH1, IN1, IS1)
-            CALL GREGOR ( A2      , IY2, IM2, ID2, IH2, IN2, IS2)
+            CALL GREGOR ( DRAR(K6), IY1, IM1, ID1, IH1, IN1, IS1, DUMMY)
+            CALL GREGOR ( A2      , IY2, IM2, ID2, IH2, IN2, IS2, DUMMY)
             WRITE ( LUNUT , 1040 )  IY1, IM1, ID1, IH1, IN1, IS1,
      *                              IY2, IM2, ID2, IH2, IN2, IS2
             iwar = iwar + 1

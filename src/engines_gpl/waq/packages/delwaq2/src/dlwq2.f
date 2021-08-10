@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -23,12 +23,17 @@
 
       program dlwq2
 
+      use delwaq2_version_module
+
       implicit none
 
       integer                          :: argc
       character(len=256), allocatable  :: argv(:)
+      character(len=120)               :: idstr
       integer(4)                       :: errorcode
       integer(4)                       :: i
+
+      call getfullversionstring_delwaq2(idstr)
 
       argc = iargc() + 1
 
@@ -40,9 +45,9 @@
       call delwaq2(argc, argv, errorcode)
 
       if (errorcode == 0) then
-        write (*,*) 'Normal end'
+        write (*,*) ' Normal end'
       else
-        write (*,*) 'Error code:', errorcode
+        write (*,*) ' Error code:', errorcode
       end if
 
       open  ( 2222 , file = 'delwaq.rtn' )

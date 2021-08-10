@@ -1,7 +1,7 @@
 subroutine wave_init (mdw_file)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine wave_init (mdw_file)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wave_init.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/kernel/src/wave_init.f90 $
+!  $Id: wave_init.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/kernel/src/wave_init.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Reads the name of the mdw file from the command line
@@ -55,7 +55,7 @@ subroutine wave_init (mdw_file)
       if (mdw_file == ' ') then
          write (*,'(a)') '*** ERROR: No mdw-file specified on command-line.'
          call usage()
-         stop
+         call wavestop(1, '*** ERROR: No mdw-file specified on command-line.')
       endif
       !
       ! check if file exists
@@ -63,6 +63,6 @@ subroutine wave_init (mdw_file)
       inquire (file=mdw_file, exist=ex)
       if (.not. ex) then
          write (*,'(a,a,a)') '*** ERROR: mdw-file ''', trim(mdw_file),''' does not exist.'
-         stop
+         call wavestop(1, '*** ERROR: mdw-file '''//trim(mdw_file)//''' does not exist.')
       endif
 end subroutine wave_init

@@ -1,7 +1,7 @@
 subroutine clrtrachy(istat, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine clrtrachy(istat, gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: clrtrachy.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/gdp/clrtrachy.f90 $
+!  $Id: clrtrachy.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/gdp/clrtrachy.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -45,18 +45,20 @@ subroutine clrtrachy(istat, gdp)
 !
 !! executable statements -------------------------------------------------------
 !
-    if (associated(gdp%gdtrachy%ittaru)) deallocate (gdp%gdtrachy%ittaru, STAT = istat)
-    if (associated(gdp%gdtrachy%ittarv)) deallocate (gdp%gdtrachy%ittarv, STAT = istat)
-    if (associated(gdp%gdtrachy%ittdef)) deallocate (gdp%gdtrachy%ittdef, STAT = istat)
+    if (associated(gdp%gdtrachy%ittaru))      deallocate (gdp%gdtrachy%ittaru      , STAT = istat)
+    if (associated(gdp%gdtrachy%ittarv))      deallocate (gdp%gdtrachy%ittarv      , STAT = istat)
+    if (associated(gdp%gdtrachy%ittdef))      deallocate (gdp%gdtrachy%ittdef      , STAT = istat)
+    if (associated(gdp%gdtrachy%itrt_list))   deallocate (gdp%gdtrachy%itrt_list   , STAT = istat)
     !
-    if (associated(gdp%gdtrachy%vegh2d)) deallocate (gdp%gdtrachy%vegh2d, STAT = istat)
-    if (associated(gdp%gdtrachy%vden2d)) deallocate (gdp%gdtrachy%vden2d, STAT = istat)
+    if (associated(gdp%gdtrachy%fraccu_list)) deallocate (gdp%gdtrachy%fraccu_list , STAT = istat)
+    if (associated(gdp%gdtrachy%rgcalu))      deallocate (gdp%gdtrachy%rgcalu      , STAT = istat)
+    if (associated(gdp%gdtrachy%rgcalv))      deallocate (gdp%gdtrachy%rgcalv      , STAT = istat)
+    if (associated(gdp%gdtrachy%rttaru))      deallocate (gdp%gdtrachy%rttaru      , STAT = istat)
+    if (associated(gdp%gdtrachy%rttarv))      deallocate (gdp%gdtrachy%rttarv      , STAT = istat)
+    if (associated(gdp%gdtrachy%rttdef))      deallocate (gdp%gdtrachy%rttdef      , STAT = istat)
+    if (associated(gdp%gdtrachy%rttfu))       deallocate (gdp%gdtrachy%rttfu       , STAT = istat)
+    if (associated(gdp%gdtrachy%rttfv))       deallocate (gdp%gdtrachy%rttfv       , STAT = istat)
     !
-    if (associated(gdp%gdtrachy%rgcalu)) deallocate (gdp%gdtrachy%rgcalu, STAT = istat)
-    if (associated(gdp%gdtrachy%rgcalv)) deallocate (gdp%gdtrachy%rgcalv, STAT = istat)
-    if (associated(gdp%gdtrachy%rttaru)) deallocate (gdp%gdtrachy%rttaru, STAT = istat)
-    if (associated(gdp%gdtrachy%rttarv)) deallocate (gdp%gdtrachy%rttarv, STAT = istat)
-    if (associated(gdp%gdtrachy%rttdef)) deallocate (gdp%gdtrachy%rttdef, STAT = istat)
-    if (associated(gdp%gdtrachy%rttfu))  deallocate (gdp%gdtrachy%rttfu , STAT = istat)
-    if (associated(gdp%gdtrachy%rttfv))  deallocate (gdp%gdtrachy%rttfv , STAT = istat)
+    if (associated(gdp%gdtrachy%vegh2d))      deallocate (gdp%gdtrachy%vegh2d      , STAT = istat)
+    if (associated(gdp%gdtrachy%vden2d))      deallocate (gdp%gdtrachy%vden2d      , STAT = istat)
 end subroutine clrtrachy

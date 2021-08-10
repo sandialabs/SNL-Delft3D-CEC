@@ -3,7 +3,7 @@ subroutine wrihisdis(lundia    ,error     ,filename  ,itdate    ,tunit     , &
                    & gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine wrihisdis(lundia    ,error     ,filename  ,itdate    ,tunit     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrihisdis.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrihisdis.f90 $
+!  $Id: wrihisdis.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrihisdis.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Writes the initial Discharge group to HIS-DAT
@@ -48,6 +48,7 @@ subroutine wrihisdis(lundia    ,error     ,filename  ,itdate    ,tunit     , &
     !
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
+    integer                         , pointer :: io_prec
 !
 ! Global variables
 !
@@ -79,6 +80,7 @@ subroutine wrihisdis(lundia    ,error     ,filename  ,itdate    ,tunit     , &
 !
 !! executable statements -------------------------------------------------------
 !
+    io_prec             => gdp%gdpostpr%io_prec
     ierror = 0
     filetype = getfiletype(gdp, FILOUT_HIS)
     select case (irequest)
@@ -91,8 +93,8 @@ subroutine wrihisdis(lundia    ,error     ,filename  ,itdate    ,tunit     , &
        !
        if (filetype /= FTYPE_NETCDF) then ! don't store duplicates for NetCDF       
           call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ITDATE', ' ', IO_INT4, 1, dimids=(/iddim_2/), longname='Initial date (input) & time (default 00:00:00)', unit='[YYYYMMDD]')
-          call addelm(gdp, lundia, FILOUT_HIS, grnam, 'TUNIT', ' ', IO_REAL4, 0, longname='Time scale related to seconds', unit='s')
-          call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DT', ' ', IO_REAL4   , 0, longname= 'Time step (DT*TUNIT sec)')
+          call addelm(gdp, lundia, FILOUT_HIS, grnam, 'TUNIT', ' ', io_prec , 0, longname='Time scale related to seconds', unit='s')
+          call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DT', ' ', io_prec    , 0, longname= 'Time step (DT*TUNIT sec)')
        endif
        call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DISCHARGES', ' ', 20 , 1, dimids=(/iddim_nsrc/), longname='Names identifying discharges') !CHARACTER
        !

@@ -5,7 +5,7 @@
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="lib/$(ConfigurationName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../data/lib/$(ConfigurationName);../data/include;../io_dol_f/lib/$(ConfigurationName);../../../../utils_lgpl/delftio/lib/$(ConfigurationName)/static;../../../../utils_lgpl/esmfsm/include;../../../../utils_lgpl/ec_module/lib/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common/packages/deltares_common/include;../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static;..\..\..\..\utils_gpl\morphology\lib\$(ConfigurationName)\static" PreprocessorDefinitions="w32" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../data/lib/$(ConfigurationName);../data/include;../io_dol_f/lib/$(ConfigurationName);../../../../utils_lgpl/delftio/lib/$(ConfigurationName)/static;../../../../utils_lgpl/esmfsm/include;../../../../utils_lgpl/ec_module/lib/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common/packages/deltares_common/include;../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static;..\..\..\..\utils_gpl\morphology\lib\$(ConfigurationName)\static" PreprocessorDefinitions="w32" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
@@ -25,7 +25,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="lib/$(PlatformName)\$(ConfigurationName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../../bin/$(PlatformName)/$(ConfigurationName);../data/lib/$(PlatformName)/$(ConfigurationName);../data/include;../io_dol_f/lib/$(PlatformName)/$(ConfigurationName);../../../../utils_lgpl/meteo/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/delftio/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/delftio_sync/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/esmfsm/include;../../../../utils_lgpl/inifiles/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/ec_module/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common\packages\deltares_common\include\" PreprocessorDefinitions="w32" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../../bin/$(PlatformName)/$(ConfigurationName);../data/lib/$(PlatformName)/$(ConfigurationName);../data/include;../io_dol_f/lib/$(PlatformName)/$(ConfigurationName);../../../../utils_lgpl/meteo/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/delftio/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/delftio_sync/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/esmfsm/include;../../../../utils_lgpl/inifiles/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/ec_module/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common\packages\deltares_common\include\" PreprocessorDefinitions="w32" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
@@ -214,15 +214,16 @@
 				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration></File>
 		<File RelativePath="src\compute_sediment\dwnvel.f90"/>
 		<File RelativePath="src\compute_sediment\erosed.f90"/>
+		<File RelativePath="src\compute_sediment\morstatistics.f90"/>
 		<File RelativePath="src\compute_sediment\red_soursin.f90"/>
 		<File RelativePath="src\compute_sediment\shearx.f90"/>
 		<File RelativePath="src\compute_sediment\upbdps.f90"/>
 		<File RelativePath="src\compute_sediment\updwaqflxsed.f90"/>
 		<File RelativePath="src\compute_sediment\upwbed.f90"/>
-		<File RelativePath=".\src\compute_sediment\z_bott3d.f90"/>
-		<File RelativePath=".\src\compute_sediment\z_dwnvel.f90"/>
-		<File RelativePath=".\src\compute_sediment\z_erosed.f90"/>
-		<File RelativePath=".\src\compute_sediment\z_red_soursin.f90"/></Filter>
+		<File RelativePath="src\compute_sediment\z_bott3d.f90"/>
+		<File RelativePath="src\compute_sediment\z_dwnvel.f90"/>
+		<File RelativePath="src\compute_sediment\z_erosed.f90"/>
+		<File RelativePath="src\compute_sediment\z_red_soursin.f90"/></Filter>
 		<Filter Name="dd">
 		<File RelativePath="src\dd\caldpu_dd.f90"/>
 		<File RelativePath="src\dd\chkdry_dd.f90"/>
@@ -261,6 +262,7 @@
 		<File RelativePath="src\general\newlun.f90"/>
 		<File RelativePath="src\general\nm_to_diag.f90"/>
 		<File RelativePath="src\general\nm_to_n_and_m.f90"/>
+		<File RelativePath=".\src\general\nm_to_nmglob.f90"/>
 		<File RelativePath="src\general\nuliar.f90"/>
 		<File RelativePath="src\general\open_datdef.f90"/>
 		<File RelativePath="src\general\pldep.F90">
@@ -297,7 +299,7 @@
 		<File RelativePath="src\general\vermdf.f90"/>
 		<File RelativePath="src\general\wrline.f90"/>
 		<File RelativePath="src\general\z_ainpro.f90"/>
-		<File RelativePath=".\src\general\z_taubotmodifylayers.f90"/></Filter>
+		<File RelativePath="src\general\z_taubotmodifylayers.f90"/></Filter>
 		<Filter Name="inichk">
 		<File RelativePath="src\inichk\allocadv2d.f90"/>
 		<File RelativePath="src\inichk\caldps.f90"/>
@@ -351,7 +353,6 @@
 		<File RelativePath="src\inichk\inieva.f90"/>
 		<File RelativePath="src\inichk\inigeo.f90"/>
 		<File RelativePath="src\inichk\inigrd.f90"/>
-		<File RelativePath="src\inichk\inimorlyr.f90"/>
 		<File RelativePath="src\inichk\iniphy.f90"/>
 		<File RelativePath="src\inichk\inirgl.f90"/>
 		<File RelativePath="src\inichk\inised.f90"/>
@@ -428,10 +429,10 @@
 		<File RelativePath="src\timedep\incbc.f90"/>
 		<File RelativePath="src\timedep\incbcc.f90"/>
 		<File RelativePath="src\timedep\incdis.f90"/>
-		<File RelativePath=".\src\timedep\inceva.f90"/>
+		<File RelativePath="src\timedep\inceva.f90"/>
 		<File RelativePath="src\timedep\incmeteo.f90"/>
 		<File RelativePath="src\timedep\incrbc.f90"/>
-		<File RelativePath=".\src\timedep\incsdu.f90"/>
+		<File RelativePath="src\timedep\incsdu.f90"/>
 		<File RelativePath="src\timedep\inctem.f90"/>
 		<File RelativePath="src\timedep\incwav.f90"/>
 		<File RelativePath="src\timedep\rtc_comm_get.f90"/>

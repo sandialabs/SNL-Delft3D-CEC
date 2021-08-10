@@ -3,7 +3,7 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
                   & kcs       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rddredge.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rddredge.f90 $
+!  $Id: rddredge.f90 65926 2020-02-04 09:27:46Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rddredge.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Reads Dredge and Dump input file.
@@ -129,11 +129,17 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
     integer                                 :: j
     integer                                 :: j2
     integer                                 :: lsed
+    integer                                 :: n
+    integer                                 :: nglob
+    integer                                 :: m
+    integer                                 :: mglob
     integer                                 :: nm
+    integer                                 :: nmglob
     integer                                 :: nmaxddb
     integer                                 :: nmcor
     integer                                 :: noutletlinks
     integer                                 :: npnt
+    integer                                 :: npnt_halo
     integer, allocatable, dimension(:)      :: imask
     integer, allocatable, dimension(:)      :: ipdr
     integer, pointer    , dimension(:)      :: ipdu
@@ -738,6 +744,7 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
                 pdredge%alpha_dh      = def_alpha_dh
                 pdredge%plough_effic  = def_plough_effic
                 nullify(pdredge%nm)
+                nullify(pdredge%nmglob)
                 nullify(pdredge%inm)
                 nullify(pdredge%area)
                 nullify(pdredge%hdune)
@@ -1045,7 +1052,7 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
                 pdredge%stilldredging = .false.
                 pdredge%dredgewhendry = .false.
                 pdredge%dumplimited   = .false.
-                pdredge%in1domain     = .false.
+                pdredge%in1domain     = .true.
                 pdredge%if_morfac_0   = .false.
                 pdredge%obey_cmp      = .true.
                 pdredge%triggertype   = DREDGETRIG_POINTBYPOINT
@@ -1056,6 +1063,7 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
                 pdredge%npnt          = 0
                 pdredge%ichkloc       = 0
                 nullify(pdredge%nm)
+                nullify(pdredge%nmglob)
                 nullify(pdredge%inm)
                 nullify(pdredge%area)
                 nullify(pdredge%hdune)
@@ -1315,6 +1323,7 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
        pdump%use_dunes    = def_use_dunes
        pdump%npnt         = 0
        nullify(pdump%nm)
+       nullify(pdump%nmglob)
        nullify(pdump%inm)
        nullify(pdump%reflevel)
        nullify(pdump%area)
@@ -1631,6 +1640,7 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
        pdump%depthdef     = DEPTHDEF_REFPLANE
        pdump%ichkloc      = CHKLOC_CENTRE
        nullify(pdump%nm)
+       nullify(pdump%nmglob)
        nullify(pdump%inm)
        nullify(pdump%reflevel)
        nullify(pdump%bedlevel)
@@ -1648,64 +1658,80 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
        !
        imask(:)       = 0
        npnt           = 0
+       npnt_halo      = 0
        ia             = ipdr(cntdred)
        do nm = 1, nmmax
-          if (gsqs(nm) > 0.0_fp .and. kcs(nm)==1) then
+          if (gsqs(nm) > 0.0_fp .and. abs(kcs(nm))==1) then
              select case (dredge_prop(i)%ichkloc)
              case (CHKLOC_ALLCORNER)
                 nmcor = nm
-                call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat)
+                call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat, gdp)
                 nmcor = nm - 1
-                if (istat >= 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat)
+                if (istat >= 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat, gdp)
                 nmcor = nm - nmaxddb
-                if (istat >= 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat)
+                if (istat >= 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat, gdp)
                 nmcor = nm - nmaxddb-1
-                if (istat >= 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat)
+                if (istat >= 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat, gdp)
              case (CHKLOC_CENTRE)
-                call ipon(xdr(ia), ydr(ia), npdr(cntdred), xz(nm), yz(nm), istat)
+                call ipon(xdr(ia), ydr(ia), npdr(cntdred), xz(nm), yz(nm), istat, gdp)
              case (CHKLOC_ANYCORNER)
                 nmcor = nm
-                call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat)
+                call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat, gdp)
                 nmcor = nm - 1
-                if (istat < 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat)
+                if (istat < 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat, gdp)
                 nmcor = nm - nmaxddb
-                if (istat < 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat)
+                if (istat < 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat, gdp)
                 nmcor = nm - nmaxddb - 1
-                if (istat < 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat)
+                if (istat < 0) call ipon(xdr(ia), ydr(ia), npdr(cntdred), xcor(nmcor), ycor(nmcor), istat, gdp)
              end select
              if (istat >= 0) then
                 imask(nm) = 1
-                npnt      = npnt + 1
+                if (kcs(nm) == 1) then
+                   npnt      = npnt + 1
+                else
+                   npnt_halo = npnt_halo + 1
+                endif
              endif
           endif
        enddo
        !
        dredge_prop(i)%npnt = npnt
-                       allocate (dredge_prop(i)%nm(npnt)           , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%inm(npnt)          , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%area(npnt)         , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%hdune(npnt)        , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%dz_dredge(npnt)    , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%reflevel(npnt)     , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%dunetoplevel(npnt) , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%triggerlevel(npnt) , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%bedlevel(npnt)     , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%troughlevel(npnt)  , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%sedimentdepth(npnt), stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%sortvar(npnt)      , stat = istat)
-       if (istat == 0) allocate (dredge_prop(i)%triggered(npnt)    , stat = istat)
+                       allocate (dredge_prop(i)%nm(npnt+npnt_halo)    , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%nmglob(npnt+npnt_halo), stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%inm(npnt)             , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%area(npnt)            , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%hdune(npnt)           , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%dz_dredge(npnt)       , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%reflevel(npnt)        , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%dunetoplevel(npnt)    , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%triggerlevel(npnt)    , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%bedlevel(npnt)        , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%troughlevel(npnt)     , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%sedimentdepth(npnt)   , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%sortvar(npnt)         , stat = istat)
+       if (istat == 0) allocate (dredge_prop(i)%triggered(npnt)       , stat = istat)
        if (istat /= 0) then
           call prterr(lundia, 'U021', 'RdDredge: memory alloc error')
           call d3stop(1, gdp)
        endif
        !
-       npnt = 0
+       ic = 0
        do nm = 1, nmmax
-          if (imask(nm) > 0) then
-             npnt                      = npnt + 1
-             dredge_prop(i)%nm(npnt)   = nm
-             dredge_prop(i)%area(npnt) = gsqs(nm)
-             globalareadred(i)         = globalareadred(i) + gsqs(nm)
+          if (imask(nm) > 0 .and. kcs(nm)==1) then
+             ic                          = ic + 1
+             call nm_to_nmglob(nm, nmglob, gdp)
+             dredge_prop(i)%nmglob(ic)   = nmglob
+             dredge_prop(i)%nm(ic)       = nm
+             dredge_prop(i)%area(ic)     = gsqs(nm)
+             globalareadred(i)           = globalareadred(i) + gsqs(nm)
+          endif
+       enddo
+       do nm = 1, nmmax
+          if (imask(nm) > 0 .and. kcs(nm)/=1) then
+             ic                          = ic + 1
+             call nm_to_nmglob(nm, nmglob, gdp)
+             dredge_prop(i)%nmglob(ic)   = nmglob
+             dredge_prop(i)%nm(ic)       = -nm
           endif
        enddo
        do ic = 1,npnt
@@ -1729,13 +1755,13 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
           loctemp = 0.0_fp
           do ic = 1, npnt
             inm     = dredge_prop(i)%nm(ic)
-            loctemp = loctemp + xz(inm)    
+            if (inm>0) loctemp = loctemp + xz(inm)    
           enddo
           dredge_prop(i)%dredgeloc(1) = loctemp/npnt
           loctemp                     = 0.0_fp
           do ic = 1, npnt
             inm     = dredge_prop(i)%nm(ic)
-            loctemp = loctemp + yz(inm)    
+            if (inm>0) loctemp = loctemp + yz(inm)    
           enddo
           dredge_prop(i)%dredgeloc(2) = loctemp / npnt
        else 
@@ -1747,49 +1773,55 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
     do i = 1, nadump
        imask(:)       = 0
        npnt           = 0
+       npnt_halo      = 0
        if (npdu(i) /= 0) then
           ia = ipdu(i)
           do nm = 1, nmmax
-             if (gsqs(nm) > 0.0_fp .and. kcs(nm)==1) then
+             if (gsqs(nm) > 0.0_fp .and. abs(kcs(nm))==1) then
                 select case (dump_prop(i)%ichkloc)
                 case (CHKLOC_ALLCORNER)
                    nmcor = nm
-                   call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat)
+                   call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat, gdp)
                    nmcor = nm - 1
-                   if (istat >= 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat)
+                   if (istat >= 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat, gdp)
                    nmcor = nm - nmaxddb
-                   if (istat >= 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat)
+                   if (istat >= 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat, gdp)
                    nmcor = nm - nmaxddb - 1
-                   if (istat >= 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat)
+                   if (istat >= 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat, gdp)
                 case (CHKLOC_CENTRE)
-                   call ipon(xdu(ia), ydu(ia), npdu(i), xz(nm), yz(nm), istat)
+                   call ipon(xdu(ia), ydu(ia), npdu(i), xz(nm), yz(nm), istat, gdp)
                 case (CHKLOC_ANYCORNER)
                    nmcor = nm
-                   call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat)
+                   call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat, gdp)
                    nmcor = nm - 1
-                   if (istat < 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat)
+                   if (istat < 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat, gdp)
                    nmcor = nm - nmaxddb
-                   if (istat < 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat)
+                   if (istat < 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat, gdp)
                    nmcor = nm - nmaxddb - 1
-                   if (istat < 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat)
+                   if (istat < 0) call ipon(xdu(ia), ydu(ia), npdu(i), xcor(nmcor), ycor(nmcor), istat, gdp)
                 end select
                 if (istat >= 0) then
                    imask(nm) = 1
-                   npnt      = npnt + 1
+                   if (kcs(nm) == 1) then
+                      npnt      = npnt + 1
+                   else
+                      npnt_halo = npnt_halo + 1
+                   endif
                 endif
              endif
           enddo
        endif
        !
        dump_prop(i)%npnt = npnt
-                       allocate (dump_prop(i)%nm(npnt)      , stat = istat)
-       if (istat == 0) allocate (dump_prop(i)%inm(npnt)     , stat = istat)
-       if (istat == 0) allocate (dump_prop(i)%reflevel(npnt), stat = istat)
-       if (istat == 0) allocate (dump_prop(i)%area(npnt)    , stat = istat)
-       if (istat == 0) allocate (dump_prop(i)%hdune(npnt)   , stat = istat)
-       if (istat == 0) allocate (dump_prop(i)%bedlevel(npnt), stat = istat)
-       if (istat == 0) allocate (dump_prop(i)%dz_dump(npnt) , stat = istat)
-       if (istat == 0) allocate (dump_prop(i)%sortvar(npnt) , stat = istat)
+                       allocate (dump_prop(i)%nm(npnt+npnt_halo)    , stat = istat)
+       if (istat == 0) allocate (dump_prop(i)%nmglob(npnt+npnt_halo), stat = istat)
+       if (istat == 0) allocate (dump_prop(i)%inm(npnt)             , stat = istat)
+       if (istat == 0) allocate (dump_prop(i)%reflevel(npnt)        , stat = istat)
+       if (istat == 0) allocate (dump_prop(i)%area(npnt)            , stat = istat)
+       if (istat == 0) allocate (dump_prop(i)%hdune(npnt)           , stat = istat)
+       if (istat == 0) allocate (dump_prop(i)%bedlevel(npnt)        , stat = istat)
+       if (istat == 0) allocate (dump_prop(i)%dz_dump(npnt)         , stat = istat)
+       if (istat == 0) allocate (dump_prop(i)%sortvar(npnt)         , stat = istat)
        if (istat /= 0) then
           call prterr(lundia, 'U021', 'RdDredge: memory alloc error')
           call d3stop(1, gdp)
@@ -1803,13 +1835,23 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
        dump_prop(i)%dz_dump  = -1.0E11_fp
        dump_prop(i)%sortvar  = -1.0E11_fp
        !
-       npnt = 0
+       ic = 0
        do nm = 1, nmmax
-          if (imask(nm) > 0) then
-             npnt                    = npnt + 1
-             localareadump(i)        = localareadump(i) + gsqs(nm)
-             dump_prop(i)%nm(npnt)   = nm
-             dump_prop(i)%area(npnt) = gsqs(nm)
+          if (imask(nm) > 0 .and. kcs(nm)==1) then
+             ic                          = ic + 1
+             call nm_to_nmglob(nm, nmglob, gdp)
+             dump_prop(i)%nmglob(ic)     = nmglob
+             dump_prop(i)%nm(ic)         = nm
+             dump_prop(i)%area(ic)       = gsqs(nm)
+             localareadump(i)            = localareadump(i) + gsqs(nm)
+          endif
+       enddo
+       do nm = 1, nmmax
+          if (imask(nm) > 0 .and. kcs(nm)/=1) then
+             ic                          = ic + 1
+             call nm_to_nmglob(nm, nmglob, gdp)
+             dump_prop(i)%nmglob(ic)     = nmglob
+             dump_prop(i)%nm(ic)         = -nm
           endif
        enddo
        !
@@ -1820,13 +1862,13 @@ subroutine rddredge(xcor      ,ycor      ,xz        ,yz        ,gsqs      , &
           loctemp = 0.0_fp
           do ic = 1, npnt
              inm     = dump_prop(i)%nm(ic)
-             loctemp = loctemp + xz(inm)    
+             if (inm>0) loctemp = loctemp + xz(inm)    
           enddo
           dump_prop(i)%dumploc(1) = loctemp / npnt
           loctemp = 0.0_fp
           do ic = 1, npnt
              inm     = dump_prop(i)%nm(ic)
-             loctemp = loctemp + yz(inm)    
+             if (inm>0) loctemp = loctemp + yz(inm)
           enddo
           dump_prop(i)%dumploc(2) = loctemp / npnt
        else 

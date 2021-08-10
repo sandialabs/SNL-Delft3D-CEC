@@ -1,9 +1,0 @@
-﻿  Generating code
-  Finished generating code
-  lint.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\lint\packages\lint\..\..\bin\Release\lint.exe
-  oss-install...
-  Target directory: ..\bin
-  Source          : package/engine lint
-  "installing lint . . ."
-  C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\lint\bin\Release\lint.exe -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\bin\win32\flow2d3d\bin\lint.exe
-  1 File(s) copied

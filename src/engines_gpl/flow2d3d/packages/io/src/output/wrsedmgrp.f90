@@ -4,7 +4,7 @@ subroutine wrsedmgrp(lundia    ,error     ,filename  ,itmapc    ,mmax      , &
                    & mf        ,ml        ,nf        ,nl        ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +28,8 @@ subroutine wrsedmgrp(lundia    ,error     ,filename  ,itmapc    ,mmax      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrsedmgrp.f90 4656 2015-02-05 17:03:40Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrsedmgrp.f90 $
+!  $Id: wrsedmgrp.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrsedmgrp.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Writes the time varying data for bedforms, sediment transport
@@ -67,6 +67,7 @@ subroutine wrsedmgrp(lundia    ,error     ,filename  ,itmapc    ,mmax      , &
     real(fp)                        , pointer :: morfac
     integer                         , pointer :: nmaxgl
     integer                         , pointer :: mmaxgl
+    integer                         , pointer :: io_prec
 !
 ! Global variables
 !
@@ -117,6 +118,7 @@ subroutine wrsedmgrp(lundia    ,error     ,filename  ,itmapc    ,mmax      , &
     sbvv           => gdp%gdr_i_ch%sbvv
     ws             => gdp%gdr_i_ch%ws
     dps            => gdp%gdr_i_ch%dps
+    io_prec        => gdp%gdpostpr%io_prec
     !
     filetype = getfiletype(gdp, FILOUT_MAP)
     !
@@ -134,7 +136,7 @@ subroutine wrsedmgrp(lundia    ,error     ,filename  ,itmapc    ,mmax      , &
           call addelm(gdp, lundia, FILOUT_MAP, grnam4, 'ITMAPS', ' ', IO_INT4    , 0, longname='timestep number (ITMAPC*DT*TUNIT := time in sec from ITDATE)')
        endif
        if (lsedtot > 0) then
-          call addelm(gdp, lundia, FILOUT_MAP, grnam4, 'MORFAC', ' ', IO_REAL4, 0, longname='morphological acceleration factor (MORFAC)')
+          call addelm(gdp, lundia, FILOUT_MAP, grnam4, 'MORFAC', ' ', io_prec , 0, longname='morphological acceleration factor (MORFAC)')
           call addelm(gdp, lundia, FILOUT_MAP, grnam4, 'MORFT' , ' ', IO_REAL8, 0, longname='morphological time (days since start of simulation)', unit='days')
        endif
        !

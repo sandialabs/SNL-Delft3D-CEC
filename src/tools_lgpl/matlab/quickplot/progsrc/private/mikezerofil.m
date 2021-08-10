@@ -18,7 +18,7 @@ function varargout=mikezerofil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,8 +43,8 @@ function varargout=mikezerofil(FI,domain,field,cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/mikezerofil.m $
-%   $Id: mikezerofil.m 5505 2015-10-19 13:00:47Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/mikezerofil.m $
+%   $Id: mikezerofil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 T_=1; ST_=2; M_=3; N_=4; K_=5;
@@ -88,10 +88,51 @@ switch cmd
         [varargout{1:2}]=gettimezone(FI,domain,Props);
         return
     case 'stations'
-        varargout={{}};
+        varargout={readsts(FI,Props,varargin{:})};
         return
     case 'subfields'
         varargout={{}};
+        return
+    case 'plot'
+        Parent=varargin{1};
+        Ops=varargin{2};
+        hOld=varargin{3};
+        Station=varargin{4};
+        %
+        LocationStr=readsts(FI,Props,Station);
+        switch Props.Name
+            case 'cross sectional profile'
+                YZ=FI.CrossSection.YZ{Station};
+                xtyp='Distance';
+                xval='';
+                xunit='m';
+            case 'area(z) plot'
+                YZ=FI.CrossSection.ZARP{Station}([2 1],:);
+                xtyp='Val';
+                xval='area';
+                xunit='m^2';
+            case 'hydraulic radius(z) plot'
+                YZ=FI.CrossSection.ZARP{Station}([3 1],:);
+                xtyp='Val';
+                xval='hydraulic radius';
+                xunit='m';
+            case 'wetted perimeter(z) plot'
+                YZ=FI.CrossSection.ZARP{Station}([4 1],:);
+                xtyp='Val';
+                xval='wetted perimeter';
+                xunit='m';
+        end
+        if ~isempty(hOld{1})
+            hNew = hOld{1};
+            set(hNew,'xdata',YZ(1,:),'ydata',YZ(2,:))
+        else
+            hNew=line(YZ(1,:),YZ(2,:),'parent',Parent,'color',Ops.colour);
+        end
+        setaxesprops(Parent,[xtyp '-Z'],{xval 'elevation'},{xunit 'm'})
+        %
+        set(get(Parent,'title'),'string',LocationStr,'interpreter','none')
+        %
+        varargout={hNew FI};
         return
     otherwise
         [XYRead,DataRead,DataInCell]=gridcelldata(cmd);
@@ -147,7 +188,7 @@ y=[];
 z=[];
 triangular = 0;
 if XYRead && DimFlag(M_)
-    if isfield(FI,'Unstructured') && FI.Unstructured
+    if isfield(FI,'DataType') && strcmp(FI.DataType,'unstructured')
         triangular = 1;
         xid = strmatch('X-coord',{FI.Item.Name},'exact');
         x=mike('read',FI,xid,1);
@@ -283,29 +324,46 @@ function Out=infile(FI,domain)
 PropNames={'Name'                         'DimFlag'    'NVal' 'DataInCell' 'Index' 'UseGrid' 'Tri'};
 DataProps={'data field'                    [1 0 0 0 0]  1           1       0          1       0};
 Out=cell2struct(DataProps,PropNames,2);
-if isfield(FI,'Unstructured') && FI.Unstructured
-    Out(1).Tri=1;
-    fm=strmatch('MIKE_FM',{FI.Attrib.Name},'exact');
-    if FI.Attrib(fm).Data(3)==3
-        Out(1).DimFlag=[1 0 1 1 1];
-    else
-        Out(1).DimFlag=[1 0 1 1 0];
-    end
+if isfield(FI,'DataType')
+    DT = FI.DataType;
 else
-    switch FI.NumCoords
-        case 1
-            Out(1).DimFlag=[1 0 1 0 0];
-            Out(1).UseGrid=0;
-        case 2
-            Out(1).DimFlag=[1 0 1 1 0];
-        case 3
+    DT = 'structured';
+end
+switch DT
+    case 'unstructured'
+        Out(1).Tri=1;
+        fm=strmatch('MIKE_FM',{FI.Attrib.Name},'exact');
+        if FI.Attrib(fm).Data(3)==3
             Out(1).DimFlag=[1 0 1 1 1];
-    end
+        else
+            Out(1).DimFlag=[1 0 1 1 0];
+        end
+    case 'crosssections'
+        Out(1).Name = 'cross sectional profile';
+        Out(1).DimFlag=[0 5 0 0 0];
+        Out(1).NVal = -1;
+        Out(2) = Out(1);
+        Out(2).Name = 'area(z) plot';
+        Out(3) = Out(2);
+        Out(3).Name = 'hydraulic radius(z) plot';
+        Out(4) = Out(3);
+        Out(4).Name = 'wetted perimeter(z) plot';
+        return
+    otherwise
+        switch FI.NumCoords
+            case 1
+                Out(1).DimFlag=[1 0 1 0 0];
+                Out(1).UseGrid=0;
+            case 2
+                Out(1).DimFlag=[1 0 1 1 0];
+            case 3
+                Out(1).DimFlag=[1 0 1 1 1];
+        end
 end
 if ~isempty(FI.Item)
     for i=1:length(FI.Item)
         Out(i)=Out(1);
-        Out(i).Name=deblank2(FI.Item(i).Name);
+        Out(i).Name=strtrim(FI.Item(i).Name);
         Out(i).Index=i;
     end
 else
@@ -373,6 +431,8 @@ switch FI.FileType
                 sz(T_)=FI.NumTimeSteps;
             end
         end
+    case 'MikeXFS'
+        sz(ST_) = length(FI.CrossSection.Name);
 end
 % -----------------------------------------------------------------------------
 
@@ -421,6 +481,27 @@ switch cmd,
         end
     otherwise
         error(['Unknown option command: ',cmd])
+end
+% -----------------------------------------------------------------------------
+
+
+% -----------------------------------------------------------------------------
+function S=readsts(FI,Props,t)
+if nargin<3 || t==0
+    t = 1:length(FI.CrossSection.Name);
+end
+S = cell(length(t),1);
+for i = 1:length(t)
+    if isempty(FI.CrossSection.Name{t(i)})
+        S{i} = sprintf('%s@%g', ...
+            FI.CrossSection.Branch{t(i)}, ...
+            FI.CrossSection.Offset(t(i)));
+    else
+        S{i} = sprintf('%s (%s@%g)', ...
+            FI.CrossSection.Name{t(i)}, ...
+            FI.CrossSection.Branch{t(i)}, ...
+            FI.CrossSection.Offset(t(i)));
+    end
 end
 % -----------------------------------------------------------------------------
 

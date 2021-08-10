@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -23,7 +23,7 @@
 
 !-- VERSION HISTORY ----------------------------------------------------------
 !
-!   $URL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/reshape_rdata.F90 $
+!   $URL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/reshape_rdata.F90 $
 !   $Revision: 42 $, $Date: 2007-11-26 15:20:20 +0100 (Mon, 26 Nov 2007) $
 !
 !   Programmer: Edwin Vollebregt (VORtech)
@@ -157,7 +157,7 @@ character(len=20), dimension(:) :: inrlp_names(num_inrlp) = &
       if (any(isize(:,1).ne.isize(:,2))) then
          write(LOUT,*) 'reshape_data, inrlp=1: Error: dimensions disagree.', &
                 ' fldin:',isize(:,1),', fldout:',isize(:,2)
-         stop
+         call srstop(1)
       endif
 
       do i3 = 1, nin3
@@ -175,7 +175,7 @@ character(len=20), dimension(:) :: inrlp_names(num_inrlp) = &
 
       if (idimin.le.0 .or. idimin.gt.3) then
          write(LOUT,*) 'reshape_data, inrlp=2: Error: idimin must be 1, 2 or 3.'
-         stop
+         call srstop(1)
       endif
 
 !     check size of arrays; in dimension idimin "nout" should be equal to ntin
@@ -184,7 +184,7 @@ character(len=20), dimension(:) :: inrlp_names(num_inrlp) = &
       if (any(isize(:,1).ne.isize(:,2))) then
          write(LOUT,*) 'reshape_data, inrlp=2: Error: dimensions disagree.', &
                 ' fldin,itin:',isize(:,1),', fldout:',isize(:,2)
-         stop
+         call srstop(1)
       endif
 
       if (idimin.eq.1) then
@@ -237,7 +237,7 @@ character(len=20), dimension(:) :: inrlp_names(num_inrlp) = &
       if (idmout.le.0 .or. idmout.gt.3) then
          write(LOUT,'(a,i1,a)') 'reshape_data, inrlp=',inrlp, &
                 ': Error: idmout must be 1, 2 or 3.'
-         stop
+         call srstop(1)
       endif
 
 !     check size of arrays; in dimension idmout "nin" should be equal to ntout
@@ -247,7 +247,7 @@ character(len=20), dimension(:) :: inrlp_names(num_inrlp) = &
          write(LOUT,'(a,i1,2(a,i7))') 'reshape_data, inrlp=',inrlp, &
                 ': Error: dimensions disagree. fldin:',isize(:,1), &
                 ', fldout,itout:',isize(:,2)
-         stop
+         call srstop(1)
       endif
 
       if (idmout.eq.1) then
@@ -327,7 +327,7 @@ character(len=20), dimension(:) :: inrlp_names(num_inrlp) = &
 
       write(LOUT,*) 'reshape_data: inner-loop type',inrlp, &
         ' is not yet supported.'
-      stop
+      call srstop(1)
 
    endif
 

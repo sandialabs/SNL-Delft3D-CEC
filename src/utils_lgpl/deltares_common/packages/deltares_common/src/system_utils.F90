@@ -1,7 +1,7 @@
 module system_utils
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -25,8 +25,8 @@ module system_utils
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: system_utils.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common/src/system_utils.F90 $
+!  $Id: system_utils.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common/src/system_utils.F90 $
 !-------------------------------------------------------------------------------
 !
 !   Support for low level system routines
@@ -35,9 +35,11 @@ module system_utils
 !
 
 #if (defined(HAVE_CONFIG_H))
+    character(3), parameter :: SHARED_LIB_PREFIX = 'lib'
     character(3), parameter :: SHARED_LIB_EXTENSION = '.so'
     character(1), parameter :: FILESEP = '/'
 #else
+    character(0), parameter :: SHARED_LIB_PREFIX = ''
     character(4), parameter :: SHARED_LIB_EXTENSION = '.dll'
     character(1), parameter :: FILESEP = '\'
 #endif
@@ -146,7 +148,37 @@ subroutine split_filename(name, path, file, ext)
     endif
 end subroutine split_filename
 
-
+subroutine remove_path(name, file)
+!!--description-----------------------------------------------------------------
+!
+!    Function: A subroutine to remove the path from a full file name and return
+!              a file name with extension.
+!
+!!--declarations----------------------------------------------------------------
+    !
+    implicit none
+    !
+    ! Call variables
+    !
+    character(*)          , intent(in)  :: name   ! Full name of file (path,file,ext)
+    character(*)          , intent(out) :: file   ! File name (including extension if ext is present)
+    !
+    ! Local variables
+    !
+    integer    :: ifilesep   ! index of last file separator
+!
+!! executable statements -------------------------------------------------------
+!
+    ! find last file separator
+    ifilesep = index(name, FILESEP, back=.true.)
+#ifndef HAVE_CONFIG_H
+    ! on Windows also check forward slash
+    ifilesep = max(ifilesep,index(name, '/', back=.true.))
+#endif
+    !
+    ! file name with extention
+    file = name(ifilesep+1:len_trim(name))
+end subroutine remove_path
 
 function exifil(name, unit)
 !!--description-----------------------------------------------------------------
@@ -188,4 +220,79 @@ function exifil(name, unit)
     endif
 end function exifil
 
+function makedir(dirname) result(istat)
+!!--description-----------------------------------------------------------------
+!
+!    Function: An integer function that creates a directory (also for linux)
+!              when it does not yet exist.
+!              Returns the error status from the 'system' command.
+!
+!!--declarations----------------------------------------------------------------
+
+#ifdef __INTEL_COMPILER
+    use ifport
+#endif
+    implicit none
+    character(len=*), intent(in) :: dirname
+
+    character(len=256)           :: command
+    integer                      :: istat
+    logical                      :: l_exist
+    integer                      :: lslash
+    character(len=999)           :: pathstr
+    character(len=1)             :: slash
+!
+!! executable statements -------------------------------------------------------
+!
+    istat = 0
+
+    call get_environment_variable('PATH',pathstr)
+   
+    slash = char(47)
+    lslash = index (pathstr,slash)
+    if (lslash .eq. 0) then
+       slash = char(92)
+    endif
+
+#ifdef __INTEL_COMPILER
+    inquire(directory = trim(dirname), exist = l_exist)
+#else
+    ! GNU
+    inquire(file = trim(dirname)//slash//".", exist = l_exist)
+#endif
+    if (l_exist) then
+       return
+    end if
+
+    if ( slash .eq. char(47)) then
+!      linux
+       command = "mkdir -p "//trim(dirname)
+    else
+!      windows
+       command = "mkdir "//trim(dirname)
+    end if
+
+    istat = system(command)
+    ! Fortran2008, not available before Intel 15:
+    ! call execute_command_line(command)
+      
+    return
+   end function
+
+!> Return .true. if path is an absolute pathname.
+!! On Unix, that means it begins with a slash, on Windows that it begins
+!! with a (back)slash after chopping off a potential drive letter.
+logical function is_abs(path)
+   character(len=*), intent(in   ) :: path !< Input path
+
+   integer :: idrive ! last char position of possible drive letter start, e.g. 'D:'
+#ifdef HAVE_CONFIG_H
+   is_abs = (path(1:1) == FILESEP)
+#else
+   idrive = index(path, ':') ! Find piece after drive letter:. When not found, still check from index 1, because it might start with / for Windows UNC paths \\share\etc.
+   is_abs = (path(idrive+1:idrive+1) == FILESEP .or. path(idrive+1:idrive+1) == '/') ! On Windows, also allow forward lash.
+#endif
+
+end function is_abs
+   
 end module system_utils

@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: plugin_culvert.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/plugins_lgpl/plugin_culvert/src/plugin_culvert.f90 $
+!  $Id: plugin_culvert.f90 65813 2020-01-17 16:46:56Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/plugins_lgpl/plugin_culvert/src/plugin_culvert.f90 $
 module plugin_culvert
    !
    ! Local constants
@@ -40,7 +40,7 @@ subroutine culvert(dll_integers, max_integers, &
                   dll_reals   , max_reals   , &
                   dll_strings , max_strings , &
                   discharge, zpos1, zpos2, &
-                  error_message   )
+                  error_message_c   )
 !DEC$ ATTRIBUTES DLLEXPORT, ALIAS: 'CULVERT' :: CULVERT
 !!--description-----------------------------------------------------------------
 !
@@ -49,6 +49,7 @@ subroutine culvert(dll_integers, max_integers, &
 !!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
+use iso_c_binding, only: c_char
 implicit none
 !
 ! Subroutine arguments: input
@@ -62,8 +63,8 @@ character(len=256), dimension(max_strings) , intent(in)  :: dll_strings
 !
 ! Subroutine arguments: output
 !
-real(hp)          , intent(out) :: discharge     ! discharge from 1 to 2 [m3/s]
-character(len=256), intent(out) :: error_message ! not empty: echo and stop run
+real(hp)          , intent(out) :: discharge              ! discharge from 1 to 2 [m3/s]
+character(kind=c_char), intent(out) :: error_message_c(*) ! not empty: echo and stop run
 !
 ! Subroutine arguments: optional output arguments
 !
@@ -82,6 +83,7 @@ real(hp)           :: timsec
 real(hp)           :: zb1, zb2, zw1, zw2
 character(len=256) :: filenm
 character(len=256) :: runid
+character(len=256) :: error_message
 !
 ! Local variables
 !
@@ -99,6 +101,9 @@ real(hp)           :: zz1, zz2
 !
 if (max_integers < 8) then
    error_message = 'Insufficient integer values provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 nm1     = dll_integers( 1) ! nm index of point 1
@@ -112,6 +117,9 @@ kfs2    = dll_integers( 8) ! dry flag of point 2 (0 = dry, 1 = wet)
 !
 if (max_reals < 7) then
    error_message = 'Insufficient real values provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 timsec  = dll_reals( 1)    ! current time since reference time [s]
@@ -124,6 +132,9 @@ ag      = dll_reals( 7)    ! gravitational acceleration [m/s2]
 !
 if (max_strings < 2) then
    error_message = 'Insufficient strings provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 runid   = dll_strings( 1)  ! user-specified run-identification
@@ -259,6 +270,10 @@ endif
 !
 zpos1 = poscul
 zpos2 = poscul
+!
+do i=1,256
+   error_message_c(i) = error_message(i:i)
+enddo
 end subroutine culvert
 
 
@@ -421,7 +436,7 @@ subroutine externtable(dll_integers, max_integers, &
                   dll_reals   , max_reals   , &
                   dll_strings , max_strings , &
                   discharge, zpos1, zpos2, &
-                  error_message   )
+                  error_message_c   )
 !DEC$ ATTRIBUTES DLLEXPORT, ALIAS: 'TABLE' :: EXTERNTABLE
 !!--description-----------------------------------------------------------------
 !
@@ -430,6 +445,7 @@ subroutine externtable(dll_integers, max_integers, &
 !!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
+use iso_c_binding, only: c_char
 implicit none
 !
 ! Subroutine arguments: input
@@ -443,8 +459,8 @@ character(len=256), dimension(max_strings) , intent(in)  :: dll_strings
 !
 ! Subroutine arguments: output
 !
-real(hp)          , intent(out) :: discharge     ! discharge from 1 to 2 [m3/s]
-character(len=256), intent(out) :: error_message ! not empty: echo and stop run
+real(hp)          , intent(out) :: discharge              ! discharge from 1 to 2 [m3/s]
+character(kind=c_char), intent(out) :: error_message_c(*) ! not empty: echo and stop run
 !
 ! Subroutine arguments: optional output arguments
 !
@@ -453,6 +469,7 @@ real(hp)                          :: zpos2       ! vertical position at 2 [m]
 !
 ! Local variables for input parameters
 !
+integer            :: i
 integer            :: kfs1, kfs2
 integer            :: m1, m2
 integer            :: n1, n2, nm1, nm2
@@ -462,6 +479,7 @@ real(hp)           :: timsec
 real(hp)           :: zb1, zb2, zw1, zw2
 character(len=256) :: filenm
 character(len=256) :: runid
+character(len=256) :: error_message
 !
 ! Local variables
 !
@@ -479,6 +497,9 @@ real(hp), dimension(:), allocatable, save :: disch
 !
 if (max_integers < 8) then
    error_message = 'Insufficient integer values provided'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 nm1     = dll_integers( 1) ! nm index of point 1
@@ -492,6 +513,9 @@ kfs2    = dll_integers( 8) ! dry flag of point 2 (0 = dry, 1 = wet)
 !
 if (max_reals < 7) then
    error_message = 'Insufficient real values provided'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 timsec  = dll_reals( 1)    ! current time since reference time [s]
@@ -504,6 +528,9 @@ ag      = dll_reals( 7)    ! gravitational acceleration [m/s2]
 !
 if (max_strings < 2) then
    error_message = 'Insufficient strings provided'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 runid   = dll_strings( 1)  ! user-specified run-identification
@@ -587,6 +614,10 @@ if (zw1<zw2) discharge = -discharge
 !
 !zpos1 = poscul
 !zpos2 = poscul
+!
+do i=1,256
+   error_message_c(i) = error_message(i:i)
+enddo
 end subroutine externtable
 
 end module plugin_culvert

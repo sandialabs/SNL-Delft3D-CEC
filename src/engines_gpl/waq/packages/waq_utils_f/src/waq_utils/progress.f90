@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -49,7 +49,7 @@ subroutine initialise_progress( progress, nstep, filename )
     character(len=*), intent(in)       :: filename     !< Name of the file to use
 
     progress%istep    = 0
-    progress%nstep    = 0
+    progress%nstep    = nstep
     progress%required = filename /= ' '
 
     call cpu_time( progress%secsprev )

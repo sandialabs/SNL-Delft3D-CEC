@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,29 +24,29 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dio_function77.inc 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftio/include/dio_function77.inc $
-C
-C     dio_function77.inc
-C
-C     F77 Interface function declarations
-C
-C     Stef.Hummel@deltares.nl
-C
-C     (c) Deltares, Nov 03
-C---------------------------------------------
-C
-C
-C     Function declarations for PLT DATASETS
-C
+!  $Id: dio_function77.inc 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftio/include/dio_function77.inc $
+!
+!     dio_function77.inc
+!
+!     F77 Interface function declarations
+!
+!     Stef.Hummel@deltares.nl
+!
+!     (c) Deltares, Nov 03
+!---------------------------------------------
+!
+!
+!     Function declarations for PLT DATASETS
+!
       integer DioDefinePltDataSet
       integer DioGetPltDataSetInfo
       logical DioGetPltDataSetReals
-C
+!
       external DioDefinePltDataSet
       external DioGetPltDataSetInfo, DioGetPltDataSetReals
-C
-C     Function declarations for Streams
-C
+!
+!     Function declarations for Streams
+!
       integer DioCreateStreamSynched
       external DioCreateStreamSynched

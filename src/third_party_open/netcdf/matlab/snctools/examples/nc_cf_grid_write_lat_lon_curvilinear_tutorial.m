@@ -58,7 +58,7 @@
    OPT.title                  = 'Example of curvilinear grid conforming to CF conventions.';
    OPT.institution            = 'TU Delpht';
    OPT.source                 = 'example data';
-   OPT.history                = ['tranformation to netCDF: $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/third_party_open/netcdf/matlab/snctools/examples/nc_cf_grid_write_lat_lon_curvilinear_tutorial.m $'];
+   OPT.history                = ['tranformation to netCDF: $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/third_party_open/netcdf/matlab/snctools/examples/nc_cf_grid_write_lat_lon_curvilinear_tutorial.m $'];
    OPT.references             = 'http://cf-pcmdi.llnl.gov/documents/cf-conventions/1.4/cf-conventions.html';
    OPT.email                  = 'john.g.evans.ne@gmail.com';
    OPT.comment                = 'Adapted from example provided by Gerben de Boer.';

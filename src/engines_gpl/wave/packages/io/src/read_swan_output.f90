@@ -42,7 +42,7 @@ subroutine hisout(hs        ,dir       ,dirc      ,dirs      ,period    , &
                 & drtm01    ,setup     ,n_outpars ,add_out_vals)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -66,8 +66,8 @@ subroutine hisout(hs        ,dir       ,dirc      ,dirs      ,period    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: read_swan_output.f90 5404 2015-09-10 13:52:50Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/io/src/read_swan_output.f90 $
+!  $Id: read_swan_output.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/io/src/read_swan_output.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -130,7 +130,6 @@ subroutine hisout(hs        ,dir       ,dirc      ,dirs      ,period    , &
     integer           :: k
     integer           :: lunhis
     integer           :: npnt
-    integer, external :: new_lun
     integer           :: outfile          ! The SWAN output is written to n_outfiles files
     integer           :: n_outfiles       ! Can be 2 or 3, depending on whether additional output is requested
     integer           :: neg_dissip_found ! = 1,2,3,4 when a negative dissip, dissurf, diswcap or disbot is found in the swanout file, repectively
@@ -196,12 +195,11 @@ subroutine hisout(hs        ,dir       ,dirc      ,dirs      ,period    , &
        if (open) then
           inquire (file = filnam, number = lunhis)
        else
-          lunhis = new_lun()
-          open (lunhis, file=filnam, iostat=fstat, status='old')
+          open (newunit=lunhis, file=filnam, iostat=fstat, status='old')
        endif
        if (fstat /= 0) then
           write (*, '(2a)') '*** ERROR: Unable to open file ',trim(filnam)
-          stop
+          call wavestop(1, '*** ERROR: Unable to open file '//trim(filnam))
        endif
        rewind lunhis
        do j = 1, offset
@@ -346,7 +344,7 @@ subroutine hisout(hs        ,dir       ,dirc      ,dirs      ,period    , &
                 !
                 close (lunhis)
                 write (*, '(2a)') '*** ERROR: Unable to read values from file ', trim(filnam)
-                stop
+                call wavestop(1, '*** ERROR: Unable to read values from file '//trim(filnam))
              endif
           enddo
           if (outfile == 1) then

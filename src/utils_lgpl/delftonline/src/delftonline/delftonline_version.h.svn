@@ -12,8 +12,8 @@
 
 /*=================================================== DO NOT MAKE CHANGES BELOW THIS LINE ===================================================================== */
 
-static char delftonline_version [] = {delftonline_major"."delftonline_minor"."delftonline_revision"."delftonline_build};
-static char delftonline_version_full [] = {"Deltares, "delftonline_program" Version "delftonline_major"."delftonline_minor"."delftonline_revision"."delftonline_build", "__DATE__", "__TIME__""};
+static char delftonline_version [] = {delftonline_major "." delftonline_minor "." delftonline_revision "." delftonline_build};
+static char delftonline_version_full [] = {"Deltares, " delftonline_program " Version " delftonline_major "." delftonline_minor "." delftonline_revision "." delftonline_build ", " __DATE__ ", " __TIME__ ""};
 
 char * getfullversionstring_delftonline(void);
 

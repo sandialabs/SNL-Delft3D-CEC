@@ -1,7 +1,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -33,7 +33,7 @@
 !
 !-- VERSION HISTORY ----------------------------------------------------------
 !
-!   $URL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/m_intfc.F90 $
+!   $URL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/m_intfc.F90 $
 !   $Revision: 42 $, $Date: 2007-11-26 15:20:20 +0100 (Mon, 26 Nov 2007) $
 !
 !   Programmer: Edwin Vollebregt (VORtech)
@@ -275,14 +275,14 @@ integer                 :: iierr
          write(LOUT,*) 'Intfc_hdnl: an interface with name "',trim(namitf),&
              '" was found but should not (yet) exist.'
       endif
-      if (iierr.eq.-IFATAL) stop
+      if (iierr.eq.-IFATAL) call srstop(1)
       intfc_hndl_iset = iitf
    else
       if (iierr.eq.IWARN .or. iierr.eq.IFATAL) then
          write(LOUT,*) 'intfc_hndl: Error: cannot find interface with name="', &
                  trim(namitf),'" for index-set "', trim(namixs), '".'
       endif
-      if (iierr.eq.IFATAL) stop
+      if (iierr.eq.IFATAL) call srstop(1)
       intfc_hndl_iset = IDUNNO
    endif
 
@@ -341,7 +341,7 @@ type(t_intfc), pointer  :: itf
    if (iitf.le.0 .or. iitf.gt.nintfc) then
       write(LOUT,*) 'intfc_getprops: Error: handle to interface',iitf,&
                     ' out of range 1..',nintfc
-      stop
+      call srstop(1)
    endif
 
    itf => intfcs(iitf)
@@ -546,7 +546,7 @@ integer                              :: ingb
    if (.not.associated(intfcs)) then
       write(LOUT,*) 'intfc_define: Error: CouPLib data-structures have not ', &
                  'been initialized properly!'
-      stop
+      call srstop(1)
    endif
 
 !  check that name 'namitf' does not yet exist in table of interfaces for
@@ -556,7 +556,7 @@ integer                              :: ingb
    if (iitf.ne.IDUNNO) then
       write(LOUT,*) 'intfc_define: Error: interface "',trim(namitf), &
                  '" already exists for index-set',iset
-      stop
+      call srstop(1)
    endif
 
 !  Re-allocate the intfcs-table when needed
@@ -675,7 +675,7 @@ type(t_intfc), pointer               :: new
    if (iitf.ne.IDUNNO) then
       write(LOUT,*) 'intfc_replicate: Error: interface "',trim(namitf), &
                  '" already exists for index-set',iset
-      stop
+      call srstop(1)
    endif
 
 !  check that iset is a Cartesian product;
@@ -685,12 +685,12 @@ type(t_intfc), pointer               :: new
    if (nfac.le.1) then
       write(LOUT,*) 'intfc_replicate: Error: index-set "',trim(namixs), &
                  '" must be a Cartesian product.'
-      stop
+      call srstop(1)
    endif
    if (ifcdst.eq.IVOID) then
       write(LOUT,*) 'intfc_replicate: Error: index-set "',trim(namixs), &
                  '" does not contain a distributed index-set factor.'
-      stop
+      call srstop(1)
    endif
 
 !  get handle to interface 'namitf' on stand-alone distributed index-set ifcdst
@@ -701,7 +701,7 @@ type(t_intfc), pointer               :: new
       write(LOUT,*) 'intfc_replicate: Error: interface "',trim(namitf), &
                  '" must exist for distributed index-set',ifcdst,' "', &
                  trim(namdst),'"'
-      stop
+      call srstop(1)
    endif
 
 !  Re-allocate the intfcs-table when needed
@@ -990,7 +990,7 @@ integer                        :: idebug
       write(LOUT,*) 'intfc_define_collcitf_ihave: Error: size of mask-',&
         'array ihave is not correct. Should be',nelem,', actual length=', &
         size(ihave)
-      stop
+      call srstop(1)
    endif
 
 !  allocate neighbour-table
@@ -1325,7 +1325,7 @@ integer                        :: idebug=0
    if (size(ineed).ne.nelem) then
       write(LOUT,*) 'intfc_define_dstrbitf_ineed: Error: size of mask-array ',&
         'ineed is not correct. Should be',nelem,', actual length=',size(ineed)
-      stop
+      call srstop(1)
    endif
 
 !  allocate neighbour-table
@@ -1512,7 +1512,7 @@ integer                        :: my_idebug=0
    if (size(ineed).ne.nelem) then
       write(LOUT,*) 'intfc_define_updatitf: Error: size of mask-array ineed',&
         ' is not correct. Should be',nelem,', actual length=',size(ineed)
-      stop
+      call srstop(1)
    endif
 
 !  check whether ownership is filled in correctly for all elements needed by the
@@ -1523,7 +1523,7 @@ integer                        :: my_idebug=0
          if (iowner(is).le.0 .or. iowner(is).gt.numprc) then
             write(LOUT,*) 'intfc_define_updatitf: Error: owner',iowner(is),&
                ' for index',is,' is out of range [1..numprc=',numprc,'].'
-            stop
+            call srstop(1)
          endif
       endif
    enddo

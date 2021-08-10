@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: pt.h 5266 2015-07-10 21:14:41Z mooiman $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/nefis/packages/nefis/include/pt.h $
+// $Id: pt.h 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/nefis/packages/nefis/include/pt.h $
 #ifndef __PT__
 #define __PT__
 
@@ -48,6 +48,7 @@ extern BInt4  GP_inquire_grp     ( BInt4  , BInt4  , BInt4 *, BText  , BText  ,
                                   BInt4 *, BInt4 *, BInt4 *);
 extern BInt4  GP_variable_pointer( BInt4  , BUInt8 *, BUInt4 , BUInt8 *);
 extern BUInt8 GP_write_file      ( BInt4  , BText   , BUInt8 , BUInt8  );
+extern BUInt8 GP_read_file       ( BInt4  , BText   , BUInt8 , BUInt8  );
 extern BInt4  RT_retrieve        ( BInt4   , BText  , BText  ,
                                   BUInt8 *, BUInt4 *, BUInt4 *,
                                   BUInt4 *, BUInt4 *, BText,

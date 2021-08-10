@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -24,7 +24,8 @@
       subroutine dlwq04 ( lun     , lchar   , filtype , nrftot  , nrharm  ,
      &                    ilflag  , dtflg1  , iwidth  , intsrt  , dtflg3  ,
      &                    vrsion  , ioutpt  , nsegdmp , isegdmp , nexcraai,
-     &                    iexcraai, ioptraai, gridps  , ierr    , iwar    )
+     &                    iexcraai, ioptraai, gridps  , ierr    , iwar    ,
+     &                    has_hydfile       , nexch   )
 
 !       Deltares Software Centre
 
@@ -109,6 +110,8 @@
       type(GridPointerColl)           GridPs            !< Collection of grid pointers
       integer  ( 4), intent(inout) :: ierr              !< cumulative error   count
       integer  ( 4), intent(inout) :: iwar              !< cumulative warning count
+      logical      , intent(in)    :: has_hydfile       !< if true, much information comes from the hyd-file
+      integer  ( 4), dimension(*), intent(in) :: nexch  !< nmber of exchanges from the hyd-file
 
       include 'sysn.inc'      !    COMMON  /  SYSN  /    System dimensions
 
@@ -187,19 +190,26 @@
 
 !        Read exchange dimensions of the system (NOQ1,NOQ2,NOQ3)
 
-      regular = .false.
-      if ( gettoken( cdummy, noq1, itype, ierr2 ) .gt. 0 ) goto 100
-      if ( itype .eq. 1 ) then
-         if ( cdummy(1:12) .eq. 'REGULAR_GRID' ) then
-            regular = .true.
-            if ( gettoken( noq1, ierr2 ) .gt. 0 ) goto 100
-         else
-            ierr2 = 1
-            goto 100
+      if ( has_hydfile ) then
+         noq1 = nexch(1)
+         noq2 = nexch(2)
+         noq3 = nexch(3)
+      else
+         regular = .false.
+         if ( gettoken( cdummy, noq1, itype, ierr2 ) .gt. 0 ) goto 100
+         if ( itype .eq. 1 ) then
+            if ( cdummy(1:12) .eq. 'REGULAR_GRID' ) then
+               regular = .true.
+               if ( gettoken( noq1, ierr2 ) .gt. 0 ) goto 100
+            else
+               ierr2 = 1
+               goto 100
+            endif
          endif
+         if ( gettoken( noq2, ierr2 ) .gt. 0 ) goto 100
+         if ( gettoken( noq3, ierr2 ) .gt. 0 ) goto 100
       endif
-      if ( gettoken( noq2, ierr2 ) .gt. 0 ) goto 100
-      if ( gettoken( noq3, ierr2 ) .gt. 0 ) goto 100
+
       noq = noq1 + noq2 + noq3
 
 !        These 2 options use a regular grid with full matrix.
@@ -337,37 +347,49 @@
 
 !        Read option variable for input mode
 
-      if ( gettoken( iopt, ierr2 ) .gt. 0 ) goto 100
-      write ( lunut , 2170 ) iopt
-      if ( iopt .eq. 2 ) goto 10
+      if ( has_hydfile ) then
+         iopt1 = 0
+      else
+          if ( gettoken( iopt, ierr2 ) .gt. 0 ) goto 100
+          write ( lunut , 2170 ) iopt
+          if ( iopt .eq. 2 ) goto 10
 
 !***************  first type of input ******************
 
 !        Read exchange pointers
 
-      if ( gettoken( iopt1, ierr2 ) .gt. 0 ) goto 100
-      write ( lunut , 2180 )  iopt1
-      call opt1 ( iopt1   , lun     , 8      , lchar  ,  filtype ,
-     &            dtflg1  , dtflg3  , 0      , ierr2  ,  iwar    )
-      if ( ierr2  .gt. 0 ) goto 100
+         if ( gettoken( iopt1, ierr2 ) .gt. 0 ) goto 100
+         write ( lunut , 2180 )  iopt1
 
-      if ( intsrt .eq. 19 .or. intsrt .eq. 20 .or. regular ) then  !        Regular grid
-         noqt = noq4
-         call pointr ( lun    , lchar  , noseg  , nmax   , mmax   ,
-     &                 kmax   , noq    , noq1   , noq2   , noq3   ,
-     &                 noqt   , nobnd  , ipnt   , intsrt , iopt1  ,
-     &                 jtrack , ioutpt , iwidth , GridPs , cellpnt,
-     &                 flowpnt, ierr   , iwar    )
-      else                                            !        Irregular grid
+         if ( intsrt .eq. 19 .or. intsrt .eq. 20 .or. regular ) then  !        Regular grid
+            call opt1 ( iopt1   , lun     , 8      , lchar  ,  filtype ,
+     &                  dtflg1  , dtflg3  , 0      , ierr2  ,  iwar    ,
+     &                  .false. )
+            if ( ierr2  .gt. 0 ) goto 100
+            noqt = noq4
+            call pointr ( lun    , lchar  , noseg  , nmax   , mmax   ,
+     &                    kmax   , noq    , noq1   , noq2   , noq3   ,
+     &                    noqt   , nobnd  , ipnt   , intsrt , iopt1  ,
+     &                    jtrack , ioutpt , iwidth , GridPs , cellpnt,
+     &                    flowpnt, ierr   , iwar    )
+         endif
+      endif
+      if ( has_hydfile .or.
+     &     .not. ( intsrt .eq. 19 .or. intsrt .eq. 20 .or. regular ) ) then  ! Irregular grid/hyd-file
+         call opt1 ( iopt1   , lun     , 44     , lchar  ,  filtype ,
+     &               dtflg1  , dtflg3  , 0      , ierr2  ,  iwar    ,
+     &               has_hydfile       )
+         if ( ierr2  .gt. 0 ) goto 100
          noqt = noq  + noq4
          allocate ( ipnt(4,noqt) , stat = ierr2 )
+         ipnt = 0
          if ( ierr2 .ne. 0 ) then
             write ( lunut , 2160 ) ierr2, 4*noqt
             goto 100
          endif
          call pointi ( lun    , lchar  , noseg  , noq       , noq1   ,
      &                 noq2   , noq3   , noqt   , nobnd     , ipnt   ,
-     &                 intsrt , iopt1  , jtrack , filtype(8), ioutpt ,
+     &                 intsrt , iopt1  , jtrack , filtype(44), ioutpt ,
      &                 GridPs , ierr   , iwar   )
       endif
       noq12 = noq1 + noq2
@@ -402,7 +424,7 @@
      &              nodisp , 1      , nrftot(3), nrharm(3), ifact  ,
      &              dtflg1 , disper , volume   , iwidth   , lchar  ,
      &              filtype, dtflg3 , vrsion   , ioutpt   , ierr2  ,
-     &              iwar   )
+     &              iwar   , .false. )
       ierr = ierr + ierr2
       disper = .false.
 
@@ -414,7 +436,7 @@
      &              1      ,  1     , nrftot(4), nrharm(4), ifact  ,
      &              dtflg1 , disper , volume   , iwidth   , lchar  ,
      &              filtype, dtflg3 , vrsion   , ioutpt   , ierr2  ,
-     &              iwar   )
+     &              iwar   , has_hydfile       )
       ierr = ierr + ierr2
 
 !        Read flows
@@ -425,7 +447,7 @@
      &              1      , 1      , nrftot(5), nrharm(5), ifact  ,
      &              dtflg1 , disper , volume   , iwidth   , lchar  ,
      &              filtype, dtflg3 , vrsion   , ioutpt   , ierr2  ,
-     &              iwar   )
+     &              iwar   , has_hydfile       )
       ierr = ierr + ierr2
       if ( .not. alone ) then
          if ( lchar(11) .ne. fnamep(7) ) then
@@ -443,17 +465,21 @@
      &                 novelo , 1      , nrftot(6), nrharm(6), ifact  ,
      &                 dtflg1 , disper , volume   , iwidth   , lchar  ,
      &                 filtype, dtflg3 , vrsion   , ioutpt   , ierr2  ,
-     &                 iwar   )
+     &                 iwar   , .false. )
          ierr = ierr + ierr2
       endif
 
 !        Read length "to" and "from" surfaces
 
       write ( lunut , 2240 )
-      if ( gettoken( ilflag, ierr2 ) .gt. 0 ) goto 100
-      write ( lunut , 2250 ) ilflag
-      select case ( ilflag )
 
+      if ( has_hydfile ) then
+         ilflag = 1
+      else
+         if ( gettoken( ilflag, ierr2 ) .gt. 0 ) goto 100
+         write ( lunut , 2250 ) ilflag
+      endif
+      select case ( ilflag )
          case ( 0 )
             write ( lunut , 2260 )
             idum   = 4
@@ -469,7 +495,7 @@
      &                     2     , 1      , nrftot(7), nrharm(7), ifact  ,
      &                    dtflg1 , disper , volume   , iwidth   , lchar  ,
      &                    filtype, dtflg3 , vrsion   , ioutpt   , ierr2  ,
-     &                    iwar   )
+     &                    iwar   , has_hydfile       )
 
          case default
             write ( lunut , 2280 )
@@ -508,7 +534,8 @@
       idum = 0
 
       call opt1 ( iopt1   , lun     , idum    , lchar   , filtype ,
-     &            dtflg1  , dtflg3  , 0       , ierr2   , iwar    )
+     &            dtflg1  , dtflg3  , 0       , ierr2   , iwar    ,
+     &            .false. )
       if ( ierr2  .gt. 0 ) goto 100
 
       do k = 1, 4

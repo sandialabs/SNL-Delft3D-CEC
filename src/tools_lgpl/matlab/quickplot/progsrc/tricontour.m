@@ -27,7 +27,7 @@ function H=tricontour(tri,x,y,z,v,levels,color)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -52,8 +52,8 @@ function H=tricontour(tri,x,y,z,v,levels,color)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/tricontour.m $
-%   $Id: tricontour.m 5637 2015-12-09 15:25:13Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/tricontour.m $
+%   $Id: tricontour.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin<5
     error('Not enough input arguments.')
@@ -132,7 +132,8 @@ for LevelNr=1:nlevels
     Nsmaller(NaN_tri)=3;
     Nlarger(NaN_tri)=0;
     CLIndex=1+4*Nlarger+Nsmaller;
-    Cutslevel=[0 3 2 0 3 3 3 0 2 3 0 0 0 0 0];
+    %Cutslevel=[0 3 2 0 3 3 3 0 2 3 0 0 0 0 0]; % deactivate cases 3 and 9 for process_polylines
+    Cutslevel=[0 3 0 0 3 3 3 0 0 3 0 0 0 0 0];
     NLevel=sum(Cutslevel(CLIndex));
     XLevel=repmat(NaN,[NLevel 1]);
     YLevel=XLevel;
@@ -232,28 +233,39 @@ for LevelNr=1:nlevels
     end
     
     % patches with one equal and two larger or two smaller
-    Patch=Patches((CLIndex==3) | (CLIndex==9));
-    if ~isempty(Patch)
-        LvlIndex=LvlOffset+(1:2:(2*length(Patch)));
-        Index=tri(Patch,:);
-        [Dummy,Permutation]=sort(v(Index)==level,2);
-        Index=Index((Permutation-1)*size(Index,1)+transpose(1:size(Index,1))*[1 1 1]);
-        % third element has elevation equal to level
-        Index=Index(:,3);
-        XPoint=x(Index);
-        XLevel(LvlIndex(:))=XPoint(:);
-        YPoint=y(Index);
-        YLevel(LvlIndex(:))=YPoint(:);
-        if zdef
-            ZPoint=z(Index);
-            ZLevel(LvlIndex(:))=ZPoint(:);
-        end
-        LvlOffset=LvlOffset+2*length(Patch);
+    % Needed to capture peaks that coincide with contour.
+    % Deactivated for compatibility with process_polylines
+%     Patch=Patches((CLIndex==3) | (CLIndex==9));
+%     if ~isempty(Patch)
+%         LvlIndex=LvlOffset+(1:2:(2*length(Patch)));
+%         Index=tri(Patch,:);
+%         [Dummy,Permutation]=sort(v(Index)==level,2);
+%         Index=Index((Permutation-1)*size(Index,1)+transpose(1:size(Index,1))*[1 1 1]);
+%         % third element has elevation equal to level
+%         Index=Index(:,3);
+%         XPoint=x(Index);
+%         XLevel(LvlIndex(:))=XPoint(:);
+%         YPoint=y(Index);
+%         YLevel(LvlIndex(:))=YPoint(:);
+%         if zdef
+%             ZPoint=z(Index);
+%             ZLevel(LvlIndex(:))=ZPoint(:);
+%         end
+%         LvlOffset=LvlOffset+2*length(Patch);
+%     end
+    
+    NonEmptyLevel(LevelNr)=1;
+    if 1 % the processing of the polylines adds a performance penalty, but improves the quality of the plot in HG2. 
+    %if isempty(XLevel)
+        % no line, so no reason to concatenate lines
+    elseif zdef
+        [XLevel,YLevel,ZLevel] = process_polylines(XLevel,YLevel,ZLevel);
+    else
+        [XLevel,YLevel] = process_polylines(XLevel,YLevel);
     end
     
     VLevel=level*ones(size(XLevel));
     
-    NonEmptyLevel(LevelNr)=1;
     if getdata
         if zdef
             H{LevelNr}={XLevel YLevel ZLevel LevelNr};
@@ -304,3 +316,116 @@ else
         set(H,'color',col);
     end
 end
+
+
+function [X,Y,Z] = process_polylines(X,Y,Z)
+valid = ~isnan(X);
+if nargin==2 || isempty(Z)
+    xyz = [X(valid) Y(valid)];
+else
+    xyz = [X(valid) Y(valid) Z(valid)];
+end
+[uxyz,ia,ic] = unique(xyz,'rows');
+edp = reshape(ic,[2 length(ic)/2])';
+sedp = sort(edp,2);
+[uedp,edgenr,isorted] = unique(sedp,'rows');
+edges = edp(edgenr,:);
+%
+contour = NaN(1,2*size(edges,1));
+i1 = 1;
+contour(i1:i1+1) = edges(1,:);
+n1 = contour(i1);
+n2 = contour(i1+1);
+i2 = i1+1;
+%
+[snodes,irow] = sort(edges(:));
+irow = mod(irow-1,size(edges,1))+1;
+istart = find(diff([0;snodes;0]));
+%
+% mark edge as traversed
+edges(1,:) = NaN;
+%
+ntodo = size(edges,1)-1;
+%
+flipped = false;
+while 1
+    %
+    % search for an edge that connects to node n2.
+    % these edges are numbered irow(istart(n2):istart(n2+1)-1)
+    % they may already be traversed, so let's check which one is available
+    %
+    found = false;
+    for r2 = istart(n2):istart(n2+1)-1
+        l2 = irow(r2);
+        if edges(l2,1)==n2
+            found = true;
+            n3 = edges(l2,2);
+            break
+        elseif edges(l2,2)==n2
+            found = true;
+            n3 = edges(l2,1);
+            break
+        end
+    end
+    %
+    if ~found
+        if flipped
+            if ntodo>0
+                % start new polyline using first unused edge
+                todo = find(~isnan(edges(:,1)));
+                todo = todo(1);
+                %
+                i1 = i2+2;
+                %
+                contour(i1:i1+1) = edges(todo,:);
+                n1 = contour(i1);
+                n2 = contour(i1+1);
+                i2 = i1+1;
+                %
+                % mark edge as traversed
+                edges(todo,:) = NaN;
+                ntodo = ntodo-1;
+                %
+                flipped = false;
+            else
+                % all edges done
+                break
+            end
+        else
+            % no edge to continue ... try flipping
+            contour(i1:i2) = contour(i2:-1:i1);
+            n1 = contour(i1);
+            n2 = contour(i2);
+            flipped = true;
+        end
+        continue
+    end
+    %
+    % n3 is the number of the other node
+    % add it to the contour
+    i2=i2+1;
+    contour(i2) = n3;
+    %
+    % mark edge as traversed
+    edges(l2,1:2) = NaN;
+    ntodo = ntodo-1;
+    %
+    % continue the search from the latest node
+    n2 = n3;
+end
+%
+% TODO: check here how many polylines have been created
+%
+% put contour back into X,Y,Z
+contour = contour(1:i2);
+bpoint = isnan(contour);
+contour(bpoint) = 1;
+X = uxyz(contour,1);
+X(bpoint) = NaN;
+Y = uxyz(contour,2);
+Y(bpoint) = NaN;
+if nargout==3
+    Z = uxyz(contour,3);
+    Z(bpoint) = NaN;
+end
+

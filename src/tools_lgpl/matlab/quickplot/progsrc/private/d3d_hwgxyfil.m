@@ -18,7 +18,7 @@ function varargout=d3d_hwgxyfil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,8 +43,8 @@ function varargout=d3d_hwgxyfil(FI,domain,field,cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/d3d_hwgxyfil.m $
-%   $Id: d3d_hwgxyfil.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/d3d_hwgxyfil.m $
+%   $Id: d3d_hwgxyfil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 T_=1; ST_=2; M_=3; N_=4; K_=5;
@@ -158,8 +158,13 @@ if XYRead
     if DimFlag(M_) & DimFlag(N_)
         %    [x,Chk]=vs_get(FI,'map-series',{t},'XP',idx([M_ N_]),'quiet');
         %    [y,Chk]=vs_get(FI,'map-series',{t},'YP',idx([M_ N_]),'quiet');
-        [x,Chk]=vs_get(FI,'map-series',{1},'XP',idx([M_ N_]),'quiet');
-        [y,Chk]=vs_get(FI,'map-series',{1},'YP',idx([M_ N_]),'quiet');
+        if DimFlag(T_)
+            tgrid = idx{T_}(1);
+        else
+            tgrid = 1;
+        end
+        [x,Chk]=vs_get(FI,'map-series',{tgrid},'XP',idx([M_ N_]),'quiet');
+        [y,Chk]=vs_get(FI,'map-series',{tgrid},'YP',idx([M_ N_]),'quiet');
         x((x==0) & (y==0)) = NaN;
         x((x==-999) & (y==-999)) = NaN;
         y(isnan(x))=NaN;
@@ -410,25 +415,27 @@ function Out=infile(FI,domain)
 
 %======================== SPECIFIC CODE =======================================
 PropNames={'Name'                   'Units'   'DimFlag' 'DataInCell' 'NVal' 'VecType' 'Loc' 'ReqLoc'  'Loc3D' 'Group'          'Val1'     'Val2'    'SubFld' 'MNK'};
-DataProps={'wave grid'                 ''       [0 0 1 1 0]  0         0     ''       'd'   'd'       ''      'map-series'     'XP'       'YP'       []       0
+DataProps={'wave grid'          ''       [0 0 1 1 0]  0         0     ''       'd'   'd'       ''      'map-series'     'XP'       'YP'       []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
     'wind velocity'             'm/s'    [1 0 1 1 0]  1         2     'x'      'd'   'd'       ''      'WIND'           'WINDU'    'WINDV'    []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
     'hsig wave height'          'm'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'HSIGN'    ''         []       0
     'hsig wave vector (mean direction)' ...
-    'm'      [1 0 1 1 0]  1         2     'm'      'd'   'd'       ''      'map-series'     'HSIGN'    'DIR'      []       0
+                                'm'      [1 0 1 1 0]  1         2     'm'      'd'   'd'       ''      'map-series'     'HSIGN'    'DIR'      []       0
     'hsig wave vector (peak direction)' ...
-    'm'      [1 0 1 1 0]  1         2     'm'      'd'   'd'       ''      'map-series'     'HSIGN'    'PDIR'     []       0
+                                'm'      [1 0 1 1 0]  1         2     'm'      'd'   'd'       ''      'map-series'     'HSIGN'    'PDIR'     []       0
     'difference in significant wave height (last iterations)' ...
-    'm'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'DHSIGN'   ''         []       0
-    'mean absolute wave period T_{m-1,0}' 's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'TMM10'    ''         []       0
+                                'm'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'DHSIGN'   ''         []       0
+    'mean absolute wave period T_{m-1,0}' ....
+                                's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'TMM10'    ''         []       0
     'mean absolute zero-crossing period T_{m02}' ...
-    's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'TM02'     ''         []       0
+                                's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'TM02'     ''         []       0
     'mean wave period T_{m01}'  's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'PERIOD'   ''         []       0
+    'peak wave period'          's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'TP'       ''         []       0
     'relative peak wave period' 's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'RTP'      ''         []       0
     'smoothed peak period'      's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'TPS'      ''         []       0
     'difference in mean wave period (last iterations)' ...
-    's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'DRTM01'      ''         []       0
+                                's'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'DRTM01'   ''         []       0
     'mean wave steepness'       '-'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'STEEPW'   ''         []       0
     'mean wave length'          'm'      [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'WLENGTH'  ''         []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
@@ -444,7 +451,7 @@ DataProps={'wave grid'                 ''       [0 0 1 1 0]  0         0     '' 
     'wave induced force'        'N/m^2'  [1 0 1 1 0]  1         2     'x'      'd'   'd'       ''      'map-series'     'FX'       'FY'       []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
     'orbital velocity near bottom' ...
-    'm/s'    [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'UBOT'     ''         []       0
+                                'm/s'    [1 0 1 1 0]  1         1     ''       'd'   'd'       ''      'map-series'     'UBOT'     ''         []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0};
 
 %============================= AUTODETECTION ==================================

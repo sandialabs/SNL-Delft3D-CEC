@@ -6,7 +6,7 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="../../lib/$(ConfigurationName)/static" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../../../../utils_lgpl/precision/lib/$(ConfigurationName)/static;../../../../third_party_open/mpich2/include" PreprocessorDefinitions="HAVE_MPI" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="$(OUTDIR)/deltares_common_mpi.lib" LinkLibraryDependencies="true"/>
+				<Tool Name="VFLibrarianTool" OutputFile="$(OUTDIR)/deltares_common_mpi.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -16,7 +16,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="../../lib/$(ConfigurationName)/static" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="../../../../utils_lgpl/precision/lib/$(ConfigurationName)/static;../../../../third_party_open/mpich2/include" PreprocessorDefinitions="HAVE_MPI" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/deltares_common_mpi.lib" LinkLibraryDependencies="true"/>
+				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/deltares_common_mpi.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -25,8 +25,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="../../lib/$(PlatformName)/$(ConfigurationName)/static" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../../../../utils_lgpl/precision/lib/$(PlatformName)/$(ConfigurationName)/static;..\..\..\..\third_party_open\mpich2\x64\include" PreprocessorDefinitions="HAVE_MPI" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="$(OUTDIR)/deltares_common_mpi.lib" LinkLibraryDependencies="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../../../../utils_lgpl/precision/lib/$(PlatformName)/$(ConfigurationName)/static;..\..\..\..\third_party_open\mpich2\x64\include" PreprocessorDefinitions="HAVE_MPI" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
+				<Tool Name="VFLibrarianTool" OutputFile="$(OUTDIR)/deltares_common_mpi.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -36,7 +36,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="../../lib/$(PlatformName)/$(ConfigurationName)/static" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="../../../../utils_lgpl/precision/lib/$(PlatformName)/$(ConfigurationName)/static;..\..\..\..\third_party_open\mpich2\x64\include" PreprocessorDefinitions="HAVE_MPI" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/deltares_common_mpi.lib" LinkLibraryDependencies="true"/>
+				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG" OutputFile="$(OUTDIR)/deltares_common_mpi.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -61,15 +61,7 @@
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
-		<File RelativePath=".\src\dfparall.F90">
-			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
-			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
-			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>
-			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
+		<File RelativePath=".\src\dfparall.F90"/>
 		<File RelativePath=".\src\dfreduce.F90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration>

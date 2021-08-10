@@ -5,7 +5,7 @@ AC_INIT(Delft3D, 0.6, delft3d-support@wldelft.nl)
 dnl Store generated files in config dir
 AC_CONFIG_AUX_DIR(config)
 dnl Define a unique file to check if we're in the right directory
-AC_CONFIG_SRCDIR([plugins_qt/packages/dido/dido/dido.f90])
+AC_CONFIG_SRCDIR([packages/nefis/src/nefis_version.cpp])
 AC_CONFIG_HEADER([config.h])
 
 
@@ -137,6 +137,7 @@ AC_C_CONST
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
+AC_HEADER_LSEEK64
 
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE

@@ -1,6 +1,6 @@
 c------- LGPL --------------------------------------------------------------------
 c                                                                                 
-c     Copyright (C) 2011-2015 Stichting Deltares.                                 
+c     Copyright (C) 2011-2020 Stichting Deltares.                                 
 c                                                                                 
 c     This library is free software; you can redistribute it and/or               
 c     modify it under the terms of the GNU Lesser General Public                  
@@ -25,8 +25,8 @@ c     Stichting Deltares. All rights reserved.
 c                                                                                 
 c---------------------------------------------------------------------------------
 c     http://www.deltaressystems.com
-c     $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/delftio/dio_core/dio_core.f $
-c     $Id: dio_core.f 4612 2015-01-21 08:48:09Z mourits $
+c     $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/delftio/dio_core/dio_core.f $
+c     $Id: dio_core.f 65778 2020-01-14 14:07:42Z mourits $
 
 c********************************************************************
 c*      Check and get string

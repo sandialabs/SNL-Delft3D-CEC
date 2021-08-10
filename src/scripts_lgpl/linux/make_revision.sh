@@ -62,7 +62,7 @@ ADDLINE="$BUILD_NUMBER"
 
 cd $CURDIR
 
-$VN_DIR/version_number.exe $BUILD_NUMBER $3 $4 $5
+$VN_DIR/version_number $BUILD_NUMBER $3 $4 $5
 
 #   =====================================
 #   Clean up

@@ -7,7 +7,7 @@ subroutine dengra(icreep    ,j         ,nmmaxj    ,nmmax     ,kmax      , &
                 & dldksi    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -31,8 +31,8 @@ subroutine dengra(icreep    ,j         ,nmmaxj    ,nmmax     ,kmax      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dengra.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/dengra.f90 $
+!  $Id: dengra.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/dengra.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Computes horizontal pressure gradient due
@@ -137,8 +137,8 @@ subroutine dengra(icreep    ,j         ,nmmaxj    ,nmmax     ,kmax      , &
     integer                              :: lst
     integer                              :: nm     ! Index gridpoint
     integer                              :: nmu    ! Index neighbour (M+1)
-    integer, dimension(2*mxkmax + 1)     :: kicol  ! K-index concentration point left for flux kf
-    integer, dimension(2*mxkmax + 1)     :: kicor  ! K-index concentration point right for flux kf
+    integer, dimension(2*kmax + 1)       :: kicol  ! K-index concentration point left for flux kf
+    integer, dimension(2*kmax + 1)       :: kicor  ! K-index concentration point right for flux kf
     real(fp)                             :: alph0
     real(fp)                             :: cl
     real(fp)                             :: cladt
@@ -166,12 +166,12 @@ subroutine dengra(icreep    ,j         ,nmmaxj    ,nmmax     ,kmax      , &
     real(fp)                             :: temp
     real(fp)                             :: zubot
     real(fp)                             :: zuk
-    real(fp), dimension(0:2*mxkmax + 1)  :: point  ! Merge arrays polal and polar
-    real(fp), dimension(0:mxkmax)        :: polal  ! Z-coordinate horizontal layers in nm
-    real(fp), dimension(0:mxkmax)        :: polar  ! Z-coordinate horizontal layers in nmu
-    real(fp), dimension(2*mxkmax + 1)    :: poflu  ! Z-coordinate gradient flux
-    real(fp), dimension(mxkmax)          :: pocol  ! Z-coordinate concentr. point nm ,k
-    real(fp), dimension(mxkmax)          :: pocor  ! Z-coordinate concentr. point nmu,k
+    real(fp), dimension(0:2*kmax + 1)    :: point  ! Merge arrays polal and polar
+    real(fp), dimension(0:kmax)          :: polal  ! Z-coordinate horizontal layers in nm
+    real(fp), dimension(0:kmax)          :: polar  ! Z-coordinate horizontal layers in nmu
+    real(fp), dimension(2*kmax + 1)      :: poflu  ! Z-coordinate gradient flux
+    real(fp), dimension(kmax)            :: pocol  ! Z-coordinate concentr. point nm ,k
+    real(fp), dimension(kmax)            :: pocor  ! Z-coordinate concentr. point nmu,k
 !
 !! executable statements -------------------------------------------------------
 !

@@ -18,7 +18,7 @@ function varargout=d3d_trihfil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -43,8 +43,8 @@ function varargout=d3d_trihfil(FI,domain,field,cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/d3d_trihfil.m $
-%   $Id: d3d_trihfil.m 5462 2015-09-30 11:58:22Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/d3d_trihfil.m $
+%   $Id: d3d_trihfil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 T_=1; ST_=2; M_=3; N_=4; K_=5;
@@ -636,6 +636,9 @@ end
 if Props.NVal==0
 elseif Props.NVal==1 || Props.NVal==4
     Ans.Val=val1;
+    if strcmp(Props.Name,'temperature')
+        Ans.AbsoluteUnits = true;
+    end
 else
     Ans.XComp=val1;
     Ans.YComp=val2;
@@ -650,10 +653,25 @@ varargout={Ans FI};
 function Out=infile(FI,domain)
 T_=1; ST_=2; M_=3; N_=4; K_=5;
 %======================== SPECIFIC CODE =======================================
-TRB='turbines';
+TRB='turbines'; BAR='barriers';
 PropNames={'Name'            'Units'   'DimFlag' 'DataInCell' 'NVal' 'VecType' 'Loc' 'ReqLoc'  'Loc3D' 'Group'          'Val1'     'Val2'    'SubFld' 'MNK'};
 DataProps={'location observation points'   ''   [1 6 0 0 0]  0         4     ''       'z'   'z'       ''      'his-series'     'XYSTAT'   ''  []       0
     'location tidal turbines'   ''       [1 3 0 0 0]  0         4     ''       TRB   'z'       ''      'his-const'      'XYTURBINES'   ''     []       0
+    '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
+    'wind speed'                'm/s'    [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZWNDSPD'  ''         []       0
+    'wind direction'            'deg'    [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZWNDDIR'  ''         []       0
+    'wind drag coefficient'     '-'      [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZWNDCD'   ''         []       0
+    'air pressure'              'Pa'     [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'PATM'     ''         []       0
+    'precipitation rate'        'mm/h'   [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZPRECP'   ''         []       0
+    'evaporation rate'          'mm/h'   [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZEVAP'    ''         []       0
+    'evaporation heat flux'            'W/m^2'  [1 5 0 0 0]  0  1     ''       'z'   'z'       ''      'his-series'     'ZQEVA'    ''         []       0
+    'heat flux of forced convection'   'W/m^2'  [1 5 0 0 0]  0  1     ''       'z'   'z'       ''      'his-series'     'ZQCO'     ''         []       0
+    'nett back radiation'              'W/m^2'  [1 5 0 0 0]  0  1     ''       'z'   'z'       ''      'his-series'     'ZQBL'     ''         []       0
+    'nett solar radiation'             'W/m^2'  [1 5 0 0 0]  0  1     ''       'z'   'z'       ''      'his-series'     'ZQIN'     ''         []       0
+    'total nett heat flux'             'W/m^2'  [1 5 0 0 0]  0  1     ''       'z'   'z'       ''      'his-series'     'ZQNET'    ''         []       0
+    'free convection of sensible heat' 'W/m^2'  [1 5 0 0 0]  0  1     ''       'z'   'z'       ''      'his-series'     'ZHFREE'   ''         []       0
+    'free convection of latent heat'   'W/m^2'  [1 5 0 0 0]  0  1     ''       'z'   'z'       ''      'his-series'     'ZEFREE'   ''         []       0
+%    'computed minus derived heat flux' 'W/m^2'  [1 5 0 0 0]  0  1     ''       'z'   'z'       ''      'his-series'     'ZQMIS'    ''         []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
     'water level'               'm'      [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZWL'      ''         []       0
     'water depth'               'm'      [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZWL'      ''         []       0
@@ -664,12 +682,6 @@ DataProps={'location observation points'   ''   [1 6 0 0 0]  0         4     '' 
     'discharge'                 'm^3/s'  [1 5 0 0 1]  0         2     'u'      'z'   'z'       'c'     'his-series'     'ZQXK'     'ZQYK'     []       1
     'froude number'             '-'      [1 5 0 0 0]  0         1     'u'      'z'   'z'       ''      'his-series'     'ZCURU'    'ZCURV'    []       0
     'head'                      'm'      [1 5 0 0 0]  0         1     'u'      'z'   'z'       ''      'his-series'     'ZCURU'    'ZCURV'    []       0
-    '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
-    'wind speed'                'm/s'    [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZWNDSPD'  ''         []       0
-    'wind direction'            'deg'    [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZWNDDIR'  ''         []       0
-    'air pressure'              'Pa'     [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'PATM'     ''         []       0
-    'precipitation rate'        'mm/h'   [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZPRECP'   ''         []       0
-    'evaporation rate'          'mm/h'   [1 5 0 0 0]  0         1     ''       'z'   'z'       ''      'his-series'     'ZEVAP'    ''         []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
     'density'                   'kg/m^3' [1 5 0 0 1]  0         1     ''       'z'   'z'       'c'     'his-series'     'ZRHO'     ''         []       0
     'non-hydrostatic pressure'  ''       [1 5 0 0 1]  0         1     ''       'z'   'z'       'c'     'his-series'     'HYDPRES'  ''         []       0
@@ -702,6 +714,8 @@ DataProps={'location observation points'   ''   [1 6 0 0 0]  0         4     '' 
     'instantaneous discharge'   'm^3/s'  [1 5 0 0 0]  0         1     ''       ''    ''        ''      'his-series'     'CTR'      ''         []       0
     'cumulative discharge'      'm^3'    [1 5 0 0 0]  0         1     ''       ''    ''        ''      'his-series'     'FLTR'     ''         []       0
     'concentration'             ''       [1 5 0 0 0]  0         1     ''       ''    ''        ''      'his-dis-series' 'RINT'     ''         []       0
+    '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
+    'barrier height'            'm'      [1 5 0 0 0]  0         1     ''       BAR   ''        ''      'his-series'     'ZBAR'     ''         []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''         ''         []       0
     'advective transport'       ''       [1 5 0 0 0]  0         1     ''       ''    ''        ''      'his-series'     'ATR'      ''         []       0
     'dispersive transport'      ''       [1 5 0 0 0]  0         1     ''       ''    ''        ''      'his-series'     'DTR'      ''         []       0
@@ -895,6 +909,7 @@ for i=size(Out,1):-1:1
                     Out(i)=[];
                 end
             case {'LINK_SUM','MORFAC','RINT'}
+            case {'ZBAR'}
             otherwise
                 % point
                 if NSt==0
@@ -983,7 +998,7 @@ end
 for i=1:length(Out)
     if isequal(Out(i).Units,'*')
         Info = vs_disp(FI,Out(i).Group,Out(i).Val1);
-        eUnit = deblank2(Info.ElmUnits(2:end-1));
+        eUnit = strtrim(Info.ElmUnits(2:end-1));
         switch lower(eUnit)
             case 'm3'
                 eUnit = 'm^3';
@@ -993,6 +1008,15 @@ for i=1:length(Out)
                 eUnit = 'kg';
             case 'kg/s'
                 eUnit = 'kg/s';
+            case ''
+                Info = vs_disp(FI,Out(i).Group,'SBTR');
+                eUnit = strtrim(Info.ElmUnits(2:end-1));
+                switch lower(eUnit)
+                    case 'm3/s'
+                        eUnit = 'm^3';
+                    case 'kg/s'
+                        eUnit = 'kg';
+                end
         end
         Out(i).Units = eUnit;
     end
@@ -1009,6 +1033,9 @@ else
     end
     Out=insstruct(Out,i,Ins);
 end
+
+[Out.TemperatureType] = deal('unspecified');
+[Out(strcmp({Out.Name},'temperature')).TemperatureType] = deal('absolute');
 % -----------------------------------------------------------------------------
 
 
@@ -1093,6 +1120,10 @@ if Props.DimFlag(ST_)
             % discharges
             Info=vs_disp(FI,'his-dis-series',Props.Val1);
             sz(ST_)=Info.SizeDim(1);
+        case {'ZBAR'}
+            % barriers
+            Info=vs_disp(FI,'his-const','NAMBAR');
+            sz(ST_)=Info.SizeDim(1);
         case {'FLTR','CTR'}
             % cross-section and discharges
             [sz(ST_),Chk]=vs_get(FI,'his-const','NTRUV','quiet');
@@ -1113,8 +1144,8 @@ if Props.DimFlag(ST_)
             sz(ST_)=sz(ST_)+Info.SizeDim;
         case {'BALVOLUME','BALAREAS','BALDPS','BALR1CONC'}
             % polygon
-            Info=vs_disp(FI,'his-bal-const','BALVOLNAMES');
-            sz(ST_)=Info.SizeDim(1)-1; % remove Open Boundaries
+            Info=vs_disp(FI,'his-bal-const','BALAREAS');
+            sz(ST_)=Info.SizeDim(1); % exclude non-polygons
         case {'BALFLUX','BALR1FLUX','BALSDFLUX'}
             % polygon interfaces
             FI.ElmDef(strcmp('BALNEIGHB',{FI.ElmDef.Name})).Type=3; % make sure BALNEIGB data is read as integers
@@ -1187,6 +1218,8 @@ switch Props.Val1
         end
     case {'RINT','ZQ_SUM','ZQ'}
         [S,Chk]=vs_get(FI,'his-dis-const','DISCHARGES','quiet');
+    case {'ZBAR'}
+        [S,Chk]=vs_get(FI,'his-const','NAMBAR','quiet');
     case {'FLTR','CTR'}
         [NSt,Chk]=vs_get(FI,'his-const','NTRUV','quiet');
         if (NSt==0)
@@ -1225,8 +1258,8 @@ switch Props.Val1
         end
     case {'BALVOLUME','BALAREAS','BALDPS','BALR1CONC'}
         % polygon
-        Info=vs_disp(FI,'his-bal-const','BALVOLNAMES');
-        [S,Chk]=vs_get(FI,'his-bal-const','BALVOLNAMES',{1:Info.SizeDim(1)-1},'quiet'); % exclude Open Boundaries
+        Info=vs_disp(FI,'his-bal-const','BALAREAS');
+        [S,Chk]=vs_get(FI,'his-bal-const','BALVOLNAMES',{1:Info.SizeDim(1)},'quiet'); % exclude non-polygons
     case {'BALFLUX','BALR1FLUX','BALSDFLUX'}
         % polygon interfaces
         [BS,Chk]=vs_get(FI,'his-bal-const','BALVOLNAMES','quiet');

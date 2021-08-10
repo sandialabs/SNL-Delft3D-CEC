@@ -7,7 +7,7 @@ subroutine z_cucbp_nhfull(kmax      ,norow     ,icx       , &
                         & crbc      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -31,8 +31,8 @@ subroutine z_cucbp_nhfull(kmax      ,norow     ,icx       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: z_cucbp_nhfull.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_cucbp_nhfull.f90 $
+!  $Id: z_cucbp_nhfull.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_cucbp_nhfull.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: For the fully non-hydrostatic approach, boundary 
@@ -257,14 +257,23 @@ subroutine z_cucbp_nhfull(kmax      ,norow     ,icx       , &
              ! WEAKLY REFLECTIVE BOUNDARY
              !
              alfas = sqrt(ag/(dep+sepu))
-             do k = k0f, k1f
-                aak(nmf,k) = alfas * tetau
-                bbk(nmf,k) = 1.0_fp
-                cck(nmf,k) = alfas * (1.0_fp-tetau)
-                ddk(nmf,k) = circ3d(k, 1, ic) + alfas*sepu  &
+             if (dep < 0) then
+                do k = k0f, k1f
+                   aak(nmf,k) = 0.0_fp
+                   bbk(nmf,k) = 1.0_fp
+                   cck(nmf,k) = 0.0_fp
+                   ddk(nmf,k) = 0.0_fp
+                enddo
+             else
+                do k = k0f, k1f
+                   aak(nmf,k) = alfas * tetau
+                   bbk(nmf,k) = 1.0_fp
+                   cck(nmf,k) = alfas * (1.0_fp-tetau)
+                   ddk(nmf,k) = circ3d(k, 1, ic) + alfas*sepu  &
                            & - 2.0_fp*sqrt(ag*(dep+sepu))   &
                            & + 2.0_fp*sqrt(ag*dep)
-             enddo
+                enddo
+             endif
           elseif (ibf == 8) then
              !
              ! NEUMANN BOUNDARY CONDITION INHOMOGENEOUS
@@ -381,14 +390,21 @@ subroutine z_cucbp_nhfull(kmax      ,norow     ,icx       , &
              ! WEAKLY REFLECTIVE BOUNDARY
              !
              alfas = sqrt(ag/(dep+sepu))
-             do k = k0l, k1l
-                aak(nml,k) = -alfas * tetau
+             if (dep < 0) then
+                aak(nml,k) = 0.0_fp
                 bbk(nml,k) = 1.0_fp
-                cck(nml,k) = -alfas * (1.0_fp-tetau)
-                ddk(nml,k) = circ3d(k,2,ic) - alfas*sepu  &
-                           & + 2.0_fp*sqrt(ag*(dep+sepu)) &
-                           & - 2.0_fp*sqrt(ag*dep)
-             enddo
+                cck(nml,k) = 0.0_fp
+                ddk(nml,k) = 0.0_fp
+             else
+                do k = k0l, k1l
+                   aak(nml,k) = -alfas * tetau
+                   bbk(nml,k) = 1.0_fp
+                   cck(nml,k) = -alfas * (1.0_fp-tetau)
+                   ddk(nml,k) = circ3d(k,2,ic) - alfas*sepu  &
+                              & + 2.0_fp*sqrt(ag*(dep+sepu)) &
+                              & - 2.0_fp*sqrt(ag*dep)
+                enddo
+             endif
           elseif (ibl == 8) then
              !
              ! NEUMANN BOUNDARY CONDITIONS INHOMOGENEOUS

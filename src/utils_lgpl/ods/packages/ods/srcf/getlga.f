@@ -1,6 +1,6 @@
 ! ---- LGPL --------------------------------------------------------------------
 !
-! Copyright (C)  Stichting Deltares, 2011-2015.
+! Copyright (C)  Stichting Deltares, 2011-2020.
 !
 ! This library is free software; you can redistribute it and/or
 ! modify it under the terms of the GNU Lesser General Public
@@ -103,9 +103,6 @@ c#endif
 *
       INCLUDE 'ods.inc'
 *
-      CHARACTER*20 UNFORM , BINARY
-      DATA         UNFORM , BINARY / 'UNFORMATTED' , 'BINARY' /
-*
 * -------- Extension of the first file: if .dat, .DAT or .def, .DEF
 *          assume NEFIS file type.
 *
@@ -181,7 +178,7 @@ C
 *          Read two records to be sure everything is all right
 *
          OPEN( LUN1   , FILE = FILNAM(1)(1:K1) , STATUS = 'OLD' ,
-     &         FORM = BINARY , ERR = 210 )
+     &         ACCESS = 'STREAM' , ERR = 210 )
          READ( LUN1   , ERR  = 210 , END = 910 ) NX
          READ( LUN1   , ERR  = 210 , END = 910 ) NY
          REWIND( LUN1   )
@@ -190,11 +187,11 @@ C
   210    CONTINUE
          CLOSE( LUN1   )
          OPEN( LUN1   , FILE = FILNAM(1)(1:K1) , STATUS = 'OLD' ,
-     &         FORM = UNFORM , ERR = 900 )
+     &         FORM = 'UNFORMATTED' , ERR = 900 )
 *
   220    CONTINUE
          OPEN( LUN2   , FILE = FILNAM(2)(1:K1) , STATUS = 'OLD' ,
-     &         FORM = BINARY , ERR = 230 )
+     &         ACCESS = 'STREAM' , ERR = 230 )
          READ( LUN2   , ERR  = 230 , END = 910 )
          READ( LUN2   , ERR  = 230 , END = 910 ) NY2
          REWIND( LUN2   )
@@ -203,7 +200,7 @@ C
   230    CONTINUE
          CLOSE( LUN2   )
          OPEN( LUN2   , FILE = FILNAM(2)(1:K1) , STATUS = 'OLD' ,
-     &         FORM = UNFORM , ERR = 900 )
+     &         FORM = 'UNFORMATTED' , ERR = 900 )
 *
 * -------- Read the first record of the LGRID file
 *          (Unfortunately there are several variations)

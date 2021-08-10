@@ -17,7 +17,6 @@ noinst_LTLIBRARIES = libDataGeneral.la
 AM_FCFLAGS += $(NETCDF_CFLAGS) $(NETCDF_FORTRAN_CFLAGS)
 
 FMODULES += \
-        -I$(NETCDFROOT)/include \
 	-I$(top_builddir)/engines_gpl/flow2d3d/packages/data/src/basics \
 	-I$(top_builddir)/engines_gpl/flow2d3d/packages/data/src/parallel_mpi \
 	-I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src \

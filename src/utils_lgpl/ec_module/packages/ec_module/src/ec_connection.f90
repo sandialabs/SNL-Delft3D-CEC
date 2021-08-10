@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2013.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -23,8 +23,8 @@
 !  are registered trademarks of Stichting Deltares, and remain the property of  
 !  Stichting Deltares. All rights reserved.                                     
 
-!  $Id: ec_connection.f90 5609 2015-11-25 17:21:04Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/ec_module/packages/ec_module/src/ec_connection.f90 $
+!  $Id: ec_connection.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/ec_module/packages/ec_module/src/ec_connection.f90 $
 
 !> This module contains all the methods for the datatype tEcConnection.
 !! @author arjen.markus@deltares.nl
@@ -36,6 +36,7 @@ module m_ec_connection
    use m_ec_message
    use m_ec_support
    use m_ec_alloc
+   use m_ec_converter
    
    implicit none
    
@@ -46,6 +47,7 @@ module m_ec_connection
    public :: ecConnectionSetConverter
    public :: ecConnectionAddSourceItem
    public :: ecConnectionAddTargetItem
+   public :: ecConnectionSetIndexWeights
    
    contains
       
@@ -111,7 +113,7 @@ module m_ec_connection
       function ecConnectionFree1dArray(connectionPtr, nConnections) result (success)
          logical                                       :: success       !< function status
          type(tEcConnectionPtr), dimension(:), pointer :: connectionPtr !< intent(inout)
-         integer                                       :: nConnections  !< number of Connections
+         integer, intent(inout)                        :: nConnections  !< number of Connections
          !
          integer :: i      !< loop counter
          integer :: istat  !< deallocate() status
@@ -136,6 +138,7 @@ module m_ec_connection
                if (istat /= 0) success = .false.
             end if
          end if
+         nConnections = 0
       end function ecConnectionFree1dArray
       
       ! =======================================================================
@@ -229,4 +232,26 @@ module m_ec_connection
             call setECMessage("ERROR: ec_connection::ecConnectionAddTargetItem: Cannot find a Connection or Item with the supplied id.")
          end if
       end function ecConnectionAddTargetItem
+
+      
+      function ecConnectionSetIndexWeights(instancePtr, connectionId) result(success)
+         logical                               :: success      !< function status
+         type(tEcInstance), pointer            :: instancePtr  !< intent(in)
+         integer,                   intent(in) :: connectionId !< unique Connection id
+         !
+         type(tEcConnection), pointer :: connectionPtr !< Connection corresponding to connectionId
+         !
+         success = .false.
+         connectionPtr => null()
+         !
+         connectionPtr => ecSupportFindConnection(instancePtr, connectionId)
+         if ( associated(connectionPtr) ) then
+            if ( associated(connectionPtr%sourceItemsPtr(1)%ptr%elementSetPtr ) ) then 
+               success = ecConverterUpdateWeightFactors(instancePtr, connectionPtr)
+            else
+               success = .True. 
+            end if
+         end if
+      end function ecConnectionSetIndexWeights
+      
 end module m_ec_connection

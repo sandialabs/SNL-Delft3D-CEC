@@ -11,10 +11,10 @@ function return_status = nc_diff ( nc1, nc2, varargin )
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% $Id: nc_diff.m 449 2011-04-11 08:10:53Z jagers $
-% $LastChangedDate: 2011-04-11 02:10:53 -0600 (Mon, 11 Apr 2011) $
-% $LastChangedRevision: 449 $
-% $LastChangedBy: jagers $
+% $Id: nc_diff.m 5717 2016-01-12 11:35:24Z mourits $
+% $LastChangedDate: 2016-01-12 11:35:24 +0000 (Tue, 12 Jan 2016) $
+% $LastChangedRevision: 5717 $
+% $LastChangedBy: mourits $
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

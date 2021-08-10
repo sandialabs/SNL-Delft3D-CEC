@@ -76,7 +76,6 @@ libKernelInichk_la_SOURCES = \
          inieva.f90 \
          inigeo.f90 \
          inigrd.f90 \
-         inimorlyr.f90 \
          iniphy.f90 \
          inirgl.f90 \
          inised.f90 \

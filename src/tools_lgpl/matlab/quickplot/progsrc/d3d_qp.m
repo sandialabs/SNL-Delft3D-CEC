@@ -6,7 +6,7 @@ function outdata=d3d_qp(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -31,9 +31,8 @@ function outdata=d3d_qp(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/d3d_qp.m $
-%   $Id: d3d_qp.m 5634 2015-12-09 12:42:35Z jagers $
-
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/d3d_qp.m $
+%   $Id: d3d_qp.m 65778 2020-01-14 14:07:42Z mourits $
 try
     if nargin==0
         cmd='initialize';
@@ -48,7 +47,7 @@ catch Ex
 end
 
 function outdata=d3d_qp_core(cmd,varargin)
-%VERSION = 2.30
+%VERSION = 2.60
 qpversionbase = 'v<VERSION>';
 qpcreationdate = '<CREATIONDATE>';
 %
@@ -79,19 +78,23 @@ if ~ischar(cmd)
     return
 end
 cmd=lower(cmd);
-if (nargout~=0)
+if nargout~=0
     if strcmp(cmd,'initialize')
-        outdata=[];
+        outdata = [];
     elseif strcmp(cmd,'iswl')
-        outdata=isequal(qp_settings('WLextensions','off'),'on');
+        outdata = isequal(qp_settings('WLextensions','off'),'on');
         return
     elseif strcmp(cmd,'version')
-        outdata=qpversion;
+        if nargin>1
+            outdata = qp_checkversion(varargin{:});
+        else
+            outdata = qpversion;
+        end
         return
     elseif isstandalone % allow standalone auto start ...
-        outdata=[];
+        outdata = [];
     elseif none(strcmp(cmd,{'loaddata','selectedfigure','selectedaxes','selecteditem','selectfield','selectedfield','qpmanual','matlabmanual'}))
-        error('Too many output arguments.');
+        error('Too many output arguments.')
     end
 end
 
@@ -200,6 +203,7 @@ switch cmd
             PS.Parent = parent;
             PS.Handles = [];
             PS.Stations = [];
+            PS.Ops.version = 1.3;
             PS.Ops.axestype = getappdata(parent,'AxesType');
             PS.Ops.basicaxestype = getappdata(parent,'BasicAxesType');
             [hNew,Error,Info]=qp_plot(PS);
@@ -248,69 +252,12 @@ switch cmd
         showUI = isequal(cmd,'initialize');
         mfig=findobj(allchild(0),'flat','tag','Delft3D-QUICKPLOT');
         %
-        % To hide version number from QuickPlot title, include the
-        % following line
-        %
-        % qpversion='';
-        %
         if length(mfig)>1
             delete(mfig(2:length(mfig)));
             mfig=mfig(1);
         elseif isempty(mfig)
             if isstandalone && matlabversionnumber>7.10
-                % Until MATLAB 7.10 (R2010a) it was possible to mix
-                % c/c++ files in with the MATLAB executable. This was
-                % used to include the @(#) identification string in the
-                % executable that could be located using the WHAT tool.
-                % Unfortunately, this option is no longer supported by
-                % later MATLAB versions. For later versions we'll need
-                % to use a separate text file which is easy to mess up
-                % and therefore we only start QuickPlot if that file is
-                % consistent with the actual executable.
-                whatfile = fullfile(qp_basedir('exe'),'d3d_qp.version');
-                Str = ['@(#)Deltares, Delft3D-QUICKPLOT, Version ' qpversionbase(2:end) ', ' qpcreationdate ];
-                fid = fopen(whatfile,'r');
-                if fid>0
-                    % file exists, read its contents
-                    Str2 = fgetl(fid);
-                    if ~ischar(Str2)
-                        Str2 = '';
-                    end
-                    fclose(fid);
-                    if ~isequal(Str,Str2)
-                        % if contents does not match, do as if file
-                        % does not exist (which will try to write it)
-                        fid = -1;
-                    end
-                end
-                if fid<0
-                    % file does not exist, try to write it
-                    fid = fopen(whatfile,'w');
-                    if fid>0
-                        % file can be opened for writing, write string
-                        try
-                            fprintf(fid,'%s\n',Str);
-                            fclose(fid);
-                            % reopen the file to check whether string
-                            % was written correctly
-                            fid = fopen(whatfile,'r');
-                            Str2 = fgetl(fid);
-                            if ~ischar(Str2)
-                                Str2 = '';
-                            end
-                            fclose(fid);
-                        catch
-                            fid = -1;
-                        end
-                    end
-                end
-                if fid>0
-                    if ~isequal(Str,Str2)
-                        ui_message('error',{['First line in ' whatfile],Str2,'doesn''t match the string',Str,'Please correct.'})
-                        return
-                    end
-                else
-                    ui_message('error',{'Copy the following line:',Str,['to ' whatfile ' to start QuickPlot.']})
+                if ~qp_checkversion(qpversionbase,qpcreationdate)
                     return
                 end
             end
@@ -333,7 +280,7 @@ switch cmd
             if strcmp(qp_settings('showversion','off'),'on')
                 set(mfig,'name',cat(2,'Delft3D-QUICKPLOT ',qpversion));
             end
-            if qp_settings('v6zoombehavior') && matlabversionnumber >= 7
+            if qp_settings('v6zoombehavior') && matlabversionnumber >= 7 && matlabversionnumber < 9
                 qp_prefs(UD,mfig,'v6zoomswitch','on')
             end
             if isstandalone
@@ -348,7 +295,12 @@ switch cmd
             figure(mfig);
         end
         if isstandalone
-            setpref('SNCTOOLS','USE_JAVA',true);
+            try
+                % Insert a try-catch block here since the setpref command sometimes fails on a write error to matlabprefs.mat.
+                setpref('SNCTOOLS','USE_JAVA',true);
+            catch
+                ui_message('message','Failed to persist preferences during initialization.')
+            end
             javaaddpath([qp_basedir('exe') filesep 'netcdfAll-4.1.jar'])
             try
                 CloseSplashScreen;
@@ -1023,8 +975,6 @@ switch cmd
         datafields=findobj(mfig,'tag','selectfield');
         if ~Succes
             set(datafields,'string',' ','value',1,'enable','off','backgroundcolor',Inactive,'userdata',Props);
-            set(mfig,'pointer','arrow')
-            d3d_qp updatefieldprop
         else
             Handle_Domain=findobj(mfig,'tag','selectdomain');
             DomainNr=get(Handle_Domain,'value');
@@ -1037,14 +987,10 @@ switch cmd
                     'enable','off', ...
                     'backgroundcolor',Inactive, ...
                     'userdata',Props);
-                set(mfig,'pointer','arrow')
-                d3d_qp updatefieldprop
             else
                 names={Props.Name};
                 if isempty(names),
                     set(datafields,'string','<no datafields found>','value',1,'enable','off','backgroundcolor',Inactive,'userdata',Props);
-                    set(mfig,'pointer','arrow')
-                    d3d_qp updatefieldprop
                 else
                     df=1;
                     if strcmp(get(datafields,'enable'),'on')
@@ -1092,7 +1038,7 @@ switch cmd
                 writelog(logfile,logtype,cmd);
             end
         end
-       
+        
     case 'selectedfield'
         sf   = findobj(mfig,'tag','selectfield');
         ifld = get(sf,'value');
@@ -1513,9 +1459,13 @@ switch cmd
         d3d_qp('editm*',MN')
         
     case 'convertmn2xy'
-        MW=UD.MainWin;
         XY = qp_gridview('convertmn2xy',UD.GridView.Fig);
         d3d_qp('editxy*',XY)
+        
+    case 'reversemn'
+        MW=UD.MainWin;
+        MN = get(MW.EditMN,'userdata');
+        d3d_qp('editmn*',flipud(MN))
         
     case {'editmn*','editmn','editxy*','editxy','loadxy'}
         MW=UD.MainWin;
@@ -1683,6 +1633,12 @@ switch cmd
             z=[];
         elseif ~isequal(size(z),[1 1])
             z=z(1);
+            switch getvalstr(UD.MainWin.VSelType)
+                case {'dZ below surface','dZ above bed'}
+                    z = max(0,z);
+                case 'depth percentage'
+                    z = min(max(0,z),100);
+            end
         end
         set(UD.MainWin.EditZ,'string',sprintf('%g',z),'userdata',z)
         d3d_qp updateoptions
@@ -1712,6 +1668,16 @@ switch cmd
         if Succes
             Info=File(NrInList);
             [DomainNr,Props,subf,selected,stats,Ops]=qp_interface_update_options(mfig,UD);
+            if ~strcmp(cmd,'updateoptions') && iscell(selected{K_}) && isempty(selected{K_}{2})
+                switch selected{K_}{1}
+                    case {'z'}
+                        error('No horizontal slice level Z specified!')
+                    case {'dz_below_max', 'dz_above_min'}
+                        error('No horizontal slice level dZ specified!')
+                    case 'percentage depth'
+                        error('No depth percentage for horizontal slice specified!')
+                end
+            end
             if isempty(Ops)
                 cmd='error';
             end
@@ -1819,7 +1785,7 @@ switch cmd
                         writelog(logfile,logtype,cmd,VarName);
                     end
                 end
-
+                
             case 'exportdata'
                 lasterr('');
                 try
@@ -2054,6 +2020,13 @@ switch cmd
             trigger={};
             if ~isempty(cmdargs)
                 i=ustrcmpi(cmdargs{1},modes);
+                if i<0 && strcmp(cmd,'angleconvention')
+                    ibracket = strfind(cmdargs{1},'[');
+                    if ~isempty(ibracket)
+                        newmode = cmdargs{1}(1:ibracket(1)+1);
+                        i=ustrcmpi(newmode,modes);
+                    end
+                end
                 if i<0
                     if strcmp(cmd,'exporttype') && strcmp(cmdargs{1},'mat file')
                         %
@@ -2064,7 +2037,7 @@ switch cmd
                         if i<0
                             error('Invalid %s: %s',cmd,cmdargs{1})
                         else
-                            set(modelist,'value',i);
+                            set(modelist,'value',i)
                         end
                     elseif strcmp(cmd,'dataunits')
                         %
@@ -2074,6 +2047,20 @@ switch cmd
                         set(modelist,'value',find(strcmp('Other',modes)))
                         modelist=findobj(UOH,'tag',[cmd '=!']);
                         set(modelist,'string',cmdargs{1})
+                    elseif strcmp(cmd,'angleconvention')
+                        switch lower(cmdargs{1})
+                            case 'nautical'
+                                i=ustrcmpi('Nautical To [-',modes);
+                            case 'nautical positive'
+                                i=ustrcmpi('Nautical To [0',modes);
+                            case 'cartesian'
+                                i=ustrcmpi('Cartesian To [-',modes);
+                            case 'cartesian positive'
+                                i=ustrcmpi('Cartesian To [0',modes);
+                            otherwise
+                                error('Invalid %s: %s',cmd,cmdargs{1})
+                        end
+                        set(modelist,'value',i)
                     else
                         error('Invalid %s: %s',cmd,cmdargs{1})
                     end
@@ -2157,7 +2144,7 @@ switch cmd
             writelog(logfile,logtype,cmd,get(cb,'value'));
         end
         
-    case {'colbarhorz','climsymm','extend2edge'}
+    case {'colbarhorz','climsymm','extend2edge','clipnans'}
         % nothing do
         cb=findobj(UOH,'tag',cmd);
         if ~isempty(cmdargs)
@@ -2576,6 +2563,7 @@ switch cmd
         %
         if 0
             box
+            delwaq2raster
             grid
             camlight
             lighting phong;
@@ -2586,6 +2574,7 @@ switch cmd
             zlim;
             qpsf;
             qpsa;
+            qpfile
         end
         
     case 'showmessagewin'
@@ -2717,6 +2706,8 @@ switch cmd
                             mm=get(MW.EditM,'userdata');
                             range{1}=mm;
                         end
+                    elseif strcmp(get(MW.MaxM,'enable'),'on')
+                        range{1}=1;
                     end
                     %----
                     if strcmp(get(MW.N,'enable'),'on')
@@ -2728,6 +2719,8 @@ switch cmd
                             nn=get(MW.EditN,'userdata');
                             range{2}=nn;
                         end
+                    elseif strcmp(get(MW.MaxN,'enable'),'on')
+                        range{2}=1;
                     end
                     %----
                 case '(M,N) point/path'
@@ -2812,8 +2805,14 @@ switch cmd
                 Handle_Domain=findobj(mfig,'tag','selectdomain');
                 DomainNr=get(Handle_Domain,'value');
                 %
-                qp_gridviewhelper(UD,Info,DomainNr,Props,fld)
-                d3d_qp('gridview_update')
+                try
+                    qp_gridviewhelper(UD,Info,DomainNr,Props,fld)
+                    d3d_qp('gridview_update')
+                catch err
+                    qp_gridview('setgrid',UD.GridView.Fig,[],[])
+                    set(UD.GridView.Fig,'userdata',[])
+                    rethrow(err)
+                end
             else
                 qp_gridview('setgrid',UD.GridView.Fig,[],[])
                 set(UD.GridView.Fig,'userdata',[])
@@ -3400,7 +3399,7 @@ switch cmd
                 writelog(logfile,logtype,cmd,lbox);
             end
         end
-
+        
     case 'axeslinewidth'
         ax = qpsa;
         if isempty(cmdargs)
@@ -3416,7 +3415,7 @@ switch cmd
                 writelog(logfile,logtype,cmd,lw);
             end
         end
-
+        
     case 'axesposition'
         ax = qpsa;
         PM = UD.PlotMngr;
@@ -3870,9 +3869,13 @@ switch cmd
             Fig=gcbf;
         elseif isempty(gcbf) || isequal(get(gcbf,'handlevisibility'),'off')
             FigIDs=get(UD.PlotMngr.FigList,'userdata');
-            FigVal=get(UD.PlotMngr.FigList,'value');
-            if FigVal<=length(FigIDs)
-                Fig=FigIDs(FigVal);
+            if get(UD.PlotMngr.FigAll,'value') % all figures
+                Fig=FigIDs;
+            else
+                FigVal=get(UD.PlotMngr.FigList,'value');
+                if FigVal<=length(FigIDs)
+                    Fig=FigIDs(FigVal);
+                end
             end
         else
             Fig=gcbf;
@@ -3882,7 +3885,14 @@ switch cmd
             switch cmd
                 case 'closefigure'
                     AllObj=findall(Fig);
-                    set(AllObj,'deletefcn','');
+                    for o = 1:length(AllObj)
+                        try
+                            set(AllObj(o),'deletefcn','');
+                        catch
+                            % Some objects (e.g. AnnotationPane) don't have
+                            % a deletefcn. Skip these.
+                        end
+                    end
                     delete(Fig);
                     if ~isempty(UD) % if quickplot is not active do not activate it ...
                         d3d_qp refreshfigs
@@ -4209,7 +4219,7 @@ switch cmd
         news = getvalstr(MWSelType);
         switch news
             case 'M range and N range'
-                set([MW.MN MW.EditMN MW.MN2XY MW.MN2M],'visible','off')
+                set([MW.MN MW.EditMN MW.MNrev MW.MN2XY MW.MN2M],'visible','off')
                 set([MW.XY MW.EditXY MW.LoadXY MW.SaveXY],'visible','off')
                 set([MW.M MW.AllM MW.EditM MW.MaxM],'visible','on')
                 set([MW.N MW.AllN MW.EditN MW.MaxN],'visible','on')
@@ -4217,7 +4227,7 @@ switch cmd
                 set([MW.M MW.AllM MW.EditM],'visible','off')
                 set([MW.N MW.AllN MW.EditN],'visible','off')
                 set([MW.XY MW.EditXY MW.LoadXY MW.SaveXY],'visible','off')
-                set([MW.MN MW.EditMN MW.MN2XY],'visible','on')
+                set([MW.MN MW.EditMN MW.MNrev MW.MN2XY],'visible','on')
                 %
                 Props=get(MW.Field,'userdata');
                 fld=get(MW.Field,'value');
@@ -4230,7 +4240,7 @@ switch cmd
             case '(X,Y) point/path'
                 set([MW.M MW.AllM MW.EditM MW.MaxM],'visible','off')
                 set([MW.N MW.AllN MW.EditN MW.MaxN],'visible','off')
-                set([MW.MN MW.EditMN MW.MN2XY MW.MN2M],'visible','off')
+                set([MW.MN MW.EditMN MW.MNrev MW.MN2XY MW.MN2M],'visible','off')
                 set([MW.XY MW.EditXY MW.LoadXY MW.SaveXY],'visible','on')
             case 'K range'
                 set([MW.Z MW.EditZ],'visible','off')
@@ -4239,6 +4249,10 @@ switch cmd
                 set([MW.K MW.AllK MW.EditK MW.MaxK],'visible','off')
                 set([MW.Z MW.EditZ],'visible','on')
                 set(MW.Z,'string',strtok(news))
+            case {'depth percentage'}
+                set([MW.K MW.AllK MW.EditK MW.MaxK],'visible','off')
+                set([MW.Z MW.EditZ],'visible','on')
+                set(MW.Z,'string','%')
         end
         
         d3d_qp updateoptions
@@ -4292,7 +4306,7 @@ switch cmd
         set(MW.StList,'enable','off','value',1,'string',' ','backgroundcolor',Inactive,'UserData',[],'visible','on')
         set(MW.Stat,'visible','off')
         set(MW.HSelType,'String',{'M range and N range','(M,N) point/path','(X,Y) point/path'},'value',1)
-        set(MW.VSelType,'String',{'K range','Z slice','dZ below surface','dZ above bed'},'value',1)
+        set(MW.VSelType,'String',{'K range','Z slice','dZ below surface','dZ above bed','depth percentage'},'value',1)
         set([MW.MN MW.MN2XY],'visible','off')
         set(MW.EditMN,'string','','Userdata',[],'visible','off')
         set([MW.XY MW.LoadXY MW.SaveXY],'visible','off')
@@ -4318,6 +4332,7 @@ switch cmd
         set(UOH,'enable','off','visible','off','backgroundcolor',Inactive)
         set(findobj(UOH,'tag','axestype=?'),'value',1,'string',{''})
         set(findobj(UOH,'tag','dataunits=?'),'value',1)
+        set(findobj(UOH,'tag','angleconvention=?'),'value',1)
         set(findobj(UOH,'tag','plotcoordinate=?'),'value',1,'string',{' '})
         set(findobj(UOH,'tag','component=?'),'value',1,'string',{' '})
         set(findobj(UOH,'tag','numformat=?'),'string','%.2f')
@@ -4395,9 +4410,10 @@ switch cmd
             'defaultaxescolor','boundingbox','v6zoombehavior', ...
             'organizationname','filefilterselection','colorbar_ratio', ...
             'showinactiveopt', 'defaultfigurepos','timezonehandling', ...
-            'enforcedtimezone', 'netcdf_use_fillvalue'}
+            'enforcedtimezone', 'netcdf_use_fillvalue','export_max_ntimes', ...
+            'update_showversion'}
         qp_prefs(UD,mfig,cmd,cmdargs);
-
+        
     case {'deltaresweb','deltaresweboss'}
         ops={};
         if matlabversionnumber>5
@@ -4424,6 +4440,31 @@ switch cmd
         hpause = findobj(findobj(allchild(0),'tag','DelftProgressBar'),'tag','pause');
         set(hpause,'value',1)
         waitfor(hpause,'value',0)
+        
+    case 'move_onscreen'
+        if ~isempty(cmdargs)
+            movegui(cmdargs{1})
+        else
+            movegui(UD.MainWin.Fig)
+            if ~isempty(UD.Options.Fig)
+                movegui(UD.Options.Fig)
+            end
+            movegui(UD.PlotMngr.Fig)
+            movegui(UD.PlotMngr.Fig)
+            movegui(UD.FilOpt.Fig)
+            movegui(UD.GridView.Fig)
+            movegui(UD.ComLine.Fig)
+            %
+            figs = get(UD.PlotMngr.Fig,'userdata');
+            for i = 1:length(figs)
+                movegui(figs(i))
+            end
+            %
+            umsg = findall(0,'tag','UI_MESSAGE window');
+            if ~isempty(umsg)
+                movegui(umsg)
+            end
+        end
         
     otherwise
         if (strncmpi(cmd,'all',3) || strncmpi(cmd,'edit',4)) && ~isempty(cmdargs)
@@ -4560,4 +4601,66 @@ switch str
         clr=[1 1 1];
     otherwise
         clr=str2vec(str,'%f');
+end
+
+function OK = qp_checkversion(qpversionbase,qpcreationdate)
+% Until MATLAB 7.10 (R2010a) it was possible to mix
+% c/c++ files in with the MATLAB executable. This was
+% used to include the @(#) identification string in the
+% executable that could be located using the WHAT tool.
+% Unfortunately, this option is no longer supported by
+% later MATLAB versions. For later versions we'll need
+% to use a separate text file which is easy to mess up
+% and therefore we only start QuickPlot if that file is
+% consistent with the actual executable.
+OK = true;
+whatfile = fullfile(qp_basedir('exe'),'d3d_qp.version');
+if isequal(qpversionbase(1),'v')
+    qpversion = qpversionbase(2:end);
+else
+    qpversion = qpversionbase;
+end
+Str = ['@(#)Deltares, Delft3D-QUICKPLOT, Version ' qpversion ', ' qpcreationdate ];
+fid = fopen(whatfile,'r');
+if fid>0
+    % file exists, read its contents
+    Str2 = fgetl(fid);
+    if ~ischar(Str2)
+        Str2 = '';
+    end
+    fclose(fid);
+    if ~isequal(Str,Str2)
+        % if contents does not match, do as if file
+        % does not exist (which will try to write it)
+        fid = -1;
+    end
+end
+if fid<0
+    % file does not exist, try to write it
+    fid = fopen(whatfile,'w');
+    if fid>0
+        % file can be opened for writing, write string
+        try
+            fprintf(fid,'%s\n',Str);
+            fclose(fid);
+            % reopen the file to check whether string was written correctly
+            fid = fopen(whatfile,'r');
+            Str2 = fgetl(fid);
+            if ~ischar(Str2)
+                Str2 = '';
+            end
+            fclose(fid);
+        catch
+            fid = -1;
+        end
+    end
+end
+if fid>0
+    if ~isequal(Str,Str2)
+        ui_message('error',{['First line in ' whatfile],Str2,'doesn''t match the string',Str,'Please correct.'})
+        OK = false;
+    end
+else
+    ui_message('error',{'Copy the following line:',Str,['to ' whatfile ' to start QuickPlot.']})
+    OK = false;
 end

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -81,6 +81,7 @@
 !
 !       Look backwards
 !
+      I4 = 0
       DO 10 I1 = I,1,-1
          I2 = IAR(I1+IOFFC)
          IF ( I2 .GT. -100000 ) GOTO 20
@@ -88,9 +89,9 @@
 !
 !       Additional messages for this sequence
 !
+      I4 = 0
    20 IF ( I2 .LE. 0 .AND. I2 .GT. -100000 ) THEN
 !       Try to find the reference
-         I4 = 0
          DO 25 I3 = 1 , I
             I5 = IAR(I3+IOFFC)
             IF ( I5 .GT. 0 ) I4 = IAR(I3+IOFFC)

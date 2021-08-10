@@ -1,7 +1,7 @@
 module m_rdsed
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,9 +25,10 @@ module m_rdsed
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdsed.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_io/src/rdsed.f90 $
+!  $Id: rdsed.f90 65813 2020-01-17 16:46:56Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_io/src/rdsed.f90 $
 !-------------------------------------------------------------------------------
+use m_depfil_stm
 
 private
 
@@ -58,7 +59,7 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
     use message_module
     use morphology_data_module
     use sediment_basics_module
-    use system_utils, only:SHARED_LIB_EXTENSION
+    use system_utils, only:SHARED_LIB_PREFIX, SHARED_LIB_EXTENSION
     use grid_dimens_module, only: griddimtype
     !
     implicit none
@@ -69,7 +70,10 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
     real(fp)                           , pointer :: mdcuni
     real(fp)                           , pointer :: kssilt
     real(fp)                           , pointer :: kssand
+    real(fp)                           , pointer :: sc_cmf1
+    real(fp)                           , pointer :: sc_cmf2
     integer                            , pointer :: nmudfrac
+    integer                            , pointer :: sc_mudfac
     real(fp)         , dimension(:)    , pointer :: rhosol
     real(fp)         , dimension(:,:,:), pointer :: logseddia
     real(fp)         , dimension(:)    , pointer :: logsedsig
@@ -157,6 +161,7 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
     character(256)              :: rec
     character(300)              :: message
     character(80)               :: parname
+    character(20)               :: sc_type
     character(20)               :: sedtype             ! Local variable for sediment type
     character(78)               :: string
     character(10)               :: versionstring
@@ -170,7 +175,10 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
     mdcuni               => sedpar%mdcuni
     kssilt               => sedpar%kssilt
     kssand               => sedpar%kssand
+    sc_cmf1              => sedpar%sc_cmf1
+    sc_cmf2              => sedpar%sc_cmf2
     nmudfrac             => sedpar%nmudfrac
+    sc_mudfac            => sedpar%sc_mudfac
     rhosol               => sedpar%rhosol
     logseddia            => sedpar%logseddia
     logsedsig            => sedpar%logsedsig
@@ -367,9 +375,12 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
           ! Space varying data has been specified
           ! Use routine that also read the depth file to read the data
           !
-          call depfil(lundia    ,error     ,flsmdc    ,fmttmp    , &
-                    & mudcnt    ,1         ,1         ,griddim   )
-          if (error) return
+          call depfil_stm(lundia    ,error     ,flsmdc    ,fmttmp    , &
+                        & mudcnt    ,1         ,1         ,griddim   , errmsg)
+          if (error) then
+              call write_error(errmsg, unit=lundia)
+              return
+          endif
           do nm = 1, griddim%nmmax
              mudcnt(nm) = max(0.0_fp, min(mudcnt(nm), 1.0_fp))
           enddo
@@ -407,16 +418,21 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
           ! Space varying data has been specified
           ! Use routine that also read the depth file to read the data
           !
-          call depfil(lundia    ,error     ,flspmc    ,fmttmp    , &
-                    & pmcrit    ,1         ,1         ,griddim   )
+          call depfil_stm(lundia    ,error     ,flspmc    ,fmttmp    , &
+                        & pmcrit    ,1         ,1         ,griddim   )
           if (error) return
           do nm = 1, griddim%nmmax
              pmcrit(nm) = min(pmcrit(nm), 1.0_fp)
           enddo
        else
           flspmc = ' '
-          call prop_get(sed_ptr, '*', 'PmCrit', pmcrit(1))
-          pmcrit = min(pmcrit(1), 1.0_fp)
+          call prop_get(sed_ptr, 'SedimentOverall', 'PmCrit', pmcrit(1))
+          !
+          ! Explicit loop because of stack overflow
+          !
+          do nm = 1, griddim%nmmax
+             pmcrit(nm) = min(pmcrit(1), 1.0_fp)
+          enddo
        endif
        !
        ! Get bed shear skin stress parameters
@@ -428,6 +444,33 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
           kssand = 0.0_fp
           call prop_get(sed_ptr, 'SedimentOverall', 'KsSilt', kssilt)
           call prop_get(sed_ptr, 'SedimentOverall', 'KsSand', kssand)
+          !
+          sc_type = 'thickness'
+          call prop_get(sed_ptr, 'SedimentOverall', 'SC_mudfactor', sc_type)
+          call str_lower(sc_type)
+          select case (sc_type)
+          case ('fraction')
+             sc_mudfac = SC_MUDFRAC
+          case ('thickness')
+             sc_mudfac = SC_MUDTHC
+          case default
+             errmsg = 'Unknown option for sc_mudfactor. Expecting ''fraction'' or ''thickness''.'
+             call write_error(errmsg, unit=lundia)
+             error = .true.
+             return
+          end select
+          !
+          sc_cmf1 = 0.01_fp
+          sc_cmf2 = 0.01_fp
+          call prop_get(sed_ptr, 'SedimentOverall', 'SC_cmf1', sc_cmf1)
+          call prop_get(sed_ptr, 'SedimentOverall', 'SC_cmf2', sc_cmf2)
+          if (sc_mudfac == SC_MUDFRAC) then
+             sc_cmf1 = max(0.0_fp , min(sc_cmf1, 1.0_fp))
+             sc_cmf2 = max(sc_cmf1, min(sc_cmf2, 1.0_fp))
+          else
+             sc_cmf1 = max(0.0_fp , sc_cmf1)
+             sc_cmf2 = max(sc_cmf1, sc_cmf2)
+          endif
        endif
        !
        do l = 1, lsedtot
@@ -501,9 +544,12 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
                 !
                 !  File with space varying data has been specified, read it now.
                 !
-                call depfil(lundia    ,error     ,flsdia    ,fmttmp    , &
-                          & sedd50fld ,1         ,1         ,griddim   )
-                if (error) return
+                call depfil_stm(lundia    ,error     ,flsdia    ,fmttmp    , &
+                              & sedd50fld ,1         ,1         ,griddim   , errmsg)
+                if (error) then 
+                    call write_error(errmsg, unit=lundia)
+                    return
+                endif      
              else
                 flsdia = ' '
              endif
@@ -567,7 +613,7 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
              call prop_get(sedblock_ptr, '*', 'SettleLib', rec)
              dll_name_settle(l) = rec
              if (rec /= ' ') then
-                rec(len_trim(rec)+1:) = SHARED_LIB_EXTENSION
+                write(rec,'(3a)') SHARED_LIB_PREFIX, trim(dll_name_settle(l)), SHARED_LIB_EXTENSION
                 dll_name_settle(l) = rec
                 istat_ptr = 0
                 istat_ptr = open_shared_library(dll_handle_settle(l), dll_name_settle(l))
@@ -687,6 +733,13 @@ subroutine rdsed(lundia    ,error     ,lsal      ,ltem      ,lsed      , &
                   & facdss    ,sedtyp    ,rhosol    ,sedd50    ,par_settle, &
                   & sdbuni    ,flsdbd    ,cdryb     ,sedpar%sedblock      , &
                   & version   ,error     )
+       !
+       ! nodal relations are not supported in older version sed files 
+       !
+       do l = 0, lsedtot       
+           sedpar%flnrd(l) = ' '
+       enddo
+       !
        close (luninp)
        if (error) return
        !
@@ -872,8 +925,7 @@ subroutine opensedfil(lundia    ,error     ,filsed    ,luninp    ,version  )
     version = 0
     !
     call remove_leading_spaces(filsed)
-    luninp = newunit()
-    open (luninp, file = filsed, form = 'formatted', status = 'old',            &
+    open (newunit = luninp, file = filsed, form = 'formatted', status = 'old',            &
         & iostat = iocond)
     if (iocond /= 0) then
        errmsg = ERROR_FILE_OPEN // trim(filsed)
@@ -932,6 +984,9 @@ subroutine echosed(lundia    ,error     ,lsed      ,lsedtot   , &
     real(fp)                          , pointer :: mdcuni
     real(fp)                          , pointer :: kssilt
     real(fp)                          , pointer :: kssand
+    real(fp)                          , pointer :: sc_cmf1
+    real(fp)                          , pointer :: sc_cmf2
+    integer                           , pointer :: sc_mudfac
     real(fp)        , dimension(:)    , pointer :: rhosol
     real(fp)        , dimension(:,:,:), pointer :: logseddia
     real(fp)        , dimension(:)    , pointer :: logsedsig
@@ -974,7 +1029,7 @@ subroutine echosed(lundia    ,error     ,lsed      ,lsedtot   , &
     real(fp)                  :: xxinv               ! Help var. [1/xx or 1/(1-xx) in log unif distrib.]
     real(fp)                  :: xm
     logical        , external :: stringsequalinsens
-    character(40)             :: txtput1
+    character(45)             :: txtput1
     character(10)             :: txtput2
     character(256)            :: errmsg
 !
@@ -984,6 +1039,9 @@ subroutine echosed(lundia    ,error     ,lsed      ,lsedtot   , &
     mdcuni               => sedpar%mdcuni
     kssilt               => sedpar%kssilt
     kssand               => sedpar%kssand
+    sc_cmf1              => sedpar%sc_cmf1
+    sc_cmf2              => sedpar%sc_cmf2
+    sc_mudfac            => sedpar%sc_mudfac
     rhosol               => sedpar%rhosol
     logseddia            => sedpar%logseddia
     logsedsig            => sedpar%logsedsig
@@ -1069,6 +1127,18 @@ subroutine echosed(lundia    ,error     ,lsed      ,lsedtot   , &
     if (bsskin) then
        txtput1 = 'Skin friction Soulsby 2004'
        write (lundia, '(a)') txtput1
+       !
+       select case (sc_mudfac)
+       case (SC_MUDFRAC)
+          txtput2 = 'fraction'
+       case (SC_MUDTHC)
+          txtput2 = 'thickness'
+       end select
+       txtput1 = 'Lower crit mud '//txtput2
+       write (lundia, '(2a,f12.6)') txtput1,':', sc_cmf1
+       txtput1 = 'Upper crit mud '//txtput2
+       write (lundia, '(2a,f12.6)') txtput1,':', sc_cmf2
+       !
        txtput1 = 'Kssilt '
        write (lundia, '(2a,f12.6)') txtput1,':', kssilt
        txtput1 = 'Kssand '
@@ -1459,7 +1529,12 @@ subroutine echosed(lundia    ,error     ,lsed      ,lsedtot   , &
                 dss(nm, 1) = sedd50fld(nm)*facdss(1)
              enddo
           else
-             dss(:, l) = sedd50(l)*facdss(l)
+             !
+             ! Explicit loop because of stack overflow
+             !
+             do nm = lbound(sedd50fld,1), ubound(sedd50fld,1)
+                dss(nm, l) = sedd50(l)*facdss(l)
+             enddo
           endif
        endif
        !
@@ -1568,12 +1643,12 @@ subroutine count_sed(lundia    ,error     ,lsed      ,lsedtot   , &
     call prop_file('ini', trim(filsed), sed_ptr, istat)
     if (istat /= 0) then
        select case (istat)
-       case(1)
-          call write_error(FILE_NOT_FOUND//trim(filsed), unit=lundia)
-       case(3)
-          call write_error(PREMATURE_EOF//trim(filsed), unit=lundia)
-       case default
-          call write_error(FILE_READ_ERROR//trim(filsed), unit=lundia)
+          case(1)
+             call write_error(FILE_NOT_FOUND//trim(filsed), unit=lundia)
+          case(3)
+             call write_error(PREMATURE_EOF//trim(filsed), unit=lundia)
+          case default
+             call write_error(FILE_READ_ERROR//trim(filsed), unit=lundia)
        endselect
        error = .true.
        return
@@ -1664,6 +1739,13 @@ subroutine count_sed(lundia    ,error     ,lsed      ,lsedtot   , &
     !
     ! rhosol, namsed and sedtyp must always be allocated
     !
+    if (lsedtot == 0) then
+       message = 'No sediment fractions defined in ' // trim(filsed)
+       call write_error(message, unit=lundia)
+       error = .true.
+       return
+    endif
+    
                     allocate (sedpar%rhosol(lsedtot), stat = istat)
     if (istat == 0) allocate (sedpar%namsed(lsedtot), stat = istat)
     if (istat == 0) allocate (sedpar%sedtyp(lsedtot), stat = istat)

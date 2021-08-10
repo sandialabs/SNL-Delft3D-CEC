@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -20,51 +20,6 @@
 !!  All indications and logos of, and references to registered trademarks
 !!  of Stichting Deltares remain the property of Stichting Deltares. All
 !!  rights reserved.
-
-module delpar_mod
-!
-!  module declarations
-!
-use precision_part                  ! single/double precision
-use timers
-use fileinfo  , lun=> lunit    ! logical unit numbers for files
-use filtyp_mod                 ! explicit interface
-use spec_feat_par
-use normal_mod
-!
-!  module procedure(s)
-!
-use delete_file_mod            ! explicit interface
-use oildsp_mod                 ! explicit interface
-use part09_mod                 ! explicit interface
-use part10_mod                 ! explicit interface
-use grid_search_mod            ! explicit interface
-use part12_mod                 ! explicit interface
-use part13_mod                 ! explicit interface
-use part14_mod                 ! explicit interface
-use part18_mod                 ! explicit interface
-use part21_mod                 ! explicit interface
-use parths_mod                 ! explicit interface
-use partur_mod                 ! explicit interface
-use partwq_mod                 ! explicit interface
-use grid_search_mod            ! explicit interface
-use rdhydr_mod                 ! explicit interface
-use stop_exit_mod              ! explicit interface
-use writrk_mod                 ! explicit interface
-use partmem
-use alloc_mod
-!use normal_mod
-
-#ifdef HAVE_CONFIG_H
-#else
-use ifcore
-#endif
-!
-implicit none                  ! force explicit typing
-!
-save
-contains
-      subroutine delpar(ifnam)
 
 !
 !
@@ -133,7 +88,6 @@ contains
 !
 !
 !     subroutines called    : write_version - echo header to screen
-!                             dlpr12 - write the history files
 !                             dlwqtd - does time inteprolation (like delwaq)
 !                             oildsp - oil dispersion (modtyp=4)
 !                             part01 - calculate distances and angles in grid
@@ -399,9 +353,52 @@ contains
 !
 !     local scalars
 !
+      subroutine delpar(ifnam)
+      !
+      !  module declarations
+      !
+      use precision_part                  ! single/double precision
+      use timers
+      use fileinfo  , lun=> lunit    ! logical unit numbers for files
+      use filtyp_mod                 ! explicit interface
+      use spec_feat_par
+      use normal_mod
+      !
+      !  module procedure(s)
+      !
+      use openfl_mod
+      use delete_file_mod            ! explicit interface
+      use oildsp_mod                 ! explicit interface
+      use part09_mod                 ! explicit interface
+      use part10_mod                 ! explicit interface
+      use grid_search_mod            ! explicit interface
+      use part12_mod                 ! explicit interface
+      use part13_mod                 ! explicit interface
+      use part14_mod                 ! explicit interface
+      use part18_mod                 ! explicit interface
+      use part21_mod                 ! explicit interface
+      use parths_mod                 ! explicit interface
+      use partur_mod                 ! explicit interface
+      use partwq_mod                 ! explicit interface
+      use grid_search_mod            ! explicit interface
+      use rdhydr_mod                 ! explicit interface
+      use writrk_mod                 ! explicit interface
+      use partmem
+      use alloc_mod
+      !use normal_mod
+      
+#ifdef HAVE_CONFIG_H
+#else
+      use ifcore
+#endif
+      !
+      implicit none                  ! force explicit typing
+      !
+      save
+
       include "omp_lib.h"
 
-      integer(ip)         :: ierror  , itime   , lunpr
+      integer(ip)         :: itime   , lunpr
       integer(ip)         :: nosubud , noth
       integer(ip)         :: ilp, isp, iext, nores, noras
       real(sp)            :: dtstep
@@ -437,7 +434,7 @@ contains
       noth = OMP_GET_MAX_THREADS()
 
       write ( lunpr  , 2020 ) noth
-      write (    *   , 2030 ) noth
+      write (    *   , 2020 ) noth
 
 !     rdlgri also calculates tcktot ! Data is put in the partmem module
 
@@ -447,6 +444,12 @@ contains
 
       call rdccol ( nmaxp   , mmaxp   , lun(5)  , fname(5) , ftype  ,    &
                     lgrid2  , xb      , yb      , lun(2)   )
+      
+      if((maxval(xb).le.180.0).and.(minval(xb).ge.-180.0).and. &
+         (maxval(yb).le.90.0 ).and.(minval(yb).ge.-90.0)) then
+         write ( lunpr  , 2030 )
+         write (    *   , 2030 )
+      endif      
 
 !     calculate distances and angles, and depth in the grid
 
@@ -551,7 +554,7 @@ contains
 !     particles not yet released will be written as default (999.999)
 
       itrakc = 0
-      itraki = 1
+      itraki = notrak  ! timestep for writing trackinformation to the track file, if notrack =0 then no track file
 
 !     get bathymetry depths (w.r.t. reference level)
 
@@ -569,12 +572,19 @@ contains
 
       if (ltrack) then
 !
+!     write initial information to track file
+         dtstep = float(idelt)
+         nstept = 1 + ((itstopp - itstrtp)/idelt)/itraki
+
+         call writrk ( lun(2)   , fout     , fname(16), nopart   , title(4) ,    &
+                       dtstep   , nstept   , ibuff    , rbuff    , cbuff    ,    &
+                       track    , npmax    )
+
          call part11 ( lgrid   , xb      , yb      , nmaxp   , npart   ,    &
                        mpart   , xpart   , ypart   , xa      , ya      ,    &
                        nopart  , npwndw  , lgrid2  , kpart   , zpart   ,    &
                        za      , locdep  , dpsp    , layt    , mmaxp   ,    &
                        tcktot  )
-
 !          write actual particle tracks (file #16)
 
          call wrttrk ( lun(2)  , fout    ,fname(16), itrakc  , nopart  ,    &
@@ -788,7 +798,9 @@ contains
          call part09 ( lun(2)   , itime    , nodye    , nwaste   , mwaste   ,    &
                        xwaste   , ywaste   , iwtime   , amassd   , aconc    ,    &
                        npart    , mpart    , xpart    , ypart    , zpart    ,    &
-                       wpart    , iptime   , nopart   , radius   , lgrid    ,    &
+                       wpart    , iptime   , nopart   , radius   , nrowswaste,   &
+                       xpolwaste           , ypolwaste           , lgrid    ,    &
+                       lgrid2   , nmaxp    , mmaxp    , xb       , yb       ,    &
                        dx       , dy       , ndprt    , nosubs   , kpart    ,    &
                        layt     , tcktot   , nplay    , kwaste   , nolayp   ,    &
                        modtyp   , zwaste   , track    , nmdyer   , substi   ,    &
@@ -801,7 +813,9 @@ contains
                        ictmax   , nwaste   , mwaste   , xwaste   , ywaste   ,    &
                        zwaste   , aconc    , rem      , npart    , ndprt    ,    &
                        mpart    , xpart    , ypart    , zpart    , wpart    ,    &
-                       iptime   , nopart   , pblay    , radius   , lgrid    ,    &
+                       iptime   , nopart   , pblay    , radius   , nrowswaste,   &
+                       xpolwaste           , ypolwaste           , lgrid    ,    &
+                       lgrid2   , nmaxp    , mmaxp    , xb       , yb       ,    &
                        dx       , dy       , ftime    , tmassu   , nosubs   ,    &
                        ncheck   , t0buoy   , modtyp   , abuoy    , t0cf     ,    &
                        acf      , lun(2)   , kpart    , layt     , tcktot   ,    &
@@ -810,13 +824,14 @@ contains
 
 !        write particle tracks
 
-         if (ltrack) then            ! get the absolute x,y,z's of the particles
+         if (ltrack.and.itime.eq.(itstrtp+idelt*itrakc-idelt)) then
+            ! get the absolute x,y,z's of the particles
             call part11 ( lgrid    , xb       , yb       , nmaxp    , npart    ,    &
                           mpart    , xpart    , ypart    , xa       , ya       ,    &
                           nopart   , npwndw   , lgrid2   , kpart    , zpart    ,    &
                           za       , locdep   , dpsp     , nolayp   , mmaxp    ,    &
                           tcktot   )
-                                     ! write actual particle tracks (file #16)
+!           write actual particle tracks (file #16)
             call wrttrk ( lun(2)   , fout     , fname(16), itrakc   , nopart  ,    &
                           npmax    , xa       , ya       , za       , xyztrk  )
             itrakc = itrakc + itraki
@@ -897,14 +912,6 @@ contains
 
       enddo
 
-!     write initial information to track file
-
-      if (ltrack) then
-         dtstep = float(idelt)
-         call writrk ( lun(2)   , fout     , fname(16), nopart   , title(4) ,    &
-                       dtstep   , nstep    , ibuff    , rbuff    , cbuff    ,    &
-                       track    , npmax    )
-      endif
       call exit_alloc ( nstep )
 
       call delete_file ( "particle.wrk", ierror )
@@ -1002,8 +1009,9 @@ contains
                 i6.4 ,'D-', i2.2 ,'H-', i2.2 ,'M-', i2.2 ,'S.', i11,' part. (of',i11,')')
 
  2020 format (/'  Parallel processing with ',i3,' processor(s)'/)
- 2030 format (/'  Parallel processing with ',i3,' processor(s)'/)
+ 2030 format (/'  WARNING: Your x-coordinates are in the range [-180,180] and your' &
+              /'           y-coordinates are in the range [-90,90]. You might have' &
+              /'           a spherical grid. This is not yet supported by PART.'//)
 
       end subroutine delpar
-end module
 

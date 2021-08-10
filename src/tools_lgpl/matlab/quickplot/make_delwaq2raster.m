@@ -7,7 +7,7 @@ function make_delwaq2raster(basedir,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -32,8 +32,8 @@ function make_delwaq2raster(basedir,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/make_delwaq2raster.m $
-%   $Id: make_delwaq2raster.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/make_delwaq2raster.m $
+%   $Id: make_delwaq2raster.m 65778 2020-01-14 14:07:42Z mourits $
 
 curdir=pwd;
 addpath(curdir)
@@ -46,24 +46,23 @@ end
 if nargin>0
     cd(basedir);
 end
+err=[];
 try
-    err=localmake(varargin{:});
-catch
-    err=lasterr;
+    localmake(varargin{:});
+catch err
 end
 if nargin>0
     cd(curdir);
 end
 rmpath(curdir)
 if ~isempty(err)
-    error(err)
+    rethrow(err)
 end
 
 
-function err=localmake(qpversion,T)
-err='';
+function localmake(qpversion,T)
 if ~exist('progsrc','dir')
-    err='Cannot locate source'; return
+    error('Cannot locate source')
 end
 sourcedir=[pwd,filesep,'progsrc'];
 disp('Copying files ...')
@@ -74,9 +73,8 @@ else
 end
 if ~exist([pwd,filesep,exedir])
     [success,message] = mkdir(exedir);
-    if ~success,
-        err=message;
-        return
+    if ~success
+        error(message)
     end
 end
 cd(exedir);
@@ -107,7 +105,9 @@ TStr = datestr(T);
 fstrrep('delwaq2raster.m','<VERSION>',qpversion)
 fstrrep('delwaq2raster.m','<CREATIONDATE>',TStr)
 g = which('-all','gscript');
-copyfile(g{1},'.')
+if ~isempty(g)
+    copyfile(g{1},'.')
+end
 %
 mcc('-m','-a','./units.ini','-a','./grib','-v','delwaq2raster.m')
 %

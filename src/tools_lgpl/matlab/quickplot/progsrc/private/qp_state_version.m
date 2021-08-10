@@ -3,7 +3,7 @@ function State=qp_state_version(OldState)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function State=qp_state_version(OldState)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_state_version.m $
-%   $Id: qp_state_version.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_state_version.m $
+%   $Id: qp_state_version.m 65778 2020-01-14 14:07:42Z mourits $
 
 State=OldState;
 if ~isfield(OldState,'version')
@@ -111,7 +111,7 @@ end
 %
 State=setopt(State,'presentationtype','');
 State=setopt(State,'units','');
-State=setopt(State,'thinningmode','none');
+%State=setopt(State,'thinningmode','none');
 %State=setopt(State,'thresholds','none');
 %State=setopt(State,'thresholddistribution','linear');
 %State=setopt(State,'horizontalalignment','centre');
@@ -135,6 +135,9 @@ if strcmp(State.axestype,'Distance-Val')
 end
 if isfield(State,'marker')
     State=setopt(State,'markersize',6);
+end
+if strcmp(State.presentationtype,'values')
+    State=setopt(State,'clipnans',1);
 end
 
 

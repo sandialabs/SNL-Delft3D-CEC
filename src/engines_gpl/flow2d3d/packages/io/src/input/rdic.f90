@@ -1,15 +1,14 @@
 subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
               & runid     ,restid    ,filic     ,fmtic     ,salin     , &
               & temp      ,const     ,secflo    ,lturi     ,lsal      , &
-              & ltem      ,lstsc     ,zini      ,u0ini     ,v0ini     , &
-              & s0ini     ,t0ini     ,c0ini     ,i0ini     ,mmax      , &
+              & ltem      ,lstsc     ,zini      ,mmax      , &
               & nmax      ,nmaxus    ,kmax      ,lstsci    ,ltur      , &
               & namcon    ,s1        ,u1        ,v1        ,r1        , &
               & rtur1     ,decay     ,umnldf    ,vmnldf    ,kfu       , &
               & kfv       ,dp        ,lsed      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -33,8 +32,8 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdic.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdic.f90 $
+!  $Id: rdic.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdic.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads RESTID from the MD-file
@@ -64,6 +63,7 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
     integer       , pointer :: itis
+    integer       , pointer :: i_restart
     character(16) , pointer :: rst_layer_model
     character*(10), pointer :: trans_unit      !  Unit of the variables ATR and DTR
     include 'pardef.igd'
@@ -101,23 +101,6 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     real(fp), dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub, kmax)         :: v1     !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub, kmax, lstsci) :: r1     !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(lstsc)                                                  :: decay  !  Description and declaration in esm_alloc_real.f90
-    real(fp), dimension(mxkmax)                                                 :: i0ini  !!  Initial condition for secondary flow
-                                                                                          !!  only if kmax = 1
-    real(fp), dimension(mxkmax)                                                 :: s0ini  !!  Initial condition for salinity,
-                                                                                          !!  which will be applied uniformly
-                                                                                          !!  over the vertical
-    real(fp), dimension(mxkmax)                                                 :: t0ini  !!  Initial condition for temperature,
-                                                                                          !!  which will be applied uniformly
-                                                                                          !!  over the vertical
-    real(fp), dimension(mxkmax)                                                 :: u0ini  !!  Initial condition for u-velocity,
-                                                                                          !!  which will be applied uniformly
-                                                                                          !!  over the vertical
-    real(fp), dimension(mxkmax)                                                 :: v0ini  !!  Initial condition for v-velocity,
-                                                                                          !!  which will be applied uniformly
-                                                                                          !!  over the vertical.
-    real(fp), dimension(mxkmax)                                                 :: c0ini  !!  Initial condition for the concentra-
-                                                                                          !!  tions which will be applied uni-
-                                                                                          !!  formly over the vertical.
     character(*)                                                                :: filic  !!  File name of initial condition file
     character(*)                                                                :: mdfrec !!  Standard rec. length in MD-file (300)
     character(*)                                                                :: restid !!  Run identification of the restart
@@ -134,36 +117,39 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !
 ! Local variables
 !
-    integer                           :: k       ! Help var. 
-    integer                           :: l       ! Help var. 
-    integer                           :: lconc   ! Number of constituents defined by user (excl. Salinity, Temperature, Secondary flow and Quantities for the Turb. models) 
-    integer                           :: lenc    ! Help var. (length of var. cvar to be looked for in the MD-file) 
-    integer                           :: lkw     ! Length (in characters) of keyword 
-    integer                           :: ll      ! Help var. 
-    integer                           :: lnconc  ! Help var. for constituent 
-    integer                           :: nlook   ! Help var.: nr. of data to look for in the MD-file 
-    integer                           :: ntrec   ! Help. var to keep track of NRREC 
-    integer, dimension(:), allocatable:: coninit ! Flag indicating whether a constituent has been initialized (0 = not initialized, 1 = initialized)
-    logical                           :: defaul  ! Flag set to YES if default value may be applied in case var. read is empty (ier <= 0, or nrread < nlook) 
-    logical                           :: found   ! FOUND=TRUE if KEYW in the MD-file was found 
-    logical                           :: lerror  ! Flag=TRUE if a local error is encountered 
-    logical                           :: newkw   ! Logical var. specifying whether a new recnam should be read from the MD-file or just new data in the continuation line 
-    logical                           :: nodef   ! Flag set to YES if default value may NOT be applied in case var. read is empty (ier <= 0, or nrread < nlook) 
-    real(fp)                          :: daysec  ! Number of seconds in one day
-    real(fp)                          :: misval  ! Value for missing data
-    real(fp)                          :: rdef    ! Help var. containing default va- lue(s) for real variable 
-    real(fp)      , dimension(mxkmax) :: rval    ! Help array (real) where the data, recently read from the MD-file, are stored temporarily 
-    character(11)                     :: fmtdef  ! Default file format (usually=blank) 
-    character(11)                     :: fmttmp  ! Help variable for file format 
-    character(12)                     :: fildef  ! Default file name (usually = blank) 
-    character(20)                     :: cdef    ! Default value when CHULP not found 
-    character(20)                     :: chulp   ! Help var. 
-    character(6)                      :: keyw    ! Name of record to look for in the MD-file (usually KEYWRD or RECNAM)
-    character(200)                    :: message
+    integer                             :: ierr    ! Status variable for (de)allocation
+    integer                             :: k       ! Help var. 
+    integer                             :: l       ! Help var. 
+    integer                             :: lconc   ! Number of constituents defined by user (excl. Salinity, Temperature, Secondary flow and Quantities for the Turb. models) 
+    integer                             :: lenc    ! Help var. (length of var. cvar to be looked for in the MD-file) 
+    integer                             :: lkw     ! Length (in characters) of keyword 
+    integer                             :: ll      ! Help var. 
+    integer                             :: lnconc  ! Help var. for constituent 
+    integer                             :: nlook   ! Help var.: nr. of data to look for in the MD-file 
+    integer                             :: ntrec   ! Help. var to keep track of NRREC 
+    integer , dimension(:), allocatable :: coninit ! Flag indicating whether a constituent has been initialized (0 = not initialized, 1 = initialized)
+    logical                             :: defaul  ! Flag set to YES if default value may be applied in case var. read is empty (ier <= 0, or nrread < nlook) 
+    logical                             :: found   ! FOUND=TRUE if KEYW in the MD-file was found 
+    logical                             :: lerror  ! Flag=TRUE if a local error is encountered 
+    logical                             :: newkw   ! Logical var. specifying whether a new recnam should be read from the MD-file or just new data in the continuation line 
+    logical                             :: nodef   ! Flag set to YES if default value may NOT be applied in case var. read is empty (ier <= 0, or nrread < nlook) 
+    real(fp)                            :: daysec  ! Number of seconds in one day
+    real(fp)                            :: misval  ! Value for missing data
+    real(fp)                            :: rdef    ! Help var. containing default va- lue(s) for real variable 
+    real(fp), dimension(:), allocatable :: rval    ! Help array (real) where the data, recently read from the MD-file, are stored temporarily 
+    real(fp), dimension(:), allocatable :: wrkini  ! Work array for reading initial conditions
+    character(11)                       :: fmtdef  ! Default file format (usually=blank) 
+    character(11)                       :: fmttmp  ! Help variable for file format 
+    character(12)                       :: fildef  ! Default file name (usually = blank) 
+    character(20)                       :: cdef    ! Default value when CHULP not found 
+    character(20)                       :: chulp   ! Help var. 
+    character(6)                        :: keyw    ! Name of record to look for in the MD-file (usually KEYWRD or RECNAM)
+    character(200)                      :: message
 !
 !! executable statements -------------------------------------------------------
 !
     itis            => gdp%gdrdpara%itis
+    i_restart       => gdp%gdrestart%i_restart
     rst_layer_model => gdp%gdrestart%rst_layer_model
     trans_unit      => gdp%gdpostpr%trans_unit
     !
@@ -188,9 +174,16 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     !
     ! define or read names of constituents
     !
-    allocate(coninit(lstsci))
+    allocate(coninit(lstsci), stat = ierr)
     coninit = 0
-    lnconc = 0
+    lnconc  = 0
+    !
+    ! temporary work arrays
+    !
+    allocate(wrkini(kmax), stat = ierr)
+    allocate(rval  (kmax), stat = ierr)
+    wrkini = 0.0_fp
+    rval   = 0.0_fp
     !
     ! define name of salinity  (Sub1(1:1) = 'S')
     !
@@ -262,11 +255,12 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     ! locate 'Restid' record for restart run-identification
     !
     restid = ' '
+    call prop_get(gdp%mdfile_ptr, '*', 'Restid_timeindex', i_restart)
     call prop_get_string(gdp%mdfile_ptr, '*', 'Restid', restid)
     if (restid /= ' ') then
        !
        ! restart from file
-       ! test on constistency: runid is not restid
+       ! test on consistency: runid is not restid
        !
        if (runid == restid) then
           call prterr(lundia    ,'V005'    ,' '       )
@@ -322,8 +316,8 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
           ! 'U0' for all layers (or just one value)
           ! First read as string to check whether U0 specification is present
           !
-          u0ini = 0.0_fp
-          chulp = ' '
+          wrkini = 0.0_fp
+          chulp  = ' '
           call prop_get_string(gdp%mdfile_ptr,'*','U0',chulp)
           if (chulp /= ' ') then
              rval  = misval
@@ -335,14 +329,16 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                        & ntrec     ,lundia    ,gdp       )
              if (lerror) then
                 lerror = .false.
-                u0ini = rdef
+                wrkini = rdef
              else
-                if (        comparereal(rval(1),misval) /= 0 &
-                    & .and. comparereal(rval(2),misval) == 0  ) then
+                if (kmax == 1) then
+                   wrkini = rval(1)
+                elseif (        comparereal(rval(1),misval) /= 0 &
+                        & .and. comparereal(rval(2),misval) == 0  ) then
                    !
                    ! One value to be used for all layers
                    !
-                   u0ini = rval(1)
+                   wrkini = rval(1)
                 else
                    !
                    ! Expecting a value specified for each layer
@@ -354,23 +350,23 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                          call prterr(lundia, 'P004', message)
                          call d3stop(1, gdp)
                       endif
-                      u0ini(k) = rval(k)
+                      wrkini(k) = rval(k)
                    enddo
                 endif
              endif
           endif
           !
-          ! copy u0ini in u1
+          ! copy wrkini in u1
           !
           do k = 1, kmax
-             u1(:, :, k) = u0ini(k)
+             u1(:, :, k) = wrkini(k)
           enddo
           !
           ! 'V0' for all layers (or just one value)
           ! First read as string to check whether V0 specification is present
           !
-          v0ini = 0.0_fp
-          chulp = ' '
+          wrkini = 0.0_fp
+          chulp  = ' '
           call prop_get_string(gdp%mdfile_ptr,'*','V0',chulp)
           if (chulp /= ' ') then
              rval  = misval
@@ -382,14 +378,16 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                        & ntrec     ,lundia    ,gdp       )
              if (lerror) then
                 lerror = .false.
-                v0ini = rdef
+                wrkini = rdef
              else
-                if (        comparereal(rval(1),misval) /= 0 &
-                    & .and. comparereal(rval(2),misval) == 0  ) then
+                if (kmax == 1) then
+                   wrkini = rval(1)
+                elseif (        comparereal(rval(1),misval) /= 0 &
+                        & .and. comparereal(rval(2),misval) == 0  ) then
                    !
                    ! One value to be used for all layers
                    !
-                   v0ini = rval(1)
+                   wrkini = rval(1)
                 else
                    !
                    ! Expecting a value specified for each layer
@@ -401,16 +399,16 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                          call prterr(lundia, 'P004', message)
                          call d3stop(1, gdp)
                       endif
-                      v0ini(k) = rval(k)
+                      wrkini(k) = rval(k)
                    enddo
                 endif
              endif
           endif
           !
-          ! copy v0ini in v1
+          ! copy wrkini in v1
           !
           do k = 1, kmax
-             v1(:, :, k) = v0ini(k)
+             v1(:, :, k) = wrkini(k)
           enddo
        endif
        !
@@ -428,8 +426,8 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
              ! 'S0' (if salin = true) for all layers (or just one value)
              ! First read as string to check whether S0 specification is present
              !
-             s0ini = 0.0_fp
-             chulp = ' '
+             wrkini = 0.0_fp
+             chulp  = ' '
              call prop_get_string(gdp%mdfile_ptr,'*','S0',chulp)
              if (chulp /= ' ') then
                 rval  = misval
@@ -443,12 +441,14 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                    error  = .true.
                    lerror = .false.
                 else
-                   if (        comparereal(rval(1),misval) /= 0 &
-                       & .and. comparereal(rval(2),misval) == 0  ) then
+                   if (kmax == 1) then
+                      wrkini = rval(1)
+                   elseif (        comparereal(rval(1),misval) /= 0 &
+                           & .and. comparereal(rval(2),misval) == 0  ) then
                       !
                       ! One value to be used for all layers
                       !
-                      s0ini = rval(1)
+                      wrkini = rval(1)
                    else
                       !
                       ! Expecting a value specified for each layer
@@ -460,16 +460,16 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                             call prterr(lundia, 'P004', message)
                             call d3stop(1, gdp)
                          endif
-                         s0ini(k) = rval(k)
+                         wrkini(k) = rval(k)
                       enddo
                    endif
                 endif
              endif
              !
-             ! copy s0ini in r1
+             ! copy wrkini in r1
              !
              do k = 1, kmax
-                r1(:, :, k, lnconc) = s0ini(k)
+                r1(:, :, k, lnconc) = wrkini(k)
              enddo
           endif
        endif
@@ -480,17 +480,17 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
           lnconc = lnconc + 1
           if (coninit(lnconc)==0) then
              !
-             ! locate and read 'T0    ' record for t0ini
+             ! locate and read 'T0    ' record for wrkini
              ! if temp  = .true.
              ! default value not allowed => nodef
              !
-             ! Initialize T0INI (MXKMAX) for KMAX layers
+             ! Initialize WRKINI for KMAX layers
              !
-             rval  = misval
-             t0ini = 0.0_fp
-             keyw  = 'T0    '
-             ntrec = nrrec
-             nlook = 0
+             rval   = misval
+             wrkini = 0.0_fp
+             keyw   = 'T0    '
+             ntrec  = nrrec
+             nlook  = 0
              call read2r(lunmd     ,lerror    ,keyw      ,newkw     ,nlook     , &
                        & mdfrec    ,rval      ,rdef      ,nodef     ,nrrec     , &
                        & ntrec     ,lundia    ,gdp       )
@@ -498,12 +498,14 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                 error  = .true.
                 lerror = .false.
              else
-                if (        comparereal(rval(1),misval) /= 0 &
-                    & .and. comparereal(rval(2),misval) == 0  ) then
+                if (kmax == 1) then
+                   wrkini = rval(1)
+                elseif (        comparereal(rval(1),misval) /= 0 &
+                        & .and. comparereal(rval(2),misval) == 0  ) then
                    !
                    ! One value to be used for all layers
                    !
-                   t0ini = rval(1)
+                   wrkini = rval(1)
                 else
                    !
                    ! Expecting a value specified for each layer
@@ -515,15 +517,15 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                          call prterr(lundia, 'P004', message)
                          call d3stop(1, gdp)
                       endif
-                      t0ini(k) = rval(k)
+                      wrkini(k) = rval(k)
                    enddo
                 endif
              endif
              !
-             ! copy t0ini in r1
+             ! copy wrkini in r1
              !
              do k = 1, kmax
-                r1(:, :, k, lnconc) = t0ini(k)
+                r1(:, :, k, lnconc) = wrkini(k)
              enddo
           endif
        endif
@@ -533,7 +535,7 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
        if (const) then
           !
           ! 'C0##  ' record if const = .true.
-          ! read c0ini(lmaxc ) from record where lmaxc = ltem + l
+          ! read wrkini(lmaxc ) from record where lmaxc = ltem + l
           ! First read as string to check whether C0 specification is present
           !
           keyw = 'C0?   '
@@ -541,9 +543,9 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
              lnconc = lnconc + 1
              if (coninit(lnconc)==0) then
                 !
-                ! Initialize WRKINI (MXKMAX) for KMAX layers
+                ! Initialize WRKINI for KMAX layers
                 !
-                c0ini = 0.0_fp
+                wrkini = 0.0_fp
                 !
                 if (l < 10) then
                    write (keyw(3:3), '(i1)') l
@@ -562,12 +564,14 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                    if (lerror) then
                       lerror = .false.
                    else
-                      if (        comparereal(rval(1),misval) /= 0 &
-                          & .and. comparereal(rval(2),misval) == 0  ) then
+                      if (kmax == 1) then
+                         wrkini = rval(1)
+                      elseif (        comparereal(rval(1),misval) /= 0 &
+                              & .and. comparereal(rval(2),misval) == 0  ) then
                          !
                          ! One value to be used for all layers
                          !
-                         c0ini = rval(1)
+                         wrkini = rval(1)
                       else
                          !
                          ! Expecting a value specified for each layer
@@ -579,16 +583,16 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                                call prterr(lundia, 'P004', message)
                                call d3stop(1, gdp)
                             endif
-                            c0ini(k) = rval(k)
+                            wrkini(k) = rval(k)
                          enddo
                       endif
                    endif
                 endif
                 !
-                ! copy c0ini in r1
+                ! copy wrkini in r1
                 !
                 do k = 1, kmax
-                   r1(:, :, k, lnconc) = c0ini(k)
+                   r1(:, :, k, lnconc) = wrkini(k)
                 enddo
              endif
           enddo
@@ -600,29 +604,31 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
           lnconc = lnconc + 1
           if (coninit(lnconc)==0) then
              !
-             ! 'I0    ' record for i0ini
+             ! 'I0    ' record for wrkini
              ! if secflo = .true.
              ! default value not allowed
              ! write in r1
              !
-             ! Initialize I0INI (MXKMAX) for KMAX layers
+             ! Initialize WRKINI for KMAX layers
              !
-             i0ini = 0.0_fp
-             keyw  = 'I0    '
-             ntrec = nrrec
-             nlook = 0
+             wrkini = 0.0_fp
+             keyw   = 'I0    '
+             ntrec  = nrrec
+             nlook  = 0
              call read2r(lunmd     ,lerror    ,keyw      ,newkw     ,nlook     , &
                        & mdfrec    ,rval      ,rdef      ,nodef     ,nrrec     , &
                        & ntrec     ,lundia    ,gdp       )
              if (lerror) then
                 lerror = .false.
              else
-                if (        comparereal(rval(1),misval) /= 0 &
-                    & .and. comparereal(rval(2),misval) == 0  ) then
+                if (kmax == 1) then
+                   wrkini = rval(1)
+                elseif (        comparereal(rval(1),misval) /= 0 &
+                        & .and. comparereal(rval(2),misval) == 0  ) then
                    !
                    ! One value to be used for all layers
                    !
-                   i0ini = rval(1)
+                   wrkini = rval(1)
                 else
                    !
                    ! Expecting a value specified for each layer
@@ -634,15 +640,15 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                          call prterr(lundia, 'P004', message)
                          call d3stop(1, gdp)
                       endif
-                      i0ini(k) = rval(k)
+                      wrkini(k) = rval(k)
                    enddo
                 endif
              endif
              !
-             ! copy i0ini in r1
+             ! copy wrkini in r1
              !
              do k = 1, kmax
-                r1(:, :, k, lnconc) = i0ini(k)
+                r1(:, :, k, lnconc) = wrkini(k)
              enddo
           endif
        endif
@@ -711,7 +717,9 @@ subroutine rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
           endif
        endif
     enddo
-    deallocate(coninit)
+    deallocate(coninit, stat = ierr)
+    deallocate(wrkini, stat = ierr)
+    deallocate(rval, stat = ierr)
 
     if (salin .and. .not. temp .and. lconc==0) then
     !  only salinity:

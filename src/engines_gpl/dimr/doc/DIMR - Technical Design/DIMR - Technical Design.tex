@@ -1,0 +1,171 @@
+\documentclass[signature]{deltares_report}
+\usepackage{listings}
+\usepackage[titletoc]{appendix}
+%-----------------------------------------------
+\lstset{ %
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code listings
+}
+
+\definecolor{Gray}{gray}{0.9}
+
+\begin{document}
+\pagestyle{empty}
+\cleardoublepage
+%
+
+\newcommand{\ProgramName}{PROJECT_NAME\xspace}
+
+\title{\ProgramName}
+\subtitle{Technical Design}
+\projectnumber{PROJECT_NUMBER}
+\client{Deltares}
+\reference{PROJECT_NUMBER-PROJECT_NAME-003}
+\classification{-}
+
+\date{PROJECT_DATE}
+\version{1.0}
+
+\keywords{software}
+
+\references{Refer to \autoref{chapterLiterature}}
+
+\summary{}
+
+\versioni{1.0}
+\datei{PROJECT_DATE}
+\authori{Carles Salvador Soriano Perez}
+\revieweri{}
+\approvali{}
+
+\status{draft}
+\disclaimer{}
+
+%\deltarestitle
+
+
+%------------------------------------------------------------------------------
+\chapter{Introduction} 
+\label{chapterIntroduction}
+
+\section{Purpose and scope of this document} \label{sec:PurposeAndScope}
+
+\section{Related Documents}
+\label{sec:RelatedDocuments}
+\bigskip
+\begin{longtable}{|p{0.28\textwidth}|p{0.72\textwidth}|}
+\caption{Overview of related documents for the \ProgramName \label{tab:RelatedDocuments}}\\	\hline
+		\hline 
+		\textbf{Document} & \textbf{Reference} \\
+		\hline 
+		\hline 
+		Functional Design & \citep{PROJECT_NAME_FunctionalDesignPROJECT_YEAR} \\
+		Technical Documentation & \citep{PROJECT_NAME_TechnicalDocumentationPROJECT_YEAR} \\
+		Test Plan & \citep{PROJECT_NAME_TestPlanPROJECT_YEAR} \\
+		Test Report & \citep{PROJECT_NAME_TestReportPROJECT_YEAR} \\
+    \hline			
+\end{longtable}
+
+\section{Versions}
+\label{sec:Versions}
+
+\subsection{Version 0.1}
+\label{sec:Version}
+This is the draft version of this document
+
+\section{Requirements}
+\label{sec:requirements}
+To do.
+
+%------------------------------------------------------------------------------
+
+%------------------------------------------------------------------------------
+\chapter{Background} 
+\label{chapterBackground}
+
+
+%------------------------------------------------------------------------------
+\chapter{Architecture} 
+\label{chapterArchitecture}
+
+\section{System}
+\label{sec:system}
+The operating system employed to develop the software has been Windows 7 Enterprise 64 bits. 
+At the same time, the software has been developed using a version control through SVN.
+
+
+\section{Applications}
+\label{sec:application}
+This tool has been fully developed in C\#. To develop it the following applications and plugins have been used:
+\begin{itemize}
+	\item Visual Studio (VCS 2015 x86 compiler) with the following plugins and NuGet packages
+		\begin{itemize}
+			\item Windows Presentation Forms (WPF).
+			\item Resharper.
+			\item NUnit.
+			\item Ghostdoc.
+		\end{itemize}
+	\item TortoiseSVN. Necessary for the version control.
+	\item TeamCity. Web application for build management and continuous integration.
+\end{itemize}
+
+\section{Hardware requirements}
+\label{sec:hwRequirements}
+The minimum requirements are as follows:
+\begin{itemize}
+\item Intel core i5, x86 (32 bit) processor.
+\item 8GB RAM.
+\item 10GB free memory disk.
+\end{itemize}
+
+%------------------------------------------------------------------------------
+\chapter{Installation instructions}
+\label{installation}
+\section{Unzip}
+\label{sec:Unzip}
+
+\section{Verify installation}
+\label{sec:VerificateInstallation}
+
+%------------------------------------------------------------------------------
+\chapter{Detailed design}
+\label{detailedDesign}
+
+\section{Design Patterns}
+\label{sec:designPatterns}
+
+
+\section{Functionalities}
+\label{sec:functionalities}
+
+\section{Business layer}
+\label{sec:businessLayer}
+
+\subsection{Kernels}
+\label{subsec:kernels}
+
+\subsection{Control flows}
+\label{subsec:controlFlows}
+
+\section{Data layer}
+\label{sec:dataLayer}
+
+\subsection{Data model}
+\label{subsec:dataModel}
+
+\subsection{Database design}
+\label{subsec:databaseDesign}
+
+\subsection{Data flows}
+\label{subsec:dataFlows}
+
+
+%------------------------------------------------------------------------------
+\chapter{Literature}  \label{chapterLiterature}
+
+\bibliography{../PROJECT_NAME_references/PROJECT_NAME_references}
+
+\pagestyle{empty}
+\mbox{}
+
+%------------------------------------------------------------------------------
+\end{document}

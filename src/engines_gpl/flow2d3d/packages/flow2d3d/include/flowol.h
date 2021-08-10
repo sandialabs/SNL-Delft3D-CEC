@@ -1,6 +1,6 @@
 //---- GPL ---------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,6 +70,7 @@ class FlowOL {
 
     public:
         int     numSubdomains;
+		bool    mpiInitialized;
         DeltaresHydro * dh;     // DeltaresHydro object instance (only one)
 #ifdef WITH_DELFTONLINE
         DOL::Server *   dol;    // DOL server object reference (only one)

@@ -15,7 +15,7 @@ function handle=qp_colorbar(varargin)
 %   If called with COLORBAR(H) or for an existing colorbar, don't change
 %   the NextPlot property.
 
-%   $Id: qp_colorbar.m 5590 2015-11-16 10:05:03Z jagers $
+%   $Id: qp_colorbar.m 62942 2019-01-13 21:06:51Z jagers $
 
 changeNextPlot = 1;
 
@@ -105,6 +105,13 @@ lengthcmap=size(get(GCF,'colormap'),1);
 
 t = get(h,'clim');
 d = (t(2) - t(1))/lengthcmap;
+dmin = 1e-13;
+singleColor = d<dmin;
+if singleColor
+    d = dmin;
+    t = mean(t) + [-1 1]*lengthcmap*d/2;
+    singleColor = true;
+end
 t = [t(1)+d/2  t(2)-d/2];
 
 %
@@ -175,13 +182,12 @@ if loc(1)=='v', % Append vertical scale to right of current plot
    set(ax,'Ydir','normal')
    set(ax,'YAxisLocation','right')
    set(ax,'xtick',[])
-
    % set up axes deletefcn
    set(ax,'tag','Colorbar','deletefcn','qp_colorbar delete')
 
-elseif loc(1)=='h', % Append horizontal scale to top of current plot
+elseif loc(1)=='h' % Append horizontal scale to top of current plot
 
-   if isempty(ax),
+   if isempty(ax)
       units = get(h,'units'); set(h,'units','normalized')
       pos = get(h,'Position');
       stripe = 0.075; space = 0.1;
@@ -229,7 +235,12 @@ ud.PlotHandle = h;
 set(ax,'userdata',ud)
 set(GCF,'currentaxes',origCurAxes)
 set(GCF,'NextPlot',origNextPlot)
-if ~isempty(legend)
+try
+    hasLegend = ~isempty(ax.Legend);
+catch
+   hasLegend = ~isempty(legend);
+end
+if hasLegend
    legend % Update legend
 end
 if nargout>0, handle = ax; end

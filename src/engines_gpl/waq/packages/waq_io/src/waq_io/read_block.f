@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -38,6 +38,8 @@
       use rd_token
       use timers       !   performance timers
 
+      use iso_fortran_env, only: int64
+
       implicit none
 
 !     declaration of arguments
@@ -73,6 +75,7 @@
       integer                               :: i_base_grid  ! index of base grid
       integer                               :: igrid        ! index of input grid
       integer                               :: noseg        ! number of segments
+      integer                               :: noseg_org    ! original number of segments
       integer                               :: i            ! loop counter
       integer                               :: noits        ! number of scale factors / columns sybstances
       integer                               :: noits_loc    ! number of scale factors locations
@@ -87,15 +90,24 @@
       character                             :: cdummy       ! dummy not used
       integer                               :: idummy       ! dummy not used
       real                                  :: rdummy       ! dummy not used
+      character(len=256)                    :: adummy       ! dummy not used
       character(len=10)                     :: callr        ! kind of item
       character(len=10)                     :: strng1       ! kind of item
       character(len=10)                     :: strng2       ! kind of item
       character(len=10)                     :: strng3       ! kind of item
+
+      logical                               :: lfound       ! Keyword found (or not)
+      logical                               :: lsegfuncheck ! Do check if segmentfunctions are correct
+      integer(kind=int64)                   :: filesize     ! Reported size of the file
+
       logical       dtflg1 , dtflg2, dtflg3
       integer       chkflg , itfact
       integer                               :: nocol        ! number of columns in input
       integer(4) :: ithndl = 0
       if (timon) call timstrt( "read_block", ithndl )
+
+      call getcom ( '-nosegfuncheck', 0, lfound, idummy, rdummy, adummy, ierr2)
+      lsegfuncheck = .not. lfound
 
 !     defaults and initialisation
 
@@ -135,6 +147,7 @@
 
       i_base_grid = GridPs%base_grid
       noseg = GridPs%Pointers(i_base_grid)%noseg
+      noseg_org = get_original_noseg()
 
 !     initialise a number of variables
 
@@ -241,7 +254,8 @@
             ! handle file option, should we resolve the use of 17? = work file segment-functions
 
             call opt1( -4    , lun    , 17    , lchar  , filtype,
-     *                 dtflg1, dtflg3 , noseg , ierr2  , iwar   )
+     *                 dtflg1, dtflg3 , noseg , ierr2  , iwar   ,
+     *                 .false.)
             if ( ierr2 .ne. 0 ) exit
 
             ierr2 = puttoken(lchar(17))
@@ -503,9 +517,24 @@
                if ( data_block%subject .eq. SUBJECT_SEGFUNC ) data_block%iorder = ORDER_LOC_PARAM
                write ( lunut   ,   2220   ) ctoken
                data_block%filename = ctoken
+
+               if (lsegfuncheck) then
+                  ! Check the size of the file (if it is binary, otherwise this is not reliable)
+                  call check_file_size( ctoken, noits*noseg_org, mod(data_block%filetype,10), filesize, ierr2 )
+                  if ( ierr2 < 0 ) then
+                      ierr2 = 1
+                      write( lunut , 2320 ) ctoken
+                  elseif ( ierr2 > 0 ) then
+                      ierr2 = 0        ! It is a warning, proceed at your own peril
+                      iwar  = iwar + 1
+                      write( lunut , 2330 ) ctoken, filesize, 4*(1+noits*noseg_org), noits, noseg
+                      write( lunut , 2340 )
+                  endif
+               end if
+
             else
 
-               ! Check if an inner loop collumn header exists for the data matrix
+               ! Check if an inner loop column header exists for the data matrix
 
                nocol = noits
                call read_header( waq_param, data_param, nocol , itfact, dtflg1,
@@ -638,4 +667,122 @@
  2290 FORMAT( ' Input grid for this item is :',A)
  2300 FORMAT( ' Input will be given for ',I10,' segments.' )
  2310 FORMAT( ' ERROR: Input grid not defined :',A)
+ 2320 FORMAT( ' ERROR: Binary/unformatted file does not exist or could not be opened: ',A)
+ 2330 FORMAT( ' WARNING: Binary/unformatted file does not have the correct size: ',A,/,
+     &        '          The reported size is: ',I0,/,
+     &        '          The size should not be zero and it should be a whole multiple of ',I0,
+     &        ' (= 4*(1+',I0,'*',I0,'))')
+ 2340 FORMAT( '          As on some file systems the reported size may be incorrect,',/,
+     &        '          this is treated as a warning')
+
+      CONTAINS
+
+      subroutine check_file_size( filename, nodata, type, filesize, ierr )
+
+      use iso_fortran_env, only: int64
+
+      character(len=*), intent(in)     :: filename
+      integer, intent(in)              :: nodata
+      integer, intent(in)              :: type
+      integer(kind=int64), intent(out) :: filesize
+      integer, intent(out)             :: ierr
+
+      integer                         :: norcd, i
+      integer                         :: lun
+      integer                         :: time
+      real, dimension(:), allocatable :: data
+      character(14)                   :: strng
+
+      integer(kind=int64)             :: recordsize
+
+      ierr = 0
+
+
+      !
+      ! Check that the file exists and can be opened
+      !
+
+      if ( type == FILE_BINARY ) then
+          open( newunit = lun, file = filename, iostat = ierr, status = 'old', access = 'stream' )
+      else
+          open( newunit = lun, file = filename, iostat = ierr, status = 'old', form = 'unformatted' )
+      endif
+      if ( ierr /= 0 ) then
+          ierr = -999 ! Explicitly mark the file as unuseable
+          return
+      endif
+
+      !
+      ! Check if this is a steering file
+      !
+
+      read ( lun , iostat = ierr ) strng
+      if ( ierr .ne. 0 ) then
+         ierr  = 0
+         strng = 'x'
+      endif
+      if ( strng(1:14) .ne. 'Steering file ' ) then
+         if ( type == FILE_BINARY ) then
+            inquire( lun, size = filesize )
+            close( lun )
+
+            recordsize = 4 * (nodata+1) ! single-precision reals occupy four bytes, also 4 bytes for the time
+            if ( mod(filesize,recordsize) /= 0 ) then
+                ierr = 1
+            endif
+         else
+            rewind( lun )
+            allocate( data(nodata) )
+            !
+            ! Determine the number of records - iostat does not seem to distinguish between partly fulfilled
+            ! reads and end-of-file
+            !
+            norcd   = 0
+            do
+               read( lun, iostat = ierr ) time, data
+               if ( ierr /= 0 ) then
+                   exit
+               endif
+               norcd = norcd + 1
+            enddo
+
+            !
+            ! The last record may have been too short, so try again:
+            ! - Read all the records we have been able to read
+            ! - Try reading an extra number (time). This should fail
+            !
+            rewind( lun )
+            do i = 1,norcd
+               read( lun, iostat = ierr ) time, data
+            enddo
+
+            read( lun, iostat = ierr ) time
+
+            !
+            ! If we have been able to read at least one record and the last read
+            ! let to and end-of-file condition, we accept the file. Otherwise return
+            ! an error.
+            !
+            if ( norcd > 0 .and. ierr < 0 ) then
+                ierr = 0
+            else
+                ierr = 1
+            endif
+            close( lun )
+            deallocate( data )
+         endif
+      else
+         !
+         ! No check yet if it is a steering file
+         !
+      endif
+
+      end subroutine check_file_size
+
+      ! Function to get around the name clash - information in a COMMON block
+      integer function get_original_noseg()
+          include 'sysn.inc'
+
+          get_original_noseg = noseg
+      end function get_original_noseg
       END

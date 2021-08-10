@@ -1,9 +1,18 @@
 function H=qp_uifigure(Name,closecom,tag,pos,callbackfcn)
 %QP_UIFIGURE Create a new empty dialog figure.
+%    H = QP_UIFIGURE(NAME,CLOSECOM,TAG,POS,CBF) creates a new dialog figure
+%    with the title set equal to NAME, tag equal to TAG, position equal to
+%    POS (shifted to on screen), resizing off, and close request function
+%    set to
+%        [CBF ' ' CLOSECOM] if CBF and CLOSECOM are strings
+%        {CBF CLOSECOM} otherwise
+%    The figure visibility is set to 'off'.
+%
+%    See also QP_UIMENU, FIGURE, UIMENU, UICONTROL.
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +37,8 @@ function H=qp_uifigure(Name,closecom,tag,pos,callbackfcn)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_uifigure.m $
-%   $Id: qp_uifigure.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_uifigure.m $
+%   $Id: qp_uifigure.m 65778 2020-01-14 14:07:42Z mourits $
 
 Inactive=qp_settings('UIInActiveColor');%[0.5 0.5 1];%
 %
@@ -48,7 +57,11 @@ pos(1:2)=min(pos(1:2),MonPos(1:2)+MonPos(3:4)-pos(3:4)-[0 70]);
 % also in R13 compiled mode
 %
 if ~isempty(closecom)
-    closecom=sprintf('%s %s',callbackfcn,closecom);
+    if ischar(callbackfcn)
+        closecom = [callbackfcn ' ' closecom];
+    else
+        closecom = {callbackfcn closecom};
+    end
 end
 %
 H = figure('Visible','off', ...
@@ -64,9 +77,19 @@ H = figure('Visible','off', ...
     'NumberTitle','off', ...
     'Resize','off', ...
     'Position',pos, ...
+    'KeyPressFcn',@keypress, ...
     'Handlevisibility','off', ...
     'Tag',tag);
 setappdata(H,'WL_UserInterface',1)
 if matlabversionnumber >= 7
     set(H,'WindowStyle','normal','DockControls','off')
+end
+
+function keypress(handle,event)
+if isequal(event.Key,'s')
+    if isequal(event.Modifier,{'control'})
+        d3d_qp('move_onscreen',handle)
+    elseif isequal(event.Modifier,{'control','alt'})
+        d3d_qp('move_onscreen')
+    end
 end

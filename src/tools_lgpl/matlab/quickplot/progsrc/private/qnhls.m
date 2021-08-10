@@ -12,7 +12,7 @@ function varargout=qnhls(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -37,8 +37,8 @@ function varargout=qnhls(cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qnhls.m $
-%   $Id: qnhls.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qnhls.m $
+%   $Id: qnhls.m 65778 2020-01-14 14:07:42Z mourits $
 
 switch lower(cmd)
     case 'read'
@@ -58,27 +58,45 @@ end
 function [CMap,Label]=Local_read_hls(filename)
 fid=fopen(filename,'r');
 if fid<0
-    CMap=[];
-    Label='';
-    return
+    error('Unable to open %s',filename)
 end
 Label=fgetl(fid);
 i=0;
 Line=fgetl(fid);
 X=sscanf(Line,'%i%i%i',[1 3]);
+CMap = zeros(128,3);
 while isequal(size(X),[1 3])
     i=i+1;
+    if i>size(CMap,1) % extend array in chunks
+        CMap(2*end,1) = 0;
+    end
     CMap(i,:)=X;
     Line=fgetl(fid);
     if ~ischar(Line) %feof(fid)
         break
     end
-    X=sscanf(Line,'%f%f%f',[1 3]);
+    X=sscanf(Line,'%i%i%i',[1 3]);
+end
+fclose(fid);
+CMap(i+1:end,:) = [];
+if size(CMap,1)<2
+    error('Invalid colour map in %s: need at least two colours.',filename)
+end
+f = find(CMap(:,1)<0 | CMap(:,1)>360);
+if ~isempty(f)
+    error('Invalid hue on line %i of %s: %i while expecting value between 0 and 360',f(1)+1,filename,CMap(f(1),1))
+end
+f = find(CMap(:,2)<0 | CMap(:,2)>100);
+if ~isempty(f)
+    error('Invalid lightness on line %i of %s: %i while expecting value between 0 and 100',f(1)+1,filename,CMap(f(1),2))
+end
+f = find(CMap(:,3)<0 | CMap(:,3)>100);
+if ~isempty(f)
+    error('Invalid saturation on line %i of %s: %i while expecting value between 0 and 100',f(1)+1,filename,CMap(f(1),3))
 end
 CMap(:,1)=CMap(:,1)/360;
 CMap(:,2:3)=CMap(:,2:3)/100;
 CMap=hls2rgb(CMap);
-fclose(fid);
 
 
 function OK=Local_write_hls(filename,CMap,Label)

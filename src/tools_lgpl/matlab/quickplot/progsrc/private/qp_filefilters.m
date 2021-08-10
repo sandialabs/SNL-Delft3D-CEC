@@ -11,7 +11,7 @@ function filtertbl = qp_filefilters(filters)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -36,18 +36,21 @@ function filtertbl = qp_filefilters(filters)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_filefilters.m $
-%   $Id: qp_filefilters.m 5632 2015-12-09 08:50:03Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_filefilters.m $
+%   $Id: qp_filefilters.m 65778 2020-01-14 14:07:42Z mourits $
 
 filtertbl={...
     '*.dat;*.ada;*.hda'                                    'Delft3D Output Files'              'nefis'              0
     '*.grd;*.rgf'                                          'Delft3D Grid Files'                'wlgrid'             0
+    '*.mdf;*.mdu;*.md1d;*.mdw'                             'Delft3D Simulation Files'          'md*-file'           0
     '*.mesh'                                               'Mike Flexible Mesh Files'          'mikemesh'           0
-    '*.14'                                                 'Adcirc Mesh Files'                 'adcircmesh'         0
+    '*.14;*.gr3'                                           'Adcirc Mesh Files'                 'adcircmesh'         0
     '*.shy'                                                'SHYFEM Mesh Files'                 'SHYFEM mesh'        0
+    '*_grd.dat'                                            'SMS Mesh Files'                    'smsmesh'            0
     '*.mesh;*.node;*.ele;*.n;*.e'                          'EasyMesh and Triangle Mesh Files'  'nodelemesh'         0
     '*.gem'                                                'GeoSystems Mesh Files'             'geomesh'            0
-    '*.bct;*.bcc;*.bcb'                                    'Delft3D-FLOW Bound. Cond. Files'   'bct'                0
+    '*.bct;*.bcc;*.bcb;*.bc'                               'Delft3D-FLOW Bound. Cond. Files'   'bct'                0
+    'bagdpt*.*'                                            'Delft3D-MOR Ascii Dredging Output' 'bagdpt'             0
     '*.am?;*.spw;*.wnd'                                    'Delft3D/SOBEK Meteo Files'         'asciiwind'          0
     'gcmplt.*;gcmtsr.*'                                    'ECOMSED Binary Files'              'ecomsed-binary'     0
     '*.stu;*.pst'                                          'JSPost Files'                      'JSPost'             0

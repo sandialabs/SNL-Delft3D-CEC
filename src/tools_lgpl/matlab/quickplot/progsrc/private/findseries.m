@@ -1,14 +1,27 @@
-function bs=findseries(bool);
+function bs=findseries(bool)
 %FINDSERIES  Find series of nonzero elements.
-%   I=FINDSERIES(X) returns an Nx2 array of
-%   pairs of indices referring to the start
-%   and end of series of nonzero elements.
-%   First column of I: start index.
-%   Second column of I: end index.
+%   I = FINDSERIES(X) returns an Nx2 array of pairs of indices referring to
+%   the start and end of series of nonzero elements. The first column of I
+%   contains the start index. The second column of I contains the end
+%   index.
+%
+%   Example
+%      X = [0 0 0 1 2 3 0 0 0 1 2 3 4 5 0];
+%      I = findseries(X)
+%
+%   returns
+%
+%      I =
+%           4     6
+%          10    14
+%
+%   since X contains non-zero values at indices 4 thru 6 and 10 thru 14.
+%
+%   See also FIND.
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -33,11 +46,14 @@ function bs=findseries(bool);
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/findseries.m $
-%   $Id: findseries.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/findseries.m $
+%   $Id: findseries.m 65778 2020-01-14 14:07:42Z mourits $
 
-ibool=find(bool(:));
-if isempty(ibool), bs=zeros(0,2); return; end
-istart=ibool(cat(2,1,find(diff(ibool')>1)+1));
-iend=ibool(cat(2,find(diff(ibool')>1),length(ibool)));
-bs=[istart iend];
+ibool = find(bool(:));
+if isempty(ibool)
+    bs = zeros(0,2);
+    return
+end
+istart = ibool(cat(2,1,find(diff(ibool')>1)+1));
+iend = ibool(cat(2,find(diff(ibool')>1),length(ibool)));
+bs = [istart iend];

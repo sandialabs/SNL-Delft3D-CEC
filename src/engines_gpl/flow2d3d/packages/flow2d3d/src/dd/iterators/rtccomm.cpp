@@ -1,6 +1,6 @@
 //---- GPL ---------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -241,7 +241,7 @@ Rtc_Function (
 
 extern "C" {
 void STDCALL
-RTCSTARTCOMMUNICATION (
+DD_RTCSTARTCOMMUNICATION (
     int * domainnumber,
     int * numdomains
     ) {
@@ -290,7 +290,7 @@ RTCSTARTCOMMUNICATION (
 
 extern "C" {
 void STDCALL
-RTCCOMMUNICATE (
+DD_RTCCOMMUNICATE (
     REAL_FP * values,
     int     * numelements
     ) {
@@ -347,7 +347,7 @@ RTCCOMMUNICATE (
 
 extern "C" {
 void STDCALL
-RTCCHARCOMMUNICATE (
+DD_RTCCHARCOMMUNICATE (
     char    * strings,
     int     * numelements,
     int     numchar
@@ -404,7 +404,7 @@ RTCCHARCOMMUNICATE (
 
 extern "C" {
 void STDCALL
-RTCNOCOMMUNICATION (
+DD_RTCNOCOMMUNICATION (
     void
     ) {
 

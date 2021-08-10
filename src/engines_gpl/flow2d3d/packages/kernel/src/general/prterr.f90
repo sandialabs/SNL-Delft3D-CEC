@@ -1,7 +1,7 @@
 subroutine prterr(lundia, msgno, filtxt)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine prterr(lundia, msgno, filtxt)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: prterr.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/general/prterr.f90 $
+!  $Id: prterr.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/general/prterr.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: This routine prints a message to output device.
@@ -92,9 +92,6 @@ subroutine prterr(lundia, msgno, filtxt)
             & ' the Delft3D input !!'
     case ('D007')
        msg = '*** ERROR Waves activated but no COM-file present !!'
-    case ('D008')
-       msg = '*** ERROR Number of Timesteps on COM-file too ' //                &
-            & 'large. Contact Deltares'
     case ('F001')
        msg = '*** ERROR Variable # not known'
     case ('F002')
@@ -350,6 +347,8 @@ subroutine prterr(lundia, msgno, filtxt)
        msg = '*** ERROR Blank label/identifier not accepted'
     case ('U060')
        msg = '*** ERROR Consecutive times in # must increase'
+    case ('U061')
+       msg = '*** ERROR Invalid Heat module parameters CD/Stanton/Dalton option (only 0 or 1 allowed)'
     case ('U062')
        msg = '*** ERROR Consecutive times on file # should increase'
     case ('U063')

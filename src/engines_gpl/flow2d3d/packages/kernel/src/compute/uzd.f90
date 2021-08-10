@@ -20,7 +20,7 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
              & pship     ,tgfsep    ,dteu      ,ustokes   ,mom_output,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -44,8 +44,8 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: uzd.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/uzd.f90 $
+!  $Id: uzd.f90 65844 2020-01-23 20:56:06Z platzek $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/uzd.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! This subroutine evaluates/solves at each half time
@@ -117,7 +117,7 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
     integer                 , pointer :: nfg
     real(fp), dimension(:,:)          , pointer :: mom_m_velchange     ! momentum du/dt term
     real(fp), dimension(:,:)          , pointer :: mom_m_densforce     ! density force term in u dir
-    real(fp), dimension(:,:)          , pointer :: mom_m_flowresist    ! vegetation term in u dir
+    real(fp), dimension(:,:)          , pointer :: mom_m_flowresist    ! vegetation and porous plates in u dir
     real(fp), dimension(:,:)          , pointer :: mom_m_corioforce    ! coriolis term in u dir
     real(fp), dimension(:,:)          , pointer :: mom_m_visco         ! viscosity term in u dir
     real(fp), dimension(:)            , pointer :: mom_m_pressure      ! pressure term in u dir
@@ -301,6 +301,7 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
     real(fp)           :: gksid
     real(fp)           :: gksiu
     real(fp)           :: h0i
+    real(fp)           :: h0fac
     real(fp)           :: hl
     real(fp)           :: hr
     real(fp)           :: hugsqs  ! HU(NM/NMD) * GSQS(NM) Depending on UMDIS the HU of point NM or NMD will be used 
@@ -311,6 +312,7 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
     real(fp)           :: rhou
     real(fp)           :: smax
     real(fp)           :: svvv
+    real(fp)           :: s_crit
     real(fp)           :: termc
     real(fp)           :: termdx
     real(fp)           :: termux
@@ -319,6 +321,7 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
     real(fp)           :: tidegforce
     real(fp)           :: tsg1
     real(fp)           :: tsg2
+    real(fp)           :: twothird
     real(fp)           :: umod
     real(fp)           :: uuu
     real(fp)           :: vih
@@ -393,6 +396,7 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
     ddb    = gdp%d%ddbound
     icxy   = max(icx, icy)
     nm_pos = 1
+    twothird = 2.0_fp / 3.0_fp
     !
     ! factor in maximum wave force 1/4 alpha rho g gammax**2 h**2 / tp /(sqrt(g h)
     ! = facmax * h**1.5/tp
@@ -406,7 +410,7 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
        ff = 1.0
     endif
     !
-    !Initialise all arrays aak - cck for all (nm,k)
+    ! Initialise all arrays aak - cck for all (nm,k)
     !
     aak  = 0.0
     buux = 0.0
@@ -544,22 +548,26 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
              nbaroc = 1
              if (kcs(nm)*kcs(nmu) == 2) nbaroc = ibaroc
              !
-             ! CORIOLIS, GRAVITY PRESSURE TERM and TIDE GENERATING FORCES
+             ! CORIOLIS, BAROCLINIC PRESSURE and TIDE GENERATING FORCES
              !
              flowresist = 0.5*rttfu(nm, k)*umod
              corioforce = ff*fcorio(nm)*vvvc
              densforce  = - ag*(1. - icreep)/(gvu(nm)*rhow)*nbaroc*(sig(k)*rhou*(hr - hl) + (sumrho(nmu, k)*hr - sumrho(nm, k)*hl))
              !
-             ! limit pressure term in case of drying/flooding on steep slopes
+             ! limit barotropic and baroclinic pressure term in case of drying/flooding on steep slopes
              !
              if (slplim) then
                 dpsmax = max(-dps(nm),-dps(nmu))
                 if (s0(nm) < dpsmax) then
-                   pressure = - ag*rhofrac*(s0(nmu) - dpsmax)/gvu(nm)
+                   s_crit     = twothird * max(0.0_fp, s0(nmu)-dpsmax) + dpsmax
+                   pressure   = - ag*rhofrac*(s0(nmu) - s_crit)/gvu(nm)
+                   densforce  = 0.0_fp
                 elseif (s0(nmu) < dpsmax) then
-                   pressure = - ag*rhofrac*(dpsmax  - s0(nm))/gvu(nm)
+                   s_crit     = twothird * max(0.0_fp, s0(nm)-dpsmax) + dpsmax
+                   pressure   = - ag*rhofrac*(s_crit  - s0(nm))/gvu(nm)
+                   densforce  = 0.0_fp
                 else
-                   pressure = - ag*rhofrac*(s0(nmu) - s0(nm))/gvu(nm)
+                   pressure   = - ag*rhofrac*(s0(nmu) - s0(nm))/gvu(nm)
                 endif
              else
                 pressure    = - ag*rhofrac*(s0(nmu) - s0(nm))/gvu(nm)
@@ -593,9 +601,9 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
     if (kmax == 1) then
        call usrbrl2d(icx       ,icy       ,nmmax     ,kmax      ,kfu       , &
                    & kspu      ,guu       ,gvu       ,qxk       ,bbk       , &
-                   & ubrlsu    ,dps       ,hkru      ,s0        ,hu        , &
-                   & umean     ,thick     ,dteu      ,taubpu    ,mom_output, &
-                   & u1        ,gdp       )
+                   & ddk       ,ubrlsu    ,dps       ,hkru      ,s0        , &
+                   & hu        ,umean     ,thick     ,dteu      ,taubpu    , &
+                   & mom_output,u1        ,gdp       )
     endif
     call usrbrl(icx       ,icy       ,nmmax     ,kmax      ,kfu       , &
               & kspu      ,gvu       ,u0        ,v         ,bbk       , &
@@ -604,12 +612,14 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
     call timer_stop(timer_uzd_eloss, gdp)
     !
     ndm = -icy
+    nmu = +icx
     kdo = max(1, kmax - 1)
     kup = min(kmax, 2)
     !
     call timer_start(timer_uzd_stress, gdp)
     do nm = 1, nmmax
        ndm = ndm + 1
+       nmu = nmu + 1
        if ((kcu(nm)==1) .and. (kfu(nm)==1)) then
           h0i = 1.0/hu(nm)
           !
@@ -617,8 +627,17 @@ recursive subroutine uzd(icreep    ,dpdksi    ,s0        ,u0        , &
           !
           ! WIND FRICTION AND BOTTOM STRESS DUE TO FLOW AND WAVES
           !
+          ! Apply factor h0fac to reduce wind force from cells with small depth
+          ! Note that the direction of windsu is opposite to what is expected
+          ! This is due to the change in sign in windtogridc.f90
           !
-          qwind  = h0i*windsu(nm)/thick(1)
+          h0fac = 1.0_fp
+          if (windsu(nm) < 0.0_fp .and.  s0(nm)+real(dps(nm),fp) < 2.0_fp*dryflc) then
+             h0fac = (s0(nm)+real(dps(nm),fp)) / (2.0_fp*dryflc)
+          elseif (windsu(nm) > 0.0_fp .and.  s0(nmu)+real(dps(nmu),fp) < 2.0_fp*dryflc) then
+             h0fac = (s0(nmu)+real(dps(nmu),fp)) / (2.0_fp*dryflc)
+          endif
+          qwind  = h0fac*h0i*windsu(nm)/thick(1)
           if (mom_output) then
              mom_m_windforce(nm)     = mom_m_windforce(nm) - qwind/rhow
           else

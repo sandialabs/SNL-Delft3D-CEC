@@ -3,7 +3,7 @@ subroutine chkset(lundia    ,error     ,sferic    ,method    ,trasol    , &
                 & keva      ,iphisi    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine chkset(lundia    ,error     ,sferic    ,method    ,trasol    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: chkset.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/chkset.f90 $
+!  $Id: chkset.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/chkset.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Checks the combination of Domain Decomposition with various program modes
@@ -68,7 +68,7 @@ subroutine chkset(lundia    ,error     ,sferic    ,method    ,trasol    , &
     logical                       , pointer :: temp
     logical                       , pointer :: dredge
     logical                       , pointer :: wave
-    logical                       , pointer :: waveol
+    integer                       , pointer :: waveol
     logical                       , pointer :: xbeach
     logical                       , pointer :: iweflg
     logical                       , pointer :: struct
@@ -417,7 +417,7 @@ subroutine chkset(lundia    ,error     ,sferic    ,method    ,trasol    , &
        ierror = ierror+ 1
     endif
     !
-    if (wave .and. waveol .and. (.not.xbeach) .and. itcomi==1) then
+    if (wave .and. waveol>0 .and. (.not.xbeach) .and. itcomi==1) then
        !
        ! Calling wave every timestep is not supported (yet).
        ! If tried, FLOW does not read wave information at all.

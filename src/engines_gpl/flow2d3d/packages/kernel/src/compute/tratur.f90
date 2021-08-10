@@ -16,7 +16,7 @@ subroutine tratur(dischy    ,nubnd     ,j         ,nmmaxj    ,nmmax     , &
                 & veul      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -40,8 +40,8 @@ subroutine tratur(dischy    ,nubnd     ,j         ,nmmaxj    ,nmmax     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: tratur.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/tratur.f90 $
+!  $Id: tratur.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/tratur.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Computes transport in the u, v and w-direction of the turbulent kinetic energy
@@ -85,12 +85,10 @@ subroutine tratur(dischy    ,nubnd     ,j         ,nmmaxj    ,nmmax     , &
     use mathconsts
     use globaldata
     use dfparall
-    use turbine_module, only: structure_turbines, structure_turbine
     !
     implicit none
     !
     type(globdat),target :: gdp
-    type(structure_turbine)                  , pointer :: turbine
     !
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
@@ -283,13 +281,7 @@ subroutine tratur(dischy    ,nubnd     ,j         ,nmmaxj    ,nmmax     , &
     real(fp):: zw
     real(fp):: zwc
     integer :: nm_pos ! indicating the array to be exchanged has nm index at the 2nd place, e.g., dbodsd(lsedtot,nm)
-    !
-    real(fp):: friccoef
-    real(fp):: Cx !temporary variable to hold updated thrust coefficient
-    real(fp):: aaa  ! induction factor
-    real(fp):: shearprod !tke production by shear
-    integer :: ndmu
-    !
+!
     data epsd/1.0e-20/
 !
 !! executable statements -------------------------------------------------------
@@ -676,45 +668,8 @@ subroutine tratur(dischy    ,nubnd     ,j         ,nmmaxj    ,nmmax     , &
              enddo
           enddo
           !
-          ! BJ 20150326:
-          ! add the additional turbine source term for the turbulent kinetic energy K
-          ! to the DDK(nm,k) value here. For l == 1 we are solving the K-equation.
+          ! (Rigid) 3D Vegetation Model
           !
-          ! add turbulence production due to turbines
-          if (associated(gdp%turbines%nr)) then
-            do ij = 1, size(gdp%turbines%nr)
-              turbine => gdp%turbines%nr(ij)
-              if (turbine%turbulencemodel==1) then  ! Rethore model
-                friccoef = turbine%friccoef
-                friccoef = 2.0_fp*friccoef
-                aaa=0.5_fp*(1.0_fp-sqrt(1.0_fp-friccoef))
-                Cx=0.5_fp*4.0_fp*aaa/(1.0_fp-aaa)
-                do n = 1,size(turbine%edgelist)
-                  nm = turbine%edgelist(n)
-                  do k = 1, kmax
-                    uuu = sqrt(u1(nm, k)**2+v1(nm, k)**2)
-                    ddk(nm, k) = ddk(nm, k) + Cx*( turbine%beta_p*uuu**3 - turbine%beta_d*uuu*rtur0(nm,k,1) )  &
-                                                *turbine%blockfrac(n, k)/gvu(nm)
-                  enddo
-                enddo
-              else if (turbine%turbulencemodel==2) then  ! TR: alternative implementation
-                friccoef = turbine%friccoef
-                Cx = friccoef * sqrt(1.0_fp - friccoef)
-                do n = 1,size(turbine%edgelist)
-                  nm = turbine%edgelist(n)
-                  do k = 1, kmax
-                    uuu = sqrt(u1(nm, k)**2+v1(nm, k)**2)
-                    ddk(nm, k) = ddk(nm, k) + Cx*( turbine%beta_p*uuu**3 &
-                               - turbine%beta_d*uuu*rtur0(nm,k,1) )  &
-                               * turbine%blockfrac(n, k)/gvu(nm)
-                  enddo
-                enddo
-              endif
-            enddo
-          endif
-          !
-          !
-          ! (Rigid) 3D Vegetation Model          !
           if (veg3d) then
              do nm = 1, nmmax
                 h0 = max(0.01_fp,s1(nm)+real(dps(nm),fp))
@@ -860,45 +815,6 @@ subroutine tratur(dischy    ,nubnd     ,j         ,nmmaxj    ,nmmax     , &
                 endif
              enddo
           enddo
-          !
-          ! BJ 20150326:
-          ! add the additional turbine source term for the turbulent dissipation EPS
-          ! to the DDK(nm,k) value here. For l == 2 we are solving the EPS-equation.
-          !
-          if (associated(gdp%turbines%nr)) then
-            do ij = 1, size(gdp%turbines%nr)
-              turbine => gdp%turbines%nr(ij)
-              if (turbine%turbulencemodel==1) then  ! Rethore model
-                friccoef = turbine%friccoef
-                friccoef = 2.0_fp*friccoef   ! friccoef includes 1/2 coefficient
-                aaa=0.5_fp*(1.0_fp-sqrt(1.0_fp-friccoef))   ! induction factor
-                Cx=0.5_fp*4.0_fp*aaa/(1.0_fp-aaa)           ! 4a/(1-a), replace the 1/2 coefficient
-                do n = 1,size(turbine%edgelist)
-                  nm = turbine%edgelist(n)
-                  do k = 1, kmax
-                    uuu = sqrt(u1(nm, k)**2+v1(nm, k)**2)
-                    ddk(nm, k) = ddk(nm, k) + Cx*(  turbine%cep4*turbine%beta_p*rtur0(nm,k,2)/rtur0(nm,k,1)*uuu**3  &
-                                                  - turbine%cep5*turbine%beta_d*rtur0(nm,k,2)*uuu  ) *turbine%blockfrac(n, k)/gvu(nm)
-                  enddo
-                enddo
-              else if (turbine%turbulencemodel==2) then  !TR: alternative implementation based on Rados et al. (2009)
-                friccoef = turbine%friccoef
-                Cx = (friccoef * sqrt(1.0_fp - friccoef))**2.0
-                do n = 1,size(turbine%edgelist)
-                  nm = turbine%edgelist(n)
-                  do k = 1, kmax
-                    if (irov > 0) then
-                      shearprod = 0.5_fp * (bdx(nm, k) + bdy(nm, k))
-                    else                   
-                      shearprod = bdy(nm, k)
-                    endif
-                    ddk(nm, k) = ddk(nm, k) + Cx*turbine%cep4 * shearprod**2.0 & ! correction term proportional to suqared shear production
-                               * (rtur0(nm,k,2)/rtur0(nm,k,l)) *turbine%blockfrac(n, k)/gvu(nm) ! attempt to satisfy dimensionality
-                  enddo
-                enddo
-              endif
-            enddo
-          endif
           !
           ! plants eps
           !

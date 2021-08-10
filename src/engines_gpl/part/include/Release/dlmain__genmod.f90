@@ -1,8 +1,0 @@
-        !COMPILER-GENERATED INTERFACE MODULE: Mon Jun 27 17:36:31 2016
-        MODULE DLMAIN__genmod
-          INTERFACE 
-            SUBROUTINE DLMAIN(IFNAM)
-              CHARACTER(*) :: IFNAM
-            END SUBROUTINE DLMAIN
-          END INTERFACE 
-        END MODULE DLMAIN__genmod

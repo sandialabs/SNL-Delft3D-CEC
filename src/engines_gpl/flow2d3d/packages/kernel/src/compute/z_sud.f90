@@ -15,7 +15,7 @@ subroutine z_sud(j         ,nmmaxj    ,nmmax     ,kmax      ,mmax      , &
                & cc        ,dd        ,tetau     ,aak       ,bbk       , &
                & cck       ,ddk       ,d0        ,d0k       ,bbka      , &
                & bbkc      ,wsu       ,taubpu    ,taubsu    ,vicuv     , &
-               & vnu2d     ,vicww     ,rxx       ,rxy       ,windu     , &
+               & vnu2d     ,vicww     ,rxx       ,rxy       ,windsu    , &
                & tp        ,rlabda    ,dfu       ,deltau    ,fxw       , wsbodyu  , &
                & patm      ,fcorio    ,tgfsep    ,drhodx    ,zk        , &
                & p0        ,crbc      ,idry      ,porosu    ,ubrlsu    , &
@@ -23,7 +23,7 @@ subroutine z_sud(j         ,nmmaxj    ,nmmax     ,kmax      ,mmax      , &
                & ustokes   ,gdp       ) 
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -47,8 +47,8 @@ subroutine z_sud(j         ,nmmaxj    ,nmmax     ,kmax      ,mmax      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: z_sud.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_sud.f90 $
+!  $Id: z_sud.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/z_sud.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Z_SUD evaluates/solves the implicitly coupled
@@ -191,7 +191,7 @@ subroutine z_sud(j         ,nmmaxj    ,nmmax     ,kmax      ,mmax      , &
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)                    :: tp      !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)                    :: umean   !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)                    :: vnu2d   !  Description and declaration in esm_alloc_real.f90
-    real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)                    :: windu   !  Description and declaration in esm_alloc_real.f90
+    real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)                    :: windsu  !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)                    :: wsu     !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub)                    :: wsbodyu !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nmlb:gdp%d%nmub, 0:kmax)            :: qzk     !  Description and declaration in esm_alloc_real.f90
@@ -354,12 +354,18 @@ subroutine z_sud(j         ,nmmaxj    ,nmmax     ,kmax      ,mmax      , &
                & aak       ,bbk       ,cck       ,ddk       ,bbka      , &
                & bbkc      ,vicuv     ,vnu2d     ,vicww     ,tgfsep    , &
                & drhodx    ,wsu       ,wsbodyu   ,taubpu    ,taubsu    ,rxx       , &
-               & rxy       ,windu     ,patm      ,fcorio    ,p0        , &
+               & rxy       ,windsu    ,patm      ,fcorio    ,p0        , &
                & tp        ,rlabda    ,dfu       ,deltau    ,fxw       , &
                & ubrlsu    ,pship     ,diapl     ,rnpl      ,cfurou    , &
                & qxk       ,qyk       ,umean     ,dps       ,s0        , &
                & ustokes   ,gdp       )
     call timer_stop(timer_sud_cucnp, gdp)
+    !
+    ! In z_cucnp, the horizontal viscosity is added to ddk (explicit).
+    ! Therefore, ddk must be synchronised with neighbouring partitions.
+    ! With sigma layers, the horizontal viscosity is added in uzd only.
+    !
+    call dfexchg ( ddk, 1, kmax, dfloat, nm_pos, gdp )
     !
     ! When neighbor cells ly higher, mass in/outflow is added to current column
     !

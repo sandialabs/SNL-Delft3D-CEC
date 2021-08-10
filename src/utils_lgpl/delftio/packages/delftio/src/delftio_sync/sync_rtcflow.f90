@@ -2,7 +2,7 @@
 module SyncRtcFlow
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -26,8 +26,8 @@ module SyncRtcFlow
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: sync_rtcflow.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftio/packages/delftio/src/delftio_sync/sync_rtcflow.f90 $
+!  $Id: sync_rtcflow.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftio/packages/delftio/src/delftio_sync/sync_rtcflow.f90 $
 !!--description-----------------------------------------------------------------
 ! Organizes the communication between the FLOW
 ! executable and the RTC executable.
@@ -53,12 +53,12 @@ module SyncRtcFlow
   character(len=DioMaxParLen), pointer, dimension(:) :: SignalRPars
   character(len=DioMaxLocLen), pointer, dimension(:) :: SignalRLocs
 !
-  integer, dimension(1,5) :: SignalXValues
+  integer, dimension(1,6) :: SignalXValues
   character*20, dimension(1) :: SignalXPars
-  character*20, dimension(5) :: SignalXLocs
+  character*20, dimension(6) :: SignalXLocs
 !
   data SignalXPars / 'Signal' /
-  data SignalXLocs / 'Status', 'Date', 'Time', 'Init1', 'Init2' /
+  data SignalXLocs / 'Status', 'Date', 'Time', 'Init1', 'Init2', 'Init3' /
 !
   logical :: commRTCtoFLOW = .false.
   logical :: commFLOWtoRTC = .false.
@@ -80,7 +80,7 @@ module SyncRtcFlow
   ! Locations for sending data
   character*20, dimension(2) :: Locbar
 !
-  data Locbar / 'Status', 'Height' /
+  data Locbar / 'Status', 'Value' /
 !
 ! Variables used by Delft3D-FLOW side
 !
@@ -96,16 +96,17 @@ contains
 !!!
 
 ! Initialise communication between RTC and Flow
-subroutine SyncRtcFlow_Init(n2steps, error, flagFLOWtoRTC, idate, rdt)
+subroutine SyncRtcFlow_Init(n2steps, error, flagFLOWtoRTC, idate, itstart, rdt)
 
   integer :: n2steps
   logical :: error
   logical :: flagFLOWtoRTC
 
-  integer :: nRpar, nRLoc
+  integer :: nrpar, nrloc
   integer :: nDummyLocs
   integer :: FlowStatus
   integer :: idate
+  integer :: itstart
   double precision :: rdt  ! time step in seconds
 
   integer :: itest
@@ -126,8 +127,8 @@ subroutine SyncRtcFlow_Init(n2steps, error, flagFLOWtoRTC, idate, rdt)
   ! First to receive number of (half) time steps
   ! Then to receive status (< 0 = Quit), Date (I8) and Time (I6)
   SignalFlowToRtc = DioPltGetDataset('SignalToRtc')
-  nRPar = DioPltGetNPar(SignalFlowToRtc)
-  nRLoc = DioPltGetNLoc(SignalFlowToRtc)
+  nrpar = DioPltGetNPar(SignalFlowToRtc)
+  nrloc = DioPltGetNLoc(SignalFlowToRtc)
 
   if (DioPltGet(SignalFlowToRtc, SignalRValues)) then
     n2steps = SignalRValues(1,1)
@@ -135,6 +136,12 @@ subroutine SyncRtcFlow_Init(n2steps, error, flagFLOWtoRTC, idate, rdt)
     rdt     = transfer(SignalRValues(1,3:4),rdt)
     commFLOWtoRTC = btest(SignalRValues(1,5),0)
     commRTCtoFLOW = btest(SignalRValues(1,5),1)
+    ! Backward compatibility with Delft3D-FLOW version that doesn't pass itstart yet.
+    if (nrloc>=6) then
+       itstart = SignalRValues(1,6)
+    else
+       itstart = 0
+    endif
     if (commFLOWtoRTC .neqv. flagFLOWtoRTC) then
        n2steps = -3
     endif
@@ -301,7 +308,7 @@ end subroutine syncflowrtc_quit
 !
 !==============================================================================
 subroutine syncflowrtc_init(error, nambar, nsluv, charlen, nsteps, &
-                          & flagFLOWtoRTC, flagRTCtoFLOW, idate, dt)
+                          & flagFLOWtoRTC, flagRTCtoFLOW, idate, itstart, dt)
     use precision
 ! Initialise communication between Flow and RTC
 !
@@ -311,6 +318,7 @@ subroutine syncflowrtc_init(error, nambar, nsluv, charlen, nsteps, &
 !
     integer                        ,intent (in)  :: charlen
     integer                        ,intent (in)  :: idate
+    integer                        ,intent (in)  :: itstart
     real(fp)                       ,intent (in)  :: dt
     integer                        ,intent (in)  :: nsluv
     integer                        ,intent (in)  :: nsteps
@@ -354,6 +362,8 @@ subroutine syncflowrtc_init(error, nambar, nsluv, charlen, nsteps, &
     signalxvalues(1, 5) = 0
     if (commFLOWtoRTC) signalxvalues(1, 5) = ibset(signalxvalues(1, 5),0)
     if (commRTCtoFLOW) signalxvalues(1, 5) = ibset(signalxvalues(1, 5),1)
+    ! Send start time (relative to idate) expressed as multiples of half time steps
+    signalxvalues(1, 6) = itstart*2
     !
     call diopltput(signalflowtortc, signalxvalues)
     !
@@ -417,7 +427,7 @@ end subroutine syncflowrtc_init
 !
 !
 !==============================================================================
-subroutine syncflowrtc_get(rtcstatus, cbuvrt, nsluv)
+subroutine syncflowrtc_get(rtcstatus, tparget, tnparget)
     use precision
 ! Routine to get RTC status and the barrier data from RTC.
 ! If the flow status is < 0, then RTC will quit.
@@ -425,12 +435,9 @@ subroutine syncflowrtc_get(rtcstatus, cbuvrt, nsluv)
 !
 ! Global variables
 !
-    integer                        ,intent (in)  :: nsluv     ! Number of U- and V-Barriers
-    integer                                      :: rtcstatus ! Status sent from RTC, < 0 tells Flow to quit.
-    real(fp), dimension(2, nsluv), intent (out)  :: cbuvrt    ! Run time barrier data:
-                                                              ! CBUVRT(1,*) = Return status from RTC
-                                                              !             > 0 : OK
-                                                              !             < 0 : Not OK/Found
+    integer                           ,intent (in)  :: tnparget  ! Number of parameters to get values for
+    integer                                         :: rtcstatus ! Status sent from RTC, < 0 tells Flow to quit.
+    real(fp), dimension(2, tnparget), intent (out)  :: tparget   ! Parameter values
 !
 ! Local variables
 !
@@ -450,9 +457,9 @@ subroutine syncflowrtc_get(rtcstatus, cbuvrt, nsluv)
     ! Flow will quit on bad status
     if (rtcstatus>=0) then
        if (diopltget(datartctoflow, DataValuesIn)) then
-          do i = 1, nsluv
-             cbuvrt(1, i) = real(DataValuesIn(i, 1),fp)
-             cbuvrt(2, i) = real(DataValuesIn(i, 2),fp)
+          do i = 1, tnparget
+             tparget(1, i) = real(DataValuesIn(i, 1),fp)
+             tparget(2, i) = real(DataValuesIn(i, 2),fp)
           enddo
        else
           ! No valid data received

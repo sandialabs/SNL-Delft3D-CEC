@@ -1,9 +1,7 @@
-subroutine write_swan_datafile (var1  , var2       , mmax   , nmax, covered, &
-                              & filnam, extr_var1, extr_var2, &
-                              & sumvars, positiveonly)
+module write_swan_datafile
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,11 +25,19 @@ subroutine write_swan_datafile (var1  , var2       , mmax   , nmax, covered, &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: write_swan_datafile.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/io/src/write_swan_datafile.f90 $
+!  $Id: write_swan_datafile.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/io/src/write_swan_datafile.f90 $
+!!--module description----------------------------------------------------------
+!
+!!--module declarations---------------------------------------------------------
+public write_swan_file
+    
+contains
+
+subroutine write_swan_file (var1  , var2       , mmax   , nmax, covered, &
+                          & filnam, extr_var1, extr_var2, &
+                          & sumvars, positiveonly, minval)
 !!--description-----------------------------------------------------------------
-! NONE
-!!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
     implicit none
@@ -46,6 +52,7 @@ subroutine write_swan_datafile (var1  , var2       , mmax   , nmax, covered, &
     integer                       , intent(in)  :: mmax
     integer                       , intent(in)  :: nmax
     integer, dimension(mmax, nmax), intent(in)  :: covered
+    real   , optional             , intent(in)  :: minval
     real   , dimension(mmax, nmax)              :: var1
     real   , dimension(mmax, nmax)              :: var2
     logical                       , intent(in)  :: extr_var1
@@ -64,16 +71,21 @@ subroutine write_swan_datafile (var1  , var2       , mmax   , nmax, covered, &
     integer                                :: j1
     integer                                :: ierr
     integer                                :: lunfil
-    integer, external                      :: new_lun
     integer                                :: sweep
     integer                                :: sweepEnd
     integer                                :: sweepStart
     integer                                :: sweepStep
     real   , dimension(:,:)  , allocatable :: cpDistance
     real                                   :: distance
+    real                                   :: minval_
 !
 !! executable statements -------------------------------------------------------
 !
+    if (present(minval)) then
+        minval_ = minval
+    else
+        minval_ = 0.0
+    endif
     if (extr_var1 .or. extr_var2) then
        allocate(closestPoint(mmax, nmax, max(iindex,jindex)))
        allocate(cpDistance  (mmax, nmax))
@@ -188,9 +200,10 @@ subroutine write_swan_datafile (var1  , var2       , mmax   , nmax, covered, &
                 ! If the closestPoint is covered by invalid source grid points
                 ! then covered == -1 and the value at i,j is not changed
                 !
-                if (covered(i, j) == 0 .and. &
-                  & covered(closestPoint(i, j, iindex), closestPoint(i, j, jindex)) == 1) then
-                   var1(i, j) = var1(closestPoint(i, j, iindex), closestPoint(i, j, jindex))
+                if (covered(i, j) == 0 .and. closestPoint(i, j, iindex)>0) then
+                   if (covered(closestPoint(i, j, iindex), closestPoint(i, j, jindex)) > 0) then    ! multi-domain: covered can be greater than 1
+                      var1(i, j) = var1(closestPoint(i, j, iindex), closestPoint(i, j, jindex))
+                   endif
                 endif
              enddo
           enddo
@@ -203,9 +216,10 @@ subroutine write_swan_datafile (var1  , var2       , mmax   , nmax, covered, &
                 ! If the closestPoint is covered by invalid source grid points
                 ! then covered == -1 and the value at i,j is not changed
                 !
-                if (covered(i, j) == 0 .and. &
-                  & covered(closestPoint(i, j, iindex), closestPoint(i, j, jindex)) == 1) then
-                   var2(i, j) = var2(closestPoint(i, j, iindex), closestPoint(i, j, jindex))
+                if (covered(i, j) == 0 .and. closestPoint(i, j, iindex)>0) then
+                   if (covered(closestPoint(i, j, iindex), closestPoint(i, j, jindex)) > 0) then
+                      var2(i, j) = var2(closestPoint(i, j, iindex), closestPoint(i, j, jindex))
+                   endif
                 endif
              enddo
           enddo
@@ -216,8 +230,7 @@ subroutine write_swan_datafile (var1  , var2       , mmax   , nmax, covered, &
     !
     ! write var1 and var2 to file for SWAN
     !
-    lunfil = new_lun()
-    open (lunfil, file = filnam, status = 'unknown')
+    open (newunit = lunfil, file = filnam, status = 'unknown')
     !
     ! Up to now, SWAN data files are produced for writing
     ! var1 and var2 (current, wind) or var1+var2 (bottom)
@@ -225,18 +238,20 @@ subroutine write_swan_datafile (var1  , var2       , mmax   , nmax, covered, &
     !
     if (sumvars) then
        if (positiveonly) then
-          write (lunfil,'(4(3X,E13.6))') ( ( max(var1(i,j)+var2(i,j),0.0), i=1,mmax), j=1,nmax )
+          write (lunfil,'(4(3X,E13.6))') ( ( max(var1(i,j)+var2(i,j),minval_), i=1,mmax), j=1,nmax )
        else
           write (lunfil,'(4(3X,E13.6))') ( (var1(i,j)+var2(i,j), i=1,mmax), j=1,nmax )
        endif
     else
        if (positiveonly) then
-          write (lunfil,'(4(3X,E13.6))') ( ( max(var1(i,j),0.0), i=1,mmax), j=1,nmax )
-          write (lunfil,'(4(3X,E13.6))') ( ( max(var2(i,j),0.0), i=1,mmax), j=1,nmax )
+          write (lunfil,'(4(3X,E13.6))') ( ( max(var1(i,j),minval_), i=1,mmax), j=1,nmax )
+          write (lunfil,'(4(3X,E13.6))') ( ( max(var2(i,j),minval_), i=1,mmax), j=1,nmax )
        else
           write (lunfil,'(4(3X,E13.6))') ( (var1(i,j), i=1,mmax), j=1,nmax )
           write (lunfil,'(4(3X,E13.6))') ( (var2(i,j), i=1,mmax), j=1,nmax )
        endif
     endif
     close (lunfil)
-end subroutine write_swan_datafile
+end subroutine write_swan_file
+
+end module write_swan_datafile

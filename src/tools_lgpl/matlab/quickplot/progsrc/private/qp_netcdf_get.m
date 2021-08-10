@@ -1,4 +1,4 @@
-function [Data, errmsg] = qp_netcdf_get(FI,var,RequestDims,RequestedSubset)
+function [Data, errmsg] = qp_netcdf_get(FI,var,varargin)
 %QP_NETCDF_GET Get data from netcdf file and reshape.
 %   [DATA,ERR] = QP_NETCDF_GET(FILE,VAR,REQDIMS,REQIND) reads data for the
 %   variable VAR from the specified netcdf file FILE. The order of the
@@ -9,7 +9,7 @@ function [Data, errmsg] = qp_netcdf_get(FI,var,RequestDims,RequestedSubset)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -34,8 +34,8 @@ function [Data, errmsg] = qp_netcdf_get(FI,var,RequestDims,RequestedSubset)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_netcdf_get.m $
-%   $Id: qp_netcdf_get.m 5634 2015-12-09 12:42:35Z jagers $ 
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_netcdf_get.m $
+%   $Id: qp_netcdf_get.m 65778 2020-01-14 14:07:42Z mourits $ 
 
 errmsg='';
 %
@@ -53,15 +53,51 @@ if isempty(Info)
     error('Variable ''%s'' not found in file.',Info.Name)
 end
 %
-if nargin<4
-    if nargin<3
-        RequestDims = Info.Dimension;
+RequestDims = {};
+RequestedSubset = {};
+netcdf_use_fillvalue = qp_settings('netcdf_use_fillvalue');
+mesh_subsets = {};
+%
+i = 1;
+while i<=length(varargin)
+    if ischar(varargin{i})
+        switch lower(varargin{i})
+            case 'netcdf_use_fillvalue'
+                netcdf_use_fillvalue = varargin{i+1};
+            case 'mesh_subsets'
+                mesh_subsets = varargin{i+1};
+            otherwise
+                error('Unknown input argument %i "%s" in qp_netcdf_get',i+2,varargin{i})
+        end
+        i = i+1;
+    elseif isempty(RequestDims)
+        RequestDims = varargin{i};
+    elseif isempty(RequestedSubset)
+        RequestedSubset = varargin{i};
+    else
+        error('Unknown input argument %i in qp_netcdf_get',i+2)
     end
+    i = i+1;
+end
+%
+if isempty(RequestDims)
+    RequestDims = Info.Dimension;
+end
+if isempty(RequestedSubset)
     RequestedSubset = cell(1,length(RequestDims));
     for i = 1:length(RequestDims)
-        idim = strmatch(RequestDims{i},Info.Dimension,'exact');
+        idim = strcmp(RequestDims{i},Info.Dimension);
         RequestedSubset{i} = 1:Info.Size(idim);
     end
+end
+%
+if iscell(Info.Mesh) && strcmp(Info.Mesh{1},'ugrid')
+    imesh = Info.Mesh{3};
+    imdim = Info.Mesh{4};
+    mInfo = FI.Dataset(imesh);
+    mdim  = mInfo.Mesh{5+imdim};
+else
+    mdim = '';
 end
 %
 rank=Info.Rank;
@@ -70,7 +106,26 @@ permuted=zeros(1,N);
 for d=1:N
     DName=RequestDims{d};
     if ~isempty(DName)
-        d_netcdf=strmatch(DName,Info.Dimension,'exact');
+        d_netcdf = strcmp(DName,Info.Dimension);
+        if none(d_netcdf) &&  ~isempty(mdim)
+            imdim2 = find(strcmp(DName,mInfo.Mesh(5:end)))-1;
+            if ~isempty(imdim2)
+                canConvert = false;
+                if ~isempty(mesh_subsets)
+                    isMDIM = strcmp(mdim,mesh_subsets(:,2));
+                    if sum(isMDIM)==1
+                        canConvert = true;
+                        d_netcdf = strcmp(mdim,Info.Dimension);
+                        RequestedSubset{d} = mesh_subsets{isMDIM,3};
+                    end
+                end
+                if ~canConvert
+                    error('Spatial dimension mismatch for variable "%s": requested dimension "%s", known dimension "%s"',Info.Name,DName,mdim)
+                end
+            end
+        end
+        %
+        d_netcdf = find(d_netcdf);
         if isempty(d_netcdf)
             %
             % requested dimension does not occur in NetCDF source
@@ -96,17 +151,11 @@ for d=1:Info.Rank
     end
 end
 %
-fliporder = ~getpref('SNCTOOLS','PRESERVE_FVD',false);
-%if fliporder
-%   reverse=Info.Rank:-1:1;
-%else
-   reverse=1:Info.Rank;
-%end
-%
-if isempty(Info.Dimid)
+if isempty(Info.Dimid) || nargin==3
     Data = nc_varget(FI.Filename,FI.Dataset(varid+1).Name);
-elseif nargin==3
-    Data = nc_varget(FI.Filename,FI.Dataset(varid+1).Name);
+    if length(FI.Dataset(varid+1).Size)>1 && ~isequal(size(Data),FI.Dataset(varid+1).Size)
+        Data = reshape(Data,FI.Dataset(varid+1).Size);
+    end
 else
     %
     % Convert data subset in QP dimension order to NetCDF dimension order
@@ -114,6 +163,7 @@ else
     RS_netcdf=cell(1,Info.Rank);
     start_coord=zeros(1,Info.Rank);
     count_coord=zeros(1,Info.Rank);
+    %fprintf('%s: %d %d %d %d %d\n',FI.Dataset(varid+1).Name,permuted);
     %
     % The following block selection procedure is inefficient if a relatively
     % limited number of values is requested compared to full range of
@@ -140,10 +190,9 @@ if ~isa(Data,'double') && ~isa(Data,'char')
     Data = double(Data);
 end
 %
-reverse=[reverse Info.Rank+1:5];
 permuted(permuted==0)=[];
 if length(permuted)>1
-    Data=permute(Data,reverse(permuted));
+    Data=permute(Data,permuted);
 end
 %
 if ~isempty(Info.Attribute)
@@ -175,8 +224,11 @@ if ~isempty(Info.Attribute)
     %
     missval = strmatch('_FillValue',Attribs,'exact');
     if ~isempty(missval)
+        % the following code is not allowed for Datatype = char, in
+        % nc_interpret we should have removed _FillValue attributes for
+        % char.
         missval = Info.Attribute(missval).Value;
-        switch qp_settings('netcdf_use_fillvalue')
+        switch netcdf_use_fillvalue
             case 'exact_match'
                 Data(Data==missval)=NaN;
             otherwise % 'valid_range'

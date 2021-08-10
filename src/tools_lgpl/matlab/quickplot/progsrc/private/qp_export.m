@@ -3,7 +3,7 @@ function filename=qp_export(ExpType,filenm1,DataState)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function filename=qp_export(ExpType,filenm1,DataState)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_export.m $
-%   $Id: qp_export.m 5306 2015-07-31 08:13:59Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_export.m $
+%   $Id: qp_export.m 65778 2020-01-14 14:07:42Z mourits $
 
 persistent savedir
 if ~ischar(savedir)
@@ -70,6 +70,9 @@ retrieve='griddata';
 AllTAtOnce=0;
 MATfile=0;
 switch expType
+    case {'csv file'}
+        AllTAtOnce=1; % code also supports AllTAtOnce=0
+        ext='csv';
     case {'csv file (time series)'}
         % assumptions: currently only time series
         AllTAtOnce=1;
@@ -77,10 +80,16 @@ switch expType
     case {'grid file','grid file (old format)'}
         % assumptions: 2D, one timestep
         ext='grd';
+    case {'netcdf3 file'}
+        ext='nc';
+    case {'netcdf4 file'}
+        ext='nc';
     case {'quickin file','morsys field file','delft3d-mor field file','box file','simona box file'}
         % assumptions: 2D, one timestep
         % morsys field file: NVal=1
         ext='dep';
+    case 'polygon file'
+        ext='pol';
     case 'tekal file'
         ext='tek';
     case 'tekal file (time series)'
@@ -104,7 +113,7 @@ switch expType
             end
         end
         switch Ops.presentationtype
-            case {'patches','patches with lines','grid','polylines','polygons',''}
+            case {'patches','patches with lines','grid','polylines','polygons','edges',''}
                 retrieve='gridcelldata';
             case {'markers','values'}
                 retrieve='griddata';
@@ -114,6 +123,9 @@ switch expType
     case 'sample file'
         % assumptions: one timestep
         ext='xyz';
+    case {'stl stereolithography file (ascii)','stl stereolithography file (binary)'}
+        % assumptions: one timestep
+        ext='stl';
     case {'mat file (v6)','mat file (v7)','mat file (v7.3/hdf5)'}
         % assumptions: one timestep
         MATfile=1;
@@ -195,13 +207,46 @@ for f=1:ntim
             Chk=1;
             data=[];
     end
+    
+    if strcmp(Ops.presentationtype,'vector') || ...
+            strcmp(Ops.presentationtype,'markers') || ...
+            strcmp(Ops.presentationtype,'values')
+        % data = geom2pnt(data);
+        if isfield(data,'ValLocation')
+            if strcmp(data.ValLocation,'EDGE')
+                if isfield(data,'Geom') && strcmp(data.Geom,'sQUAD')
+                    data.EdgeNodeConnect = [1:length(data.X)-1;2:length(data.X)]';
+                end
+                data.X = mean(data.X(data.EdgeNodeConnect),2);
+                data.Y = mean(data.Y(data.EdgeNodeConnect),2);
+            elseif strcmp(data.ValLocation,'FACE')
+                missing = isnan(data.FaceNodeConnect);
+                nNodes = size(missing,2)-sum(missing,2);
+                data.FaceNodeConnect(missing) = 1;
+                data.X = data.X(data.FaceNodeConnect);
+                data.X(missing) = 0;
+                data.X = sum(data.X,2)./nNodes;
+                data.Y = data.Y(data.FaceNodeConnect);
+                data.Y(missing) = 0;
+                data.Y = sum(data.Y,2)./nNodes;
+            end
+            for c = {'FaceNodeConnection','EdgeNodeConnection','ValLocation'}
+                s = c{1};
+                if isfield(data,s)
+                    data = rmfield(data,s);
+                end
+            end
+            data.Geom = 'sSEG';
+        end
+    end
+    
     if ~Chk
         filename='';
         return
     end
     componentof='';
     if ~isempty(data)
-        if ~(isfield(data,'XYZ') && ~MATfile) || ~strcmp(Ops.thinningmode,'none')
+        if ~(isfield(data,'XYZ') && ~MATfile) || (isfield(Ops,'thinningmode') && ~strcmp(Ops.thinningmode,'none'))
             data = qp_thinning(data,Ops);
         end
         %
@@ -284,6 +329,52 @@ for f=1:ntim
     end
 
     switch expType
+        case {'csv file'}
+            TIMEFORMAT = '%04d-%02d-%02d %02d:%02d:%02d';
+            if f==1
+                fid=fopen(filename,'wt');
+                if fid<0
+                    error(['Could not create or open: ',filename])
+                end
+            end
+            %
+            if isfield(data,'Time')
+                nTim = length(data.Time);
+                if nTim==1
+                    fprintf(fid,['time,' TIMEFORMAT '\n'],datevec(data.Time));
+                end
+            else
+                nTim = 1;
+            end
+            Format = [repmat('%s,',1,nCrd+nVal*nTim-1) '%s\n'];
+            %
+            Vars = [vars(1:nCrd) repmat(vars(nCrd+1:end),1,nTim)];
+            fprintf(fid,Format,Vars{:});
+            %
+            if nTim>1
+                Format = [repmat(',',1,nCrd-1) repmat([',' TIMEFORMAT],1,nVal*nTim) '\n'];
+                fprintf(fid,Format,datevec(data.Time)');
+            end
+            %
+            Format = [repmat('%.15g,',1,nCrd+nVal*nTim-1) '%.15g\n'];
+            Val = zeros(nCrd+nVal*nTim,numel(data.(flds{1}))/nTim);
+            for i = 1:nCrd
+                Val(i,:) = data.(crds{i})(:)';
+            end
+            if nTim>1
+                for i = 1:nVal
+                    Val(nCrd+i:nVal:end,:) = data.(flds{i})(:,:);
+                end
+            else
+                for i = 1:nVal
+                    Val(nCrd+i,:) = data.(flds{i})(:)';
+                end
+            end
+            fprintf(fid,Format,Val);
+            %
+            if f==ntim
+                fclose(fid);
+            end
         case {'csv file (time series)','tekal file (time series)'}
             NTim=max(1,length(data.Time));
             switch Props.NVal
@@ -397,6 +488,8 @@ for f=1:ntim
                 case 'grid file (old format)'
                     wlgrid('writeold',filename,G);
             end
+        case {'netcdf3 file','netcdf4 file'}
+            export_netcdf(filename,expType,data)
         case {'quickin file','morsys field file','delft3d-mor field file','box file','simona box file'}
             for fld=1:length(flds)
                 Temp=getfield(data,flds{fld});
@@ -416,31 +509,37 @@ for f=1:ntim
                     boxfile('write',filename,expdata.Data);
             end
         case {'tekal file','spline','landboundary file'}
-            expdata=zeros([size(data.X) nVar]);
-            dims(1:ndims(data.X))={':'};
-            cmnt={};
-            for i=1:nVar
-                cmnt{i}=sprintf('column %i = %s',i,vars{i});
+            cmnt = cell(nVar,1);
+            for i = 1:nVar
+                cmnt{i} = sprintf('column %i = %s',i,vars{i});
             end
-            locflds=cat(2,crds,flds);
-            for fld=1:length(locflds)
-                expdata(dims{:},fld)=getfield(data,locflds{fld});
-            end
-            switch expType
-                case 'spline'
-                    expdata=squeeze(expdata);
-                    %
-                    % the following line initially made sense when skipping
-                    % over small gaps in grid lines, but it doesn't work in
-                    % the cases of (a) big gaps in grid lines and (b) lines
-                    % from shape files.
-                    %
-                    %expdata(any(isnan(expdata),2),:)=[];
-                case 'landboundary file'
-                    expdata=squeeze(expdata);
-                    expdata(any(isnan(expdata),2),:)=999.999;
-                otherwise
-                    expdata(isnan(expdata))=-999;
+            if isfield(data,'XDam')
+                [x,y] = thindam(data.X,data.Y,data.XDam,data.YDam);
+                expdata = [x y];
+            else
+                expdata=zeros([size(data.X) nVar]);
+                dims(1:ndims(data.X))={':'};
+                locflds=cat(2,crds,flds);
+                for fld=1:length(locflds)
+                    expdata(dims{:},fld)=getfield(data,locflds{fld});
+                end
+                switch expType
+                    case 'spline'
+                        expdata=squeeze(expdata);
+                        expdata=expdata(:,1:2); % don't write data or z coordinates ro spline file
+                        %
+                        % the following line initially made sense when skipping
+                        % over small gaps in grid lines, but it doesn't work in
+                        % the cases of (a) big gaps in grid lines and (b) lines
+                        % from shape files.
+                        %
+                        %expdata(any(isnan(expdata),2),:)=[];
+                    case 'landboundary file'
+                        expdata=squeeze(expdata);
+                        expdata(any(isnan(expdata(:,1:2)),2),:)=999.999;
+                    otherwise
+                        expdata(isnan(expdata))=-999;
+                end
             end
             if isfield(data,'Time') && ~isempty(data.Time) && ~isnan(data.Time)
                 cmnt={sprintf('time     = %s',datestr(data.Time,0)),cmnt{:}};
@@ -486,12 +585,12 @@ for f=1:ntim
             if lastfield
                 tecplot('write',filename,xx);
             end
-        case 'arcview shape'
-           if isfield(data,'XDam')
-              Ops.presentationtype = 'thin dams';
-           end
+        case {'arcview shape','polygon file'}
+            if isfield(data,'XDam')
+                Ops.presentationtype = 'thin dams';
+            end
             switch Ops.presentationtype
-                case {'patches','patches with lines','markers','values','grid','polylines','polygons',''}
+                case {'patches','patches with lines','markers','values','grid','polylines','polygons','edges',''}
                     xy=[];
                     if isfield(Props,'Geom') && (strcmp(Props.Geom,'POLYL') || strcmp(Props.Geom,'POLYG'))
                         vNaN=isnan(data.X);
@@ -500,9 +599,9 @@ for f=1:ntim
                         else
                             bs=[1 length(vNaN)];
                         end
-                        xyc={};
+                        xy={};
                         for i=size(bs,1):-1:1
-                            xyc{i}=[data.X(bs(i,1):bs(i,2)) data.Y(bs(i,1):bs(i,2))];
+                            xy{i}=[data.X(bs(i,1):bs(i,2)) data.Y(bs(i,1):bs(i,2))];
                         end
                         vals={};
                         if isfield(data,'Val')
@@ -513,18 +612,48 @@ for f=1:ntim
                         else
                            shp_type = 'polygon';
                         end
-                        shapewrite(filename,shp_type,xyc,vals{:})
+                        switch expType
+                            case 'arcview shape'
+                                shapewrite(filename,shp_type,xy,vals{:})
+                            case 'polygon file'
+                                DATA = [];
+                                for i = length(xy):-1:1
+                                    DATA.Field(i).Name = sprintf('polygon %i',i);
+                                    DATA.Field(i).Data = xy{i};
+                                end
+                                tekal('write',filename,DATA);
+                        end
                     else
                         d=1;
+                        shp_type = 'polygon';
                         if isfield(Props,'Geom') && strncmp(Props.Geom,'UGRID',5)
-                            switch Props.Geom(7:end)
-                                case 'NODE'
+                            if Props.NVal==0 && isfield(data,'FaceNodeConnect')
+                                Props.Geom='UGRID2D-FACE';
+                                data.ValLocation='FACE';
+                            end
+                            switch Ops.presentationtype
+                                case {'markers','values'}
+                                    retrieve='griddata';
                                     xy=[data(d).X data(d).Y];
                                     rm=[];
-                                case 'FACE'
-                                    xv=[data(d).X data(d).Y];
-                                    fv=data(d).FaceNodeConnect;
-                                    rm=[];
+                                otherwise
+                                    switch Props.Geom(max(strfind(Props.Geom,'-'))+1:end)
+                                        case 'NODE'
+                                            retrieve='griddata';
+                                            xy=[data(d).X data(d).Y];
+                                            rm=[];
+                                        case 'EDGE'
+                                            xv=[data(d).X data(d).Y];
+                                            fv=data(d).EdgeNodeConnect;
+                                            shp_type = 'polyline';
+                                            rm=[];
+                                        case 'FACE'
+                                            xv=[data(d).X data(d).Y];
+                                            fv=data(d).FaceNodeConnect;
+                                            rm=[];
+                                        otherwise
+                                            error('Unsupported geometry ''%s''.',Props.Geom);
+                                    end
                             end
                         elseif isfield(Props,'Tri') && Props.Tri
                             if strcmp(retrieve,'gridcelldata')
@@ -595,10 +724,18 @@ for f=1:ntim
                             %
                             % make sure that polygons are stored clockwise ...
                             %
-                            if ~any(isnan(fv(1,:))) && clockwise(data(d).X(fv(1,:)),data(d).Y(fv(1,:)))<0
-                                fv=fliplr(fv);
+                            if strcmp(shp_type,'polygon') && ~any(isnan(fv(1,:))) && clockwise(data(d).X(fv(1,:)),data(d).Y(fv(1,:)))<0
+                                % a simple fv=fliplr(fv) only works if all
+                                % patches have the same number of corner
+                                % nodes, so no fill NaNs. To be generic we
+                                % have to loop:
+                                nv = size(fv,2)-sum(isnan(fv),2);
+                                for i = 1:size(fv,1)
+                                    % first nv indices should not be NaN
+                                    fv(i,1:nv(i)) = fv(i,nv(i):-1:1);
+                                end
                             end
-                            shapewrite(filename,xv,fv,cv{:})
+                            shapewrite(filename,shp_type,xv,fv,cv{:})
                         else
                             shapewrite(filename,'point',xy,cv{:})
                         end
@@ -626,14 +763,22 @@ for f=1:ntim
                     switch Ops.presentationtype
                         case 'coloured contour lines'
                             xy=get(hNew,'vertices');
+                            for i=1:length(xy)
+                                xy{i} = xy{i}(:,1:2);
+                            end
                             cv=get(hNew,'facevertexcdata');
                             UD=get(hNew0,'userdata');
                             Thresholds=UD.XInfo.Thresholds;
                             for i=1:length(xy)
-                                xy{i}=xy{i}(1:end-1,:);
-                                cv{i}=Thresholds(cv{i}(1));
+                                if ~isempty(xy{i}) && isnan(xy{i}(end,1))
+                                    xy{i}=xy{i}(1:end-1,:);
+                                end
+                                if ~isempty(cv{i})
+                                    cv{i}=Thresholds(cv{i}(1));
+                                end
                             end
                             cv=cat(1,cv{:});
+                            xy(cellfun('isempty',xy)) = [];
                             cLabels={'Value'};
                             shapewrite(filename,'polyline',xy,cLabels,cv)
                         case 'thin dams'
@@ -658,168 +803,32 @@ for f=1:ntim
                         case {'contour patches','contour patches with lines'}
                             hNew = hNew(strcmp(get(hNew,'type'),'patch'));
                             xy=get(hNew,'vertices');
+                            fc=get(hNew,'faces');
                             cv=get(hNew,'facevertexcdata');
-                            UD=get(hNew0,'userdata');
-                            Thresholds=UD.XInfo.Thresholds;
-                            nThresh=length(Thresholds);
-                            cv(cellfun('isempty',cv))={0};
-                            cv=cat(1,cv{:});
-                            for i=1:size(cv,1)
-                                ci=cv(i,1);
-                                if ci==0
-                                    cv(i,1)=NaN;
-                                    cv(i,2)=NaN;
-                                elseif ci<nThresh
-                                    cv(i,1)=Thresholds(ci);
-                                    cv(i,2)=Thresholds(ci+1);
-                                else
-                                    cv(i,1)=Thresholds(ci);
-                                    cv(i,2)=NaN;
-                                end
-                            end
-                            cLabels={'Min','Max'};
-                            %
-                            for i=length(xy):-1:1
-                                if size(xy{i},1)==1
-                                    xy(i) = [];
-                                    cv(i,:) = [];
-                                else
-                                    xy{i} = xy{i}(:,1:2);
-                                end
-                            end
-                            inside = false(length(xy));
-                            s = warning('query','MATLAB:inpolygon:ModelingWorld');
-                            warning('off','MATLAB:inpolygon:ModelingWorld')
-                            for i=1:length(xy)
-                               for j=1:length(xy)
-                                  if i~=j
-                                     inside(i,j) = all(inpolygon(xy{i}(:,1),xy{i}(:,2),xy{j}(:,1),xy{j}(:,2)));
-                                  end
-                               end
-                            end
-                            warning(s);
-                            %
-                            changed = 1;
-                            while changed
-                               changed = 0;
-                               outerpolys = find(~any(inside,2));
-                               for i = 1:length(outerpolys)
-                                  outerpoly = outerpolys(i);
-                                  %
-                                  % find polygons that fit inside this
-                                  % polygon, but not in any other.
-                                  %
-                                  inpoly = find(inside(:,outerpoly));
-                                  biggestinnerpolys = inpoly(sum(inside(inpoly,:),2)==1);
-                                  for j = 1:length(biggestinnerpolys)
-                                     biggestinnerpoly = biggestinnerpolys(j);
-                                     %
-                                     % remove biggestinnerpoly from this
-                                     % outerpoly. We should distinguish two
-                                     % cases:
-                                     %  - simple case in which the inner
-                                     %    polygon is strictly inside the
-                                     %    outer polygon. The polygon should
-                                     %    then just be appended as second
-                                     %    part/hole.
-                                     %  - the inner polygon may be partly
-                                     %    aligned with the outer polygon
-                                     %    and this case should be handled
-                                     %    by cutting away part of the
-                                     %    polygon.
-                                     %
-                                     xy1 = xy{outerpoly};
-                                     xy2 = flipud(xy{biggestinnerpoly});
-                                     %
-                                     [aligned,index] = ismember(xy2,xy1,'rows');
-                                     %
-                                     if ~any(aligned)
-                                        %
-                                        % simple case
-                                        %
-                                        xy{outerpoly}=[xy1;xy2];
-                                     else
-                                        %
-                                        % partial alignment
-                                        %
-                                        npnt1 = size(xy1,1);
-                                        npnt2 = size(xy2,1);
-                                        %
-                                        % make sure that the first point is
-                                        % the first aligned point
-                                        %
-                                        if ~aligned(1)
-                                           %
-                                           % find first point aligned
-                                           % (could be implemented in
-                                           % recent MATLAB versions using
-                                           % find first).
-                                           %
-                                           i2 = 1;
-                                           while ~aligned(i2)
-                                              i2 = i2+1;
-                                           end
-                                           %
-                                           % renumber such that first point
-                                           % aligned becomes first point.
-                                           %
-                                           renumber = [i2:npnt2 2:i2];
-                                           xy2 = xy2(renumber,:);
-                                           aligned = aligned(renumber);
-                                           index = index(renumber);
-                                        end
-                                        %
-                                        % determine last point aligned
-                                        %
-                                        i2 = 1;
-                                        i1 = index(i2);
-                                        if i1==1
-                                           i1 = npnt1;
-                                        end
-                                        while isequal(xy2(i2+1,:),xy1(i1-1,:))
-                                           i2 = i2+1;
-                                           i1 = i1-1;
-                                           if i1==1 % wrap around if necessary
-                                              i1 = npnt1;
-                                           end
-                                        end
-                                        %
-                                        % determine first point aligned
-                                        %
-                                        j2 = npnt2;
-                                        j1 = index(j2);
-                                        if j1==npnt1
-                                           j1 = 1;
-                                        end
-                                        while isequal(xy2(j2-1,:),xy1(j1+1,:))
-                                           j2 = j2-1;
-                                           j1 = j1+1;
-                                           if j1==npnt1 % wrap around if necessary
-                                              j1 = 1;
-                                           end
-                                        end
-                                        %
-                                        % now stick the non-aligned parts
-                                        % of the two polygons together
-                                        %
-                                        xy{outerpoly}=[xy2(i2:j2,:);xy1(j1+1:i1,:)];
-                                     end
-                                     %
-                                     % polygons inside biggestinnerpoly don't
-                                     % fit inside outerpoly anymore.
-                                     %
-                                     inside(inside(:,biggestinnerpoly),outerpoly)=0;
-                                     %
-                                     % biggestinnerpoly itself doesn't fit
-                                     % inside outerpoly anymore.
-                                     %
-                                     inside(biggestinnerpoly,outerpoly)=0;
-                                     changed = 1;
-                                  end
-                               end
+                            minmax = zeros(length(hNew),2);
+                            for i = 1:length(hNew)
+                                minmax(i,:) = [getappdata(hNew(i),'MinThreshold') getappdata(hNew(i),'MaxThreshold')];
                             end
                             %
-                            shapewrite(filename,xy,cLabels,cv)
+                            [xy,cLabels,cv] = process_polygons(xy,fc,cv,minmax);
+                            %
+                            switch expType
+                                case 'arcview shape'
+                                    shapewrite(filename,xy,cLabels,cv)
+                                case 'polygon file'
+                                    DATA = [];
+                                    for i = length(xy):-1:1
+                                        if isnan(cv(i,1))
+                                            DATA.Field(i).Name = sprintf('values smaller than %g',cv(i,2));
+                                        elseif isnan(cv(i,2))
+                                            DATA.Field(i).Name = sprintf('values larger than %g',cv(i,1));
+                                        else
+                                            DATA.Field(i).Name = sprintf('values between %g and %g',cv(i,:));
+                                        end
+                                        DATA.Field(i).Data = xy{i};
+                                    end
+                                    tekal('write',filename,DATA);
+                            end
                         case {'vector','vector (split x,y)','vector (split m,n)'}
                             hascolor = strcmp(get(hNew(end),'type'),'patch');
                             if hascolor
@@ -951,6 +960,17 @@ for f=1:ntim
             Format=[Format(2:end) '\n'];
             fprintf(fid,Format,expdata);
             fclose(fid);
+        case {'stl stereolithography file (ascii)','stl stereolithography file (binary)'}
+            xyz = squeeze(data.XYZ);
+            if size(xyz,2)==2
+                xyz  = [xyz data.Val'];
+            end
+            switch expType(strfind(expType,'('):end)
+                case '(ascii)'
+                    stl('write_ascii',filename,data.Name,data.TRI,xyz)
+                case '(binary)'
+                    stl('write',filename,data.Name,data.TRI,xyz)
+            end
         case {'mat file','mat file (v6)','mat file (v7)','mat file (v7.3/hdf5)'}
             if scalar && isfield(data,'XComp')
                 data.Name = [data.Name ', ' Ops.vectorcomponent];
@@ -966,4 +986,114 @@ for f=1:ntim
             end
             save(filename,'data',saveops{:});
     end
+end
+
+function export_netcdf(filename,expType,data)
+mode = netcdf.getConstant('CLOBBER');
+switch expType
+    case 'netcdf4 file'
+        mode = bitor(mode,netcdf.getConstant('NETCDF4'));
+        mode = bitor(mode,netcdf.getConstant('CLASSIC_MODEL'));
+end
+ncid = netcdf.create(filename,mode);
+ui_message('warning','The netCDF export option is still under development.')
+try
+    for g = 1:length(data)
+        if length(data)>1
+            prefix = sprintf('DATA%i_',g);
+        else
+            prefix = '';
+        end
+        DATA = data(g);
+        %
+        if isfield(DATA,'FaceNodeConnect')
+            % save as UGRID
+            nNodes = [prefix 'nNodes'];
+            nEdges = [prefix 'nEdges'];
+            nFaces = [prefix 'nFaces'];
+            maxNodesPerFace = [prefix 'maxNodesPerFace'];
+            dim_nNodes = netcdf.defDim(ncid,nNodes,length(DATA.X));
+            dim_nFaces = netcdf.defDim(ncid,nFaces,size(DATA.FaceNodeConnect,1));
+            dim_maxNodesPerFace = netcdf.defDim(ncid,maxNodesPerFace,size(DATA.FaceNodeConnect,2));
+            if isfield(DATA,'EdgeNodeConnect')
+                dim_nEdges = netcdf.defDim(ncid,nEdges,size(DATA.EdgeNodeConnect,1));
+                dim_2 = netcdf.defDim(ncid,'TWO',2);
+            end
+            %
+            X = [prefix 'X'];
+            var_X = netcdf.defVar(ncid,X,'double',dim_nNodes);
+            if isfield(DATA,'XUnits') && strcmp(DATA.XUnits,'deg')
+                netcdf.putAtt(ncid,var_X,'standard_name','longitude')
+                netcdf.putAtt(ncid,var_X,'units','degrees_east')
+            else
+                netcdf.putAtt(ncid,var_X,'standard_name','projection_x_coordinate')
+                if isfield(DATA,'XUnits') && ~isempty(DATA.XUnits)
+                    netcdf.putAtt(ncid,var_X,'units',DATA.XUnits)
+                end
+            end
+            %
+            Y = [prefix 'Y'];
+            var_Y = netcdf.defVar(ncid,Y,'double',dim_nNodes);
+            if isfield(DATA,'YUnits') && strcmp(DATA.YUnits,'deg')
+                netcdf.putAtt(ncid,var_Y,'standard_name','latitude');
+                netcdf.putAtt(ncid,var_Y,'units','degrees_north')
+            else
+                netcdf.putAtt(ncid,var_Y,'standard_name','projection_y_coordinate')
+                if isfield(DATA,'YUnits') && ~isempty(DATA.YUnits)
+                    netcdf.putAtt(ncid,var_Y,'units',DATA.YUnits)
+                end
+            end
+            %
+            FaceNodeConnect = [prefix 'FaceNodeConnect'];
+            var_FaceNodeConnect = netcdf.defVar(ncid,FaceNodeConnect,'int',[dim_maxNodesPerFace dim_nFaces]);
+            %netcdf.defVarFill(ncid,var_FaceNodeConnect,false,-999);
+            netcdf.putAtt(ncid,var_FaceNodeConnect,'cf_role','face_node_connectivity')
+            netcdf.putAtt(ncid,var_FaceNodeConnect,'start_index',1)
+            %
+            if isfield(DATA,'EdgeNodeConnect')
+                EdgeNodeConnect = [prefix 'EdgeNodeConnect'];
+                var_EdgeNodeConnect = netcdf.defVar(ncid,EdgeNodeConnect,'int',[dim_2 dim_nEdges]);
+                %netcdf.defVarFill(ncid,var_EdgeNodeConnect,false,-999);
+                netcdf.putAtt(ncid,var_EdgeNodeConnect,'cf_role','edge_node_connectivity')
+                netcdf.putAtt(ncid,var_EdgeNodeConnect,'start_index',1)
+            end
+            %
+            Mesh = [prefix 'Mesh'];
+            var_Mesh = netcdf.defVar(ncid,Mesh,'int',[]);
+            netcdf.putAtt(ncid,var_Mesh,'cf_role','mesh_topology')
+            netcdf.putAtt(ncid,var_Mesh,'topology_dimension',2)
+            netcdf.putAtt(ncid,var_Mesh,'node_coordinates',[X ' ' Y])
+            netcdf.putAtt(ncid,var_Mesh,'face_node_connectivity',FaceNodeConnect)
+            if isfield(DATA,'EdgeNodeConnect')
+                netcdf.putAtt(ncid,var_Mesh,'edge_node_connectivity',EdgeNodeConnect)
+            end
+            netcdf.putAtt(ncid,var_Mesh,'node_dimension',nNodes)
+            if isfield(DATA,'EdgeNodeConnect')
+                netcdf.putAtt(ncid,var_Mesh,'edge_dimension',nEdges)
+            end
+            netcdf.putAtt(ncid,var_Mesh,'face_dimension',nFaces)
+            %
+            globalId = netcdf.getConstant('GLOBAL');
+            netcdf.putAtt(ncid,globalId,'Conventions','UGRID-1.0');
+            %
+            netcdf.endDef(ncid)
+            %
+            netcdf.putVar(ncid,var_X,DATA.X)
+            netcdf.putVar(ncid,var_Y,DATA.Y)
+            if isfield(DATA,'EdgeNodeConnect')
+                netcdf.putVar(ncid,var_EdgeNodeConnect,DATA.EdgeNodeConnect')
+            end
+            netcdf.putVar(ncid,var_FaceNodeConnect,DATA.FaceNodeConnect')
+        else
+            error('Exporting this data set to netCDF not yet supported')
+        end
+    end
+    netcdf.close(ncid)
+catch Exception1
+    try
+        netcdf.close(ncid)
+    catch
+        % ignore or append
+    end
+    rethrow(Exception1)
 end

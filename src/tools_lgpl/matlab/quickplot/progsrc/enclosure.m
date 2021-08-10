@@ -23,7 +23,7 @@ function varargout=enclosure(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -48,8 +48,8 @@ function varargout=enclosure(cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/enclosure.m $
-%   $Id: enclosure.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/enclosure.m $
+%   $Id: enclosure.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin==0
     error('Missing input arguments.')
@@ -100,9 +100,13 @@ end
 % Grid enclosure file
 fid=fopen(filename);
 err=[];
+ln = 0;
 if fid>0
     try
+        Enc = NaN(1000,2); % avoid extending array for every line
+        iP  = 0;
         while 1
+            ln = ln+1;
             line=fgetl(fid);
             if ~ischar(line)
                 break
@@ -112,21 +116,47 @@ if fid>0
             % TK : X returned empty on comgrid scaloost model waqua,
             %      remove the delimiters
             %
+            org_line = line;
             for i_lim = 1: length(delimiters)
                 line(line == delimiters{i_lim}) = ' ';
             end
             
-            X=sscanf(line,'%i');
+            [X,nX,errX] = sscanf(line,'%i');
             
-            if length(X)>=2
+            if nX==0
+                % empty line
+            elseif nX ~= round(nX/2)*2
+                error('Every enclosure line should contain a pair of numbers; check line %i:\n%s',ln,org_line)
+            elseif nX ==2
+                % normal line
+                if size(Enc,1)<iP+1
+                    Enc = [Enc;NaN(size(Enc))]; % avoid extending array for every line
+                end
+                Enc(iP+1,:) = X';
+                iP = iP+1;
+            elseif ~isempty(errX)
+                % Multiple coordinate pairs on a single line are accepted
+                % for WAQUA but then no other text on the line is allowed.
+                % Otherwise, we would interpret a thin dam file containing
+                % lines like
+                %       8      4      8      2 U
+                % also an enclosure file.
+                error('Error reading data from line %i:\n%s',ln,org_line)
+            elseif nX>2
                 %
                 % Multiple coordinate pairs on 1 single line ==> reshape
                 %
-                X = reshape(X,2,size(X,1)/2)';
-                
-                Enc=[Enc; X];
+                nX = nX/2;
+                if size(Enc,1)<iP+nX
+                    Enc = [Enc;NaN(size(Enc))]; % avoid extending array for every line
+                end
+                X = reshape(X,2,nX)';
+                Enc(iP+1:iP+nX,:) = X;
+                iP = IP+nX;
             end
         end
+        %
+        Enc = Enc(1:iP,:); % avoid extending array for every line
     catch err
     end
     fclose(fid);

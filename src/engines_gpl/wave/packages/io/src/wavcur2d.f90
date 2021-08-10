@@ -4,7 +4,7 @@ subroutine wavcur2d(wavetime  ,layer_model ,kfu       ,kfv       , &
                   & dzu1      ,rbuffu       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +28,8 @@ subroutine wavcur2d(wavetime  ,layer_model ,kfu       ,kfv       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wavcur2d.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/io/src/wavcur2d.f90 $
+!  $Id: wavcur2d.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/io/src/wavcur2d.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -311,7 +311,7 @@ subroutine wavcur2d(wavetime  ,layer_model ,kfu       ,kfv       , &
        ! Erroneous vertical layering definition found on COM-FILE
        !
        write(*, '(2a)') '*** ERROR: Erroneous vertical layering definition found on COM-FILE: LAYER_MODEL = ', trim(layer_model)
-       stop
+       call wavestop(1, '*** ERROR: Erroneous vertical layering definition found on COM-FILE: LAYER_MODEL = '//trim(layer_model))
     endif
     !
     ! Normal end
@@ -350,7 +350,7 @@ subroutine wavcur2d(wavetime  ,layer_model ,kfu       ,kfv       , &
        ! Erroneous vertical layering definition found on COM-FILE
        !
        write(*, '(2a)') '*** ERROR: Erroneous vertical layering definition found on COM-FILE: LAYER_MODEL = ', trim(layer_model)
-       stop
+       call wavestop(1, '*** ERROR: Erroneous vertical layering definition found on COM-FILE: LAYER_MODEL = '//trim(layer_model))
     endif
     !
     ! assuming error is solved
@@ -360,6 +360,6 @@ subroutine wavcur2d(wavetime  ,layer_model ,kfu       ,kfv       , &
     deallocate (rlabda, stat=ierr)
     if (error /= 0) then
        write(*,'(2a)') '*** ERROR: Unable to read/calculate wave-dependent flow velocities from file ', trim(filnam)
-       stop
+       call wavestop(1, '*** ERROR: Unable to read/calculate wave-dependent flow velocities from file '//trim(filnam))
     endif
 end subroutine wavcur2d

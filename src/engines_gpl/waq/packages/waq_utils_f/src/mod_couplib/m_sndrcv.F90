@@ -1,7 +1,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -33,7 +33,7 @@
 !
 !-- VERSION HISTORY ----------------------------------------------------------
 !
-!   $URL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/m_sndrcv.F90 $
+!   $URL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/m_sndrcv.F90 $
 !   $Revision: 42 $, $Date: 2007-11-26 15:20:20 +0100 (Mon, 26 Nov 2007) $
 !
 !   Programmer: Edwin Vollebregt (VORtech)
@@ -996,7 +996,7 @@ integer                                    :: my_idebug
       write(LOUT,*) 'sendrecv_data: Error: precisely one of the arguments ', &
          'iarray, rarray and darray must be specified; actual number of ', &
          'arguments is',nargs
-      stop
+      call srstop(1)
    endif
 
 !  Get optional argument lladd; overwrite or add to contents of [ird]array
@@ -1240,7 +1240,7 @@ integer                                    :: my_idebug
       if (.not.found) then
          write(LOUT,*) 'sendrecv: Error: obtained message from process',iprc,&
                 ', which does not occur in interface "',trim(namitf),'"'
-         stop
+         call srstop(1)
       endif
 
       if (my_idebug.ge.3) write(LOUT,'(2(a,i3),a)') ' recv_data: obtained iprc=',&
@@ -1260,7 +1260,7 @@ integer                                    :: my_idebug
          write(LOUT,'(a,i5,a,i3,a,i5,a)') 'recv_data: Error: expected',nexpct,&
                 ' items in message of process',iprc,', obtained',&
                 rcvbuf(2),' items instead.'
-         stop
+         call srstop(1)
       endif
       if (my_idebug.ge.2) write(LOUT,'(a,i6,a,i3)') ' recv_data: received', &
          nexpct,' items of process',iprc

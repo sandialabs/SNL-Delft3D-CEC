@@ -1,13 +1,13 @@
 #-------------------------------------------------------------------------------
 #   Makefile for ec-module
 #
-#   Irv.Elshoff@deltares.nl
+#   Irv Elshoff
 #   Adri.Mourits@deltares.nl
 #   Fedor.Baart@deltares.nl
 #   Edwin.Spee@deltares.nl
 #   9 nov 2009
 #
-#   Copyright (C)  Stichting Deltares, 2011-2013.
+#   Copyright (C)  Stichting Deltares, 2011-2018.
 #-------------------------------------------------------------------------------
 
 include $(top_srcdir)/common.am
@@ -27,7 +27,9 @@ dist-hook:
 #-------------------------------------------------------------------------------
 #Includes
 FMODULES += \
-	-I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src
+	-I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src \
+	-I$(top_builddir)/third_party_open/kdtree2/src-f90 \
+	-I$(top_builddir)/utils_lgpl/kdtree_wrapper/packages/kdtree_wrapper/src
 
 #-------------------------------------------------------------------------------
 #   Fortran 90 flags
@@ -47,17 +49,20 @@ endif
 libECModule_la_SOURCES = \
          transform_shiftedpole.f90 \
          ec_module_version.F90 \
-         ec_parameters.f90 \
+         ec_parameters.F90 \
          ec_typedefs.f90 \
          ec_message.f90 \
-         ec_stringbuffer.f90 \
+         ec_alloc.f90 \
          ec_support.f90 \
          ec_netcdf_timeseries.f90 \
          ec_bcreader.f90 \
          ec_field.f90 \
          ec_quantity.f90 \
          ec_elementset.f90 \
+         ec_spatial_extrapolation.f90 \
+         ec_basic_interpolation.f90 \
          ec_converter.f90 \
+         ec_astro.f90 \
          ec_filereader_read.F90 \
          ec_filereader.F90 \
          ec_item.f90 \

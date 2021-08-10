@@ -8,7 +8,7 @@ function [OutTxt,OutFig]=simsteps(C,i)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -33,8 +33,8 @@ function [OutTxt,OutFig]=simsteps(C,i)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/simsteps.m $
-%   $Id: simsteps.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/simsteps.m $
+%   $Id: simsteps.m 65778 2020-01-14 14:07:42Z mourits $
 
 Txt={'NOTE: This function provides only indicative values.'
     'For theory see chapter 10 (in particular sections 10.4 and 10.6) of the'
@@ -140,7 +140,7 @@ if isfield(ms,'VICUV') & ~isempty(ms.VICUV) & ~isequal(size(ms.VICUV),[1 1])
     Dt1=1./(VICUV.*(isqdist.^2));
     Dt1(Dt1==0)=NaN;
 
-    createplot(jet(64),X,Y,dtused./Dt1, ...
+    createplot(jet(64),X,Y,spherical,dtused./Dt1, ...
         'Courant number for viscosity', ...
         [0 2],'Courant number');
 
@@ -162,7 +162,7 @@ vK=0.41;
 maxCFLwav=10;
 Ct2=(2*sqrt(AG*max(eps,H)).*isqdist);
 
-createplot(jet(64),X,Y,Ct2*dtused, ...
+createplot(jet(64),X,Y,spherical,Ct2*dtused, ...
     'Courant number for barotropic mode (wave propagation)', ...
     [0 10],'Courant number');
 
@@ -177,7 +177,7 @@ Txt{end+1}=sprintf('waves of 10.\n');
 %
 Dt3=dist./magU;
 
-createplot(jet(64),X,Y,dtused./Dt3, ...
+createplot(jet(64),X,Y,spherical,dtused./Dt3, ...
     'Courant number for advection (drying/flooding, transport)', ...
     [0 2],'Courant number');
 
@@ -217,7 +217,7 @@ if ~isempty(rsp) & ~isempty(C)
     denom(denom==0)=NaN;
     Dt4=dist./abs(denom);
 
-    createplot(jet(64),X,Y,dtused./Dt4, ...
+    createplot(jet(64),X,Y,spherical,dtused./Dt4, ...
         'Courant number for spiral flow', ...
         [0 2],'Courant number');
 
@@ -237,7 +237,7 @@ else
 end
 Dt=min(Dt,Dt3); dt=min(dt,dt3);
 
-Fig=createplot(flipud(jet(64)),X,Y,Dt, ...
+Fig=createplot(flipud(jet(64)),X,Y,spherical,Dt, ...
     'Spatial variation of the maximum allowed timestep', ...
     [min(dt,dtused) max(1e-10,min(4*dt,4*dtused))],'seconds');
 
@@ -250,18 +250,22 @@ else
     end
 end
 
-function Fig=createplot(cmap,X,Y,V,ttl,clm,val)
-X(X==0 & Y==0)=NaN;
-Y(isnan(X))=NaN;
-Fig=qp_createfig('quick',ttl);
+function Fig = createplot(cmap,X,Y,spherical,V,ttl,clm,val)
+X(X==0 & Y==0) = NaN;
+X(isnan(V)) = NaN;
+Y(isnan(X)) = NaN;
+Fig = qp_createfig('quick',ttl);
 set(Fig,'colormap',cmap);
-S=surf(X,Y,V);
-view(0,90);
+Ax = qp_createaxes(Fig,'oneplot');
+surf(Ax,X,Y,V);
 shading interp
 title(ttl)
-A=get(S,'parent');
-set(A,'clim',clm,'da',[1 1 1]);
+if spherical
+    setaxesprops(Ax,'Lon-Lat')
+else
+    setaxesprops(Ax,'X-Y',{},{'m' 'm'})
+end
+set(Ax,'clim',clm);
 C=qp_colorbar('horz');
-axes(C);
-xlabel([val ' \rightarrow'])
+xlabel(C,[val ' \rightarrow'])
 set(findall(gcf),'deletefcn','')

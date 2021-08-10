@@ -1,7 +1,7 @@
 include $(top_srcdir)/common.am
-bin_PROGRAMS = stream02test.exe
+bin_PROGRAMS = stream02test
 
-stream02test_exe_SOURCES = \
+stream02test_SOURCES = \
 	streamtest.cpp
 
 #-------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ INCLUDES = \
 #-------------------------------------------------------------------------------
 #Libraries
 
-stream02test_exe_LDADD = \
+stream02test_LDADD = \
 	$(top_builddir)/utils_lgpl/stream/packages/stream/src/libstream.la \
 	$(top_builddir)/utils_lgpl/stream/packages/stream_version_number/src/libstream_version_number.la
 

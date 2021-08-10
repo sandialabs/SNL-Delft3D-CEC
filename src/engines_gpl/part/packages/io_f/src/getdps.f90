@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -64,27 +64,35 @@
 
       integer :: idum, nmnw, iocond
       real(sp), allocatable :: depwrk(:)          !  work array to read depth
+      logical :: ex
 
       integer(4) ithndl              ! handle to time this subroutine
       data       ithndl / 0 /
       if ( timon ) call timstrt( "getdps", ithndl )
 
+      dps = 0.0
       if ( ltrack ) then
 
 !        for particle tracking, get depth
-
-         call openfl ( lundp, lnam, ftype(2), 0 )
-         read (lundp) idum,idum,nmnw,nmnw,nmnw,idum
-         if ( nmnw .ne. nosegl ) then
-            write ( lunpr, * ) 'ERROR, dimension in dps file does not match!',nmnw,nosegl
-            call srstop(1)
+         
+         inquire (file = trim(lnam), exist = ex)
+         if (ex) then
+            call openfl ( lundp, lnam, ftype(2), 0 )
+            read (lundp) idum,idum,nmnw,nmnw,nmnw,idum
+            if ( nmnw .ne. nosegl ) then
+               write ( lunpr, * ) 'ERROR, dimension in dps file does not match!',nmnw,nosegl
+               call stop_exit(1)
+            endif
+            allocate ( depwrk(nosegl) )
+            read (lundp, iostat = iocond) depwrk
+            close(lundp)
+            if (iocond  .ne.  0 ) goto 100
+            dps(cellpnt(:)) = depwrk(:)
+         else
+            write ( lunpr, * ) 'WARNING: Depths file does not exist. Will continue assuming'
+            write ( lunpr, * ) '         uniform bathymetry of 0.0 for particle tracks.'
+            write ( lunpr, * ) '         z-values in the particle tracks file are not absolute!'
          endif
-         allocate ( depwrk(nosegl) )
-         read (lundp, iostat = iocond) depwrk
-         if (iocond  .ne.  0 ) goto 100
-         dps = 0.0
-         dps(cellpnt(:)) = depwrk(:)
-         close(lundp)
       endif
 
       if ( timon ) call timstop ( ithndl )
@@ -93,5 +101,11 @@
   100 write (lunpr, *) 'Error 4407. Reading the depth file :', lnam(:len_trim(lnam))
       write (lunpr, *) '            (file maybe missing ??)      '
       write (*,  *)   'Error 4407. Reading the depth file :', lnam(:len_trim(lnam))
-      call srstop(1)
+      write (lunpr, * ) 'WARNING: Depths not read correctly, will continue assuming'
+      write (lunpr, * ) '         uniform bathymetry of 0.0 for particle tracks.'
+      write (lunpr, * ) '         z-values in the particle tracks file are not absolute!'
+      write (*, * ) 'WARNING: Depths not read correctly, will continue assuming'
+      write (*, * ) '         uniform bathymetry of 0.0 for particle tracks.'
+      write (*, * ) '         z-values in the particle tracks file are not absolute!'
+      return
       end subroutine

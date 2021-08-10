@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -130,7 +130,6 @@ contains
       use typos
       use p10cor_mod
       use grid_search_mod
-      use stop_exit_mod
       use spec_feat_par    ! special feature parameters
 !
       implicit none             ! force explicit typing
@@ -411,6 +410,9 @@ contains
       real(sp)      :: yabounce
 
       integer(ip)   :: nboomtry
+      integer(ip)   :: nscreenstry
+      logical       :: screensfirsttry
+      logical       :: leftside
 
 !**   maintain all values
 
@@ -537,9 +539,10 @@ contains
 !$OMP                       chi0, vxnew, vynew, vznew, chi1, ynew, vxw, vyw,       &
 !$OMP                       deppar, yy, n0new, depth2, dstick, xx, n03d2, disp2,   &
 !$OMP                       pbounce, xpnew, ypnew, xrest, yrest, dxpnew,           &
-!$OMP                       dypnew, mpnew, npnew, ddshift, wdirr, uwstar,          &
-!$OMP                       nboomtry, boomseffective, xaold, yaold, xanew, yanew,  &
-!$OMP                       xacatch, yacatch, catch, xabounce, yabounce, bounce) , &
+!$OMP                       dypnew, mpnew, npnew, ddshift, wdirr, uwstar, nboomtry,&
+!$OMP                       boomseffective, bouncefirsttry, xaold, yaold, xanew,   &
+!$OMP                       yanew, xacatch, yacatch, catch, xabounce, yabounce,    &
+!$OMP                       bounce, screensfirsttry, nscreenstry, leftside),       &
 !$OMP           REDUCTION ( +   : ninact, nstpar, nopart_ero, nopart_sed,          &
 !$OMP                             nrms  , dsprms ) ,                               &
 !$OMP           REDUCTION ( MIN : dspmin ) , REDUCTION ( MAX : dspmax ),           &
@@ -593,7 +596,9 @@ contains
             elseif ( kp .eq. 2 ) then
                dred = pblay
             else
-               stop ' The layer-number is too large for modtyp=2'
+               write (*,*) ' The layer-number is too large for modtyp=2'
+               write( lun2,*) ' The layer-number is too large for modtyp=2'
+               call stop_exit(1)
             endif
          endif
 
@@ -709,7 +714,7 @@ contains
                vyr    = vy  * dyp
                ubstar_b = sqrt(c2g*(vxr*vxr + vyr*vyr))
             else
-               ubstar_b = tau(n0 + idep) / rhow
+               ubstar_b = sqrt(tau(n0 + idep) / rhow)
             endif
          endif
 
@@ -733,7 +738,7 @@ contains
             if ( caltau ) then
                ubstar = sqrt(c2g*(vxr*vxr + vyr*vyr))  ! ubstar this is requiered for disersion
             else
-               ubstar = tau(n03d) / rhow
+               ubstar = sqrt(tau(n03d) / rhow)
             endif
             ubstar_b   = ubstar                     ! ubstar_bot is required for sedimentation and erosion
          else
@@ -920,13 +925,15 @@ contains
          dspmax = max(disp,dspmax)
          dsprms = dsprms + disp*disp
          nrms   = nrms   + 1.0
-         vrtdsp(1,ipart) = disp
-         vrtdsp(2,ipart) = dvz  * depthl
-         vrtdsp(3,ipart) = dvzs * depthl
-         vrtdsp(4,ipart) = dvzt * depthl
-         vrtdsp(5,ipart) = depthl
-         vrtdsp(6,ipart) = depth1
-         vrtdsp(7,ipart) = n0
+
+!         debugging code
+!         vrtdsp(1,ipart) = disp
+!         vrtdsp(2,ipart) = dvz  * depthl
+!         vrtdsp(3,ipart) = dvzs * depthl
+!         vrtdsp(4,ipart) = dvzt * depthl
+!         vrtdsp(5,ipart) = depthl
+!         vrtdsp(6,ipart) = depth1
+!         vrtdsp(7,ipart) = n0
 !**
 !**       this is innerloop for particles crossing gridcell borders
 !**
@@ -1488,6 +1495,76 @@ contains
             call stop_exit(1)
          endif
 
+         nscreenstry=1
+         screensfirsttry=.true.
+         if (screens) then
+!**      compute absolute x's and y's for a single particle end point
+            call part11sp ( lgrid , xcor  , ycor  , nmax   , np     , mp    ,    &
+                            xnew  , ynew  , xanew , yanew  , lgrid2 , mmax  )
+            if (iptime(ipart) .le. 0 .and. nscreenstry==1) then
+!      determine absolute location of starting point as well for new particles
+               call part11sp ( lgrid , xcor  , ycor  , nmax   , npart(ipart)     , mpart(ipart)    ,    &  !  new coordinates
+                               xpart(ipart)  , ypart(ipart)  , xaold , yaold  , lgrid2 , mmax  )
+            else
+               xaold = xa(ipart)
+               yaold = ya(ipart)
+            end if
+            call boombounce( xaold, yaold, xanew, yanew, nrowsscreens, &
+                             xpolscreens(1:nrowsscreens), ypolscreens(1:nrowsscreens), &
+                             xacatch, yacatch, catch, xabounce, yabounce, bounce, leftside )
+            if (catch) then
+               a = rnd(rseed)
+               if (leftside) then
+                  catch = a .gt. permealeft
+               else
+                  catch = a .gt. permearight
+               endif
+            end if
+            if (catch) then
+               if (bounce .and. bouncefirsttry) then
+!                 go back to relative coordinates from the original cell(!), set boomseffective to false (!?) and go back to check for checking of inactive cells etc... (30)
+!                 a new bounce may mean that the booms must be effective again... hm, more complicated than I thought... Skip for the first implementation
+                  np = npart(ipart)
+                  mp = mpart(ipart)
+                  kp = kpart(ipart)
+                  znew = zpart(ipart)
+                  call part07nm ( lgrid  , lgrid2 , nmax   , mmax   , xcor  , & ! make relative
+                                  ycor   , xabounce , yabounce, np   , &        ! coordinates
+                                  mp, xnew, ynew  , ierror )                    ! again
+                  if (ierror/=0) then
+                        mpart(ipart) = mpart0(ipart)
+                        npart(ipart) = npart0(ipart)
+                  end if
+                  screensfirsttry = .false.
+                  goto 30
+               else
+                  if (nscreenstry==1) then
+                     screensfirsttry = .true.
+!                 go back to the original location and try with dispersion only...
+                     np = npart(ipart)
+                     mp = mpart(ipart)
+                     kp = kpart(ipart)
+                     xnew = xpart(ipart)
+                     ynew = ypart(ipart)
+                     znew = zpart(ipart)
+                     !**      xnew,ynew is inclusive of diffusion (dax,day); c1 = 0.0 for 3d
+                     xnew  = xnew + (dax - c1 * sin(wdirr + sangl)) / dxp
+                     ynew  = ynew + (day - c1 * cos(wdirr + sangl)) / dyp
+                     nscreenstry = 2
+                     goto 30
+                  else
+!                 finally just put it back to the old location!
+                     np = npart(ipart)
+                     mp = mpart(ipart)
+                     kp = kpart(ipart)
+                     xnew = xpart(ipart)
+                     ynew = ypart(ipart)
+                     znew = zpart(ipart)
+                  end if
+               end if
+            end if
+         end if
+
          if (boomseffective) then
 !**      compute absolute x's and y's for a single particle end point
             call part11sp ( lgrid , xcor  , ycor  , nmax   , np     , mp    ,    &
@@ -1503,13 +1580,11 @@ contains
             call boombounce( xaold, yaold, xanew, yanew, nrowsboom(iboomint), &
                              xpolboom(1:nrowsboom(iboomint), iboomint), &
                              ypolboom(1:nrowsboom(iboomint), iboomint), &
-                             xacatch, yacatch, catch, xabounce, yabounce, bounce )
-!            bounce = mod(ipart,2) .eq. 0
+                             xacatch, yacatch, catch, xabounce, yabounce, bounce, leftside )
             if (catch) then
                if (bounce .and. bouncefirsttry) then
 !                 go back to relative coordinates from the original cell(!), set boomseffective to false (!?) and go back to check for checking of inactive cells etc... (30)
 !                 a new bounce may mean that the booms must be effective again... hm, more complicated than I thought... Skip for the first implementation
-!                  nm   = lgrid2( n  , m   )
                   np = npart(ipart)
                   mp = mpart(ipart)
                   kp = kpart(ipart)

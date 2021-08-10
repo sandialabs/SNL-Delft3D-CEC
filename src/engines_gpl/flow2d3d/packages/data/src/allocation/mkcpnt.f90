@@ -1,7 +1,7 @@
 function mkcpnt(pntnam    ,length    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ function mkcpnt(pntnam    ,length    ,gdp       )
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: mkcpnt.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/allocation/mkcpnt.f90 $
+!  $Id: mkcpnt.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/allocation/mkcpnt.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Request memory space with the dynamic array
@@ -87,14 +87,8 @@ function mkcpnt(pntnam    ,length    ,gdp       )
     
     
     if (mkcpnt /= 0) then
-       if (gdp%gdtricom%initi /= 3) then
-          call chnull(chbuf(mkcpnt)         ,length    )
-          mkcpnt = 1
-       else
-
-       ! return the value -1 (used in Mor)
-         mkcpnt = -1
-       endif   
+       call chnull(chbuf(mkcpnt)         ,length    )
+       mkcpnt = 1
 
     else
        !

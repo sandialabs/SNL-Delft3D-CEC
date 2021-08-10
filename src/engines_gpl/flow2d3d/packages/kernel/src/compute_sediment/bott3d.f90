@@ -12,7 +12,7 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
                 & nto       ,volum0    ,volum1    ,dt        ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -36,8 +36,8 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: bott3d.f90 5616 2015-11-27 14:35:08Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute_sediment/bott3d.f90 $
+!  $Id: bott3d.f90 65844 2020-01-23 20:56:06Z platzek $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute_sediment/bott3d.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Computes suspended sediment transport correction
@@ -60,12 +60,12 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
 ! NONE
 !!--declarations----------------------------------------------------------------
     use precision
-    use sp_buffer
     use flow_tables
     use bedcomposition_module
     use globaldata
     use dfparall
     use sediment_basics_module
+    use morstatistics, only: morstats
     !
     implicit none
     !
@@ -80,7 +80,6 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
     real(fp)                             , pointer :: morfac
     real(fp)                             , pointer :: sus
     real(fp)                             , pointer :: bed
-    real(fp)                             , pointer :: tmor
     real(fp)                             , pointer :: thetsd
     real(fp)                             , pointer :: sedthr
     real(fp)                             , pointer :: hmaxth
@@ -258,7 +257,6 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
     morfac              => gdp%gdmorpar%morfac
     sus                 => gdp%gdmorpar%sus
     bed                 => gdp%gdmorpar%bed
-    tmor                => gdp%gdmorpar%tmor
     thetsd              => gdp%gdmorpar%thetsd
     sedthr              => gdp%gdmorpar%sedthr
     hmaxth              => gdp%gdmorpar%hmaxth
@@ -591,7 +589,7 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
        !
        do jb = 1, nto
           icond = morbnd(jb)%icond
-          if (icond == 4 .or. icond == 5) then
+          if (icond == 4 .or. icond == 5 .or. icond == 8) then
              !
              ! Open boundary with transport boundary condition:
              ! Get data from table file
@@ -659,14 +657,19 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
                    !
                    if (icond == 4) then
                       !
-                      ! transport including pores
+                      ! transport volume including pores
                       !
                       rate = rate*cdryb(l)
-                   else
+                   elseif (icond == 5) then
                       !
-                      ! transport excluding pores
+                      ! transport volume excluding pores
                       !
                       rate = rate*rhosol(l)
+                   elseif (icond == 8) then
+                      !
+                      ! transport mass
+                      !
+                      !rate = rate
                    endif
                    !
                    ! impose boundary condition
@@ -678,7 +681,7 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
                    endif
                 enddo ! l (sediment fraction)
              enddo    ! ib (boundary point)
-          endif       ! icond = 4 or 5 (boundary with transport condition)
+          endif       ! icond = 4, 5 or 8 (boundary with transport condition)
        enddo          ! jb (open boundary) 
        !
        ! Update quantity of bottom sediment
@@ -805,7 +808,9 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
              !
              dbodsd(l, nm) = dbodsd(l, nm) + dsdnm
              !
-             call updwaqflxsed(nst, nm, l, trndiv, sedflx, eroflx, gdp)
+             if (.not. bedload) then
+                call updwaqflxsed(nst, nm, l, trndiv, sedflx, eroflx, gdp)
+             endif
           enddo    ! nm
        enddo       ! l
        if (bedchangemesscount > bedchangemessmax) then
@@ -993,6 +998,7 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
           !
           ! Update layers and obtain the depth change
           !
+          call morstats(gdp, dbodsd, s1, dps, umean, vmean, sbuu, sbvv, ssuu, ssvv, gdp%d%nmlb, gdp%d%nmub, lsedtot, lsed)
           if (updmorlyr(gdp%gdmorlyr, dbodsd, depchg, gdp%messages) /= 0) then
              call writemessages(gdp%messages, lundia)
              call d3stop(1, gdp)
@@ -1069,11 +1075,12 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
              endif
              !
              select case(icond)
-             case (0,4,5)
+             case (0,4,5,8)
                 !
                 ! outflow or free boundary (0)
-                ! or prescribed transport with pores (4)
-                ! or prescribed transport without pores (5)
+                ! or prescribed transport volume with pores (4)
+                ! or prescribed transport volume without pores (5)
+                ! or prescribed transport mass (8)
                 !
                 depchg(nm) = depchg(nm) + depchg(nxmx) * alfa_mag
              case (1)
@@ -1136,7 +1143,7 @@ subroutine bott3d(nmmax     ,kmax      ,lsed      ,lsedtot  , &
        enddo
        if (scour) then
           !
-          ! -Check bottom slopes and apply an avalance effect if needed
+          ! -Check bottom slopes and apply an avalanche effect if needed
           ! -Depths at waterlevel points (dps) will be updated,
           !  to be used for dpu and dpv
           ! -Depth changes will be added to depchg,to be used for dp

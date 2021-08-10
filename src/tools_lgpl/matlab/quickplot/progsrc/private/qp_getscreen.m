@@ -3,7 +3,7 @@ function screensize = qp_getscreen(ref,pos)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function screensize = qp_getscreen(ref,pos)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_getscreen.m $
-%   $Id: qp_getscreen.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_getscreen.m $
+%   $Id: qp_getscreen.m 65778 2020-01-14 14:07:42Z mourits $
 
 MonPos = getpixels(0,'MonitorPositions');
 if isa(handle(0),'matlab.ui.Root') %HG2
@@ -48,7 +48,9 @@ if nargin==2
         pos = 1;
     end
 elseif nargin==1
-    if isequal(size(ref),[1 4])
+    if isequal(ref,'pointer')
+        pos = [get(0,'pointerlocation') 1 1];
+    elseif isequal(size(ref),[1 4])
         pos = ref;
     elseif isequal(size(ref),[1 1]) && ishandle(ref) && strcmp(get(ref,'type'),'figure')
         pos = getpixels(ref,'position');
@@ -60,12 +62,12 @@ else
     qpf = findobj(allchild(0),'flat','tag','Delft3D-QUICKPLOT');
     if ~isempty(gcbf)
         pos = getpixels(gcbf,'position');
-    elseif ~isempty(gcf)
-        pos = getpixels(gcf,'position');
     elseif ~isempty(qpf)
         pos = getpixels(qpf,'position');
+    elseif ~isempty(gcf)
+        pos = getpixels(gcf,'position');
     else
-        pos = 1;
+        pos = [get(0,'pointerlocation') 1 1];
     end
 end
 %

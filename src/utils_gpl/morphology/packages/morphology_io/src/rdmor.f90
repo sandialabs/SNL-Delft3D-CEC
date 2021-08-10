@@ -1,7 +1,7 @@
 module m_rdmor
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ module m_rdmor
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdmor.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_io/src/rdmor.f90 $
+!  $Id: rdmor.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_io/src/rdmor.f90 $
 !-------------------------------------------------------------------------------
 
 private
@@ -40,9 +40,9 @@ public echomor
 contains
 
 subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
-               & lsed      ,nmaxus    ,nto       , &
+               & lsed      ,nmaxus    ,nto       ,lfbedfrm  , &
                & nambnd    ,julday    ,mor_ptr   ,sedpar    ,morpar    , &
-               & fwfac     ,morlyr    ,griddim   )
+               & fwfac     ,morlyr    ,griddim)
 !!--description-----------------------------------------------------------------
 !
 ! Reads attribute file for 3D morphology computation
@@ -65,10 +65,10 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
     !
     integer                                , pointer :: subiw
     integer                                , pointer :: i10
+    integer                                , pointer :: i15
     integer                                , pointer :: i50
     integer                                , pointer :: i90
     integer                                , pointer :: ihidexp
-    integer                                , pointer :: itmor
     integer                                , pointer :: iopkcw
     integer                                , pointer :: islope
     integer                                , pointer :: morfacpar
@@ -110,6 +110,10 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
     real(fp)                               , pointer :: fpco
     real(fp)                               , pointer :: factcr
     real(fp)                               , pointer :: wetslope
+    real(fp)                               , pointer :: dryslope
+    logical                                , pointer :: duneavalan
+    real(fp)                               , pointer :: hswitch
+    real(fp)                               , pointer :: dzmaxdune
     real(fp)                               , pointer :: avaltime
     real(fp)              , dimension(:)   , pointer :: xx
     logical                                , pointer :: bedupd
@@ -137,8 +141,7 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
 !
 ! Local parameters
 !
-    integer, parameter :: maxfld     = 20
-    integer, parameter :: maxfldprog = 10
+    integer, parameter :: max_nuserfrac     = 20
 !
 ! Call variables
 !
@@ -149,6 +152,7 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
     integer                        , intent(in)  :: lsec
     integer                        , intent(in)  :: lsed    !  Description and declaration in esm_alloc_int.f90
     integer                        , intent(in)  :: lsedtot !  Description and declaration in esm_alloc_int.f90
+    logical                        , intent(in)  :: lfbedfrm    
     logical                        , intent(out) :: error
     character(*)                                 :: filmor
     character(20) , dimension(nto)               :: nambnd  !  Description and declaration in esm_alloc_char.f90
@@ -164,6 +168,7 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
     integer                                                           :: i
     integer                                                           :: ilist
     integer                                                           :: ilun     ! Unit number for attribute file
+    integer                                                           :: iqnt
     integer                                                           :: istat
     integer                                                           :: j
     integer                                                           :: jj
@@ -174,11 +179,13 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
     integer                                                           :: nxxuser
     integer                                                           :: version
     integer                    , external                             :: newunit
+    integer                    , dimension(6)                         :: stat_flags
     integer                    , dimension(:) , allocatable           :: itype
     integer                    , dimension(:) , allocatable           :: ifield
     integer                    , dimension(:) , allocatable           :: lenchr
     real(fp)                                                          :: rmissval
     real(fp)                                                          :: xxmin
+    real(fp)                   , dimension(3)                         :: tint
     real(fp)                   , dimension(:) , allocatable           :: xxprog
     real(fp)                   , dimension(:) , allocatable           :: rfield
     logical                                                           :: ex       ! Logical flag for file existence
@@ -195,12 +202,11 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
 !! executable statements -------------------------------------------------------
 !
     !
-    allocate(itype  (maxfld))
-    allocate(ifield (maxfld))
-    allocate(lenchr (maxfld))
-    allocate(rfield (maxfld))
-    allocate(cfield (maxfld))
-    allocate(xxprog (maxfldprog))
+    allocate(itype  (max_nuserfrac))
+    allocate(ifield (max_nuserfrac))
+    allocate(lenchr (max_nuserfrac))
+    allocate(rfield (max_nuserfrac))
+    allocate(cfield (max_nuserfrac))
     !
     error         = .false.
     rmissval      = -999.0_fp
@@ -252,10 +258,10 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
     asklhe              => morpar%asklhe
     mwwjhe              => morpar%mwwjhe
     i10                 => morpar%i10
+    i15                 => morpar%i15
     i50                 => morpar%i50
     i90                 => morpar%i90
     ihidexp             => morpar%ihidexp
-    itmor               => morpar%itmor
     iopkcw              => morpar%iopkcw
     islope              => morpar%islope
     morfacpar           => morpar%morfacpar
@@ -268,7 +274,11 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
     mornum              => morpar%mornum
     morbnd              => morpar%morbnd
     wetslope            => morpar%wetslope
+    dryslope            => morpar%dryslope
+    duneavalan          => morpar%duneavalan
     avaltime            => morpar%avaltime
+    hswitch             => morpar%hswitch
+    dzmaxdune           => morpar%dzmaxdune
     xx                  => morpar%xx
     bedupd              => morpar%bedupd
     cmpupd              => morpar%cmpupd
@@ -302,15 +312,18 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
        nullify(morbnd(j)%idir)
        nullify(morbnd(j)%nm)
        nullify(morbnd(j)%nxmx)
+       nullify(morbnd(j)%lm)
     enddo
     versionstring = 'n.a.'
     !
     ! Sediment percentiles needed by the program
     !
-    nxxprog   = 3       ! limited to parameter maxfldprog
+    nxxprog   = 4
+    allocate(xxprog (nxxprog))
     xxprog(1) = 10.0_fp
-    xxprog(2) = 50.0_fp
-    xxprog(3) = 90.0_fp
+    xxprog(2) = 15.0_fp
+    xxprog(3) = 50.0_fp
+    xxprog(4) = 90.0_fp
     !
     ! Set default value for FWFac (only used if no mor file specified and
     ! parameter not specified in mdf file)
@@ -384,7 +397,6 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
        !
        call prop_get(mor_ptr, 'Morphology', 'MorStt', tmor)
        !
-       ! calculation of ITMOR has been moved to TRICOM
        ! === threshold value for slowing erosion near a fixed layer (m)
        !
        call prop_get(mor_ptr, 'Morphology', 'Thresh', thresh)
@@ -450,11 +462,15 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
        !
        call prop_get(mor_ptr, 'Morphology', 'AlfaBn', alfabn)
        !
-       ! === maximum slope used in avalanching
+       ! === Parameters used in dune avalanching
        !
-       call prop_get(mor_ptr, 'Morphology', 'WetSlope', wetslope)
+       call prop_get(mor_ptr, 'Morphology', 'WetSlope'  , wetslope)
+       call prop_get(mor_ptr, 'Morphology', 'DrySlope'  , dryslope)
+       call prop_get(mor_ptr, 'Morphology', 'DuneAvalan', duneavalan)
+       call prop_get(mor_ptr, 'Morphology', 'Hswitch'   , hswitch)
+       call prop_get(mor_ptr, 'Morphology', 'DzMaxDune' , dzmaxdune)
        !
-       ! === time scale for avalanching
+       ! === time scale for avalanching  D3D style
        !
        call prop_get(mor_ptr, 'Morphology', 'AvalTime', avaltime)
        !
@@ -655,7 +671,7 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
           ! Read bed boundary condition for open boundary
           !
           call prop_get_integer(morbound_ptr, '*', 'IBedCond', morbnd(j)%icond)
-          if (morbnd(j)%icond<0 .or. morbnd(j)%icond>5) then
+          if (morbnd(j)%icond<0 .or. morbnd(j)%icond>8) then
              errmsg = 'Invalid bed boundary condition at "'//trim(bndname)//'" in '//trim(filmor)
              call write_error(errmsg, unit=lundia)
              error = .true.
@@ -694,15 +710,22 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
           error = .true.
           return
        endif
+       call prop_get_logical(mor_ptr, 'Output', 'BedTranspAtFlux'             , moroutput%sbuuvv)
+       call prop_get_logical(mor_ptr, 'Output', 'SuspTranspAtFlux'            , moroutput%ssuuvv)
        call prop_get_logical(mor_ptr, 'Output', 'BedTranspDueToCurrentsAtZeta', moroutput%sbcuv)
        call prop_get_logical(mor_ptr, 'Output', 'BedTranspDueToCurrentsAtFlux', moroutput%sbcuuvv)
        call prop_get_logical(mor_ptr, 'Output', 'BedTranspDueToWavesAtZeta'   , moroutput%sbwuv)
        call prop_get_logical(mor_ptr, 'Output', 'BedTranspDueToWavesAtFlux'   , moroutput%sbwuuvv)
        call prop_get_logical(mor_ptr, 'Output', 'SuspTranspDueToWavesAtZeta'  , moroutput%sswuv)
+       call prop_get_logical(mor_ptr, 'Output', 'SuspTranspDueToCurrentsAtZeta'  , moroutput%sscuv)
        call prop_get_logical(mor_ptr, 'Output', 'SuspTranspDueToWavesAtFlux'  , moroutput%sswuuvv)
+       call prop_get_logical(mor_ptr, 'Output', 'NearBedRefConcentration'     , moroutput%rca)
+       call prop_get_logical(mor_ptr, 'Output', 'EquilibriumConcentration'    , moroutput%rsedeq)
        call prop_get_logical(mor_ptr, 'Output', 'NearBedTranspCorrAtFlux'     , moroutput%suvcor)
        call prop_get_logical(mor_ptr, 'Output', 'SourceSinkTerms'             , moroutput%sourcesink)
        call prop_get_logical(mor_ptr, 'Output', 'ReferenceHeight'             , moroutput%aks)
+       call prop_get_logical(mor_ptr, 'Output', 'SettlingVelocity'            , moroutput%ws)
+       call prop_get_logical(mor_ptr, 'Output', 'RawTransportsAtZeta'         , moroutput%rawtransports)
        !
        call prop_get_logical(mor_ptr, 'Output', 'Bedslope'                    , moroutput%dzduuvv)
        call prop_get_logical(mor_ptr, 'Output', 'Taurat'                      , moroutput%taurat)
@@ -716,7 +739,81 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
        call prop_get_logical(mor_ptr, 'Output', 'FixFac'                      , moroutput%fixfac)
        call prop_get_logical(mor_ptr, 'Output', 'HidExp'                      , moroutput%hidexp)
        !
+       call prop_get_logical(mor_ptr, 'Output', 'CumNetSedimentationFlux'     , moroutput%dmsedcum)
+       call prop_get_logical(mor_ptr, 'Output', 'BedLayerSedimentMass'        , moroutput%msed)
+       call prop_get_logical(mor_ptr, 'Output', 'BedLayerVolumeFractions'     , moroutput%lyrfrac)
+       call prop_get_logical(mor_ptr, 'Output', 'BedLayerDepth'               , moroutput%dpbedlyr)
+       call prop_get_logical(mor_ptr, 'Output', 'BedLayerPorosity'            , moroutput%poros)
+       !
        call prop_get_logical(mor_ptr, 'Output', 'AverageAtEachOutputTime'     , moroutput%cumavg)
+       !
+       call prop_get(mor_ptr,         'Output', 'MorStatsOutputInterval'      , moroutput%avgintv, 3, ex)
+       if (ex) then
+          moroutput%morstats = .true.    ! only used in FM, separate _sed.nc file
+       endif
+       if (moroutput%avgintv(2) < 0.0_fp) then
+          moroutput%avgintv(2) = 0.0_fp
+          moroutput%avgintv(3) = 0.0_fp
+       end if
+       string = ' '
+       call prop_get_string (mor_ptr, 'Output', 'MorstatsWeightFactor'         , string)
+       call str_lower(string)
+       if (index(string,'time') > 0) then
+          moroutput%weightflg = MOR_STAT_TIME
+       endif
+       if (index(string,'sedimentation') > 0) then
+          moroutput%weightflg = MOR_STAT_BODS            ! Delft3D behaviour
+       endif
+       i = 1+lsedtot ! index 1           used internally for weights
+                     ! index 2,lsedtot+1 used for CumNetSedimentationFlux per fraction
+                     ! rest follows below
+       do iqnt = 1, 4
+           string = ' '
+           select case (iqnt)
+           case (1)
+               call prop_get_string (mor_ptr, 'Output', 'StatWaterDepth'             , string)
+           case (2)
+               call prop_get_string (mor_ptr, 'Output', 'StatVelocity'               , string)
+           case (3)
+               call prop_get_string (mor_ptr, 'Output', 'StatBedLoad'                , string)
+           case (4)
+               call prop_get_string (mor_ptr, 'Output', 'StatSuspLoad'               , string)
+           endselect
+           !
+           stat_flags(:) = 0
+           call str_lower(string)
+           if (index(string,'min') > 0) then
+               stat_flags(1) = stat_flags(1) + MOR_STAT_MIN
+               i = i+1
+               stat_flags(2) = i
+           endif
+           if (index(string,'max') > 0) then
+               stat_flags(1) = stat_flags(1) + MOR_STAT_MAX
+               i = i+1
+               stat_flags(3) = i
+           endif
+           if (index(string,'mean') > 0) then
+               stat_flags(1) = stat_flags(1) + MOR_STAT_MEAN
+               i = i+1
+               stat_flags(4) = i
+           endif
+           if (index(string,'std') > 0) then
+               stat_flags(1) = stat_flags(1) + MOR_STAT_STD
+               if (.not.btest(stat_flags(1),MOR_STAT_MEAN)) then
+                   i = i+1
+                   stat_flags(4) = i
+               endif
+               i = i+1
+               stat_flags(5) = i
+           endif
+           if (index(string,'net') > 0) then
+              stat_flags(1) = stat_flags(1) + MOR_STAT_CUM
+              i = i+1
+              stat_flags(6) = i
+           endif
+           moroutput%statflg(:,iqnt) = stat_flags
+       enddo
+       moroutput%nstatqnt = i
        !
        ! Sediment percentiles
        ! Requested by the user via the .mor attribute file
@@ -739,7 +836,7 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
        ! Process string
        !
        call scannr( pxxstr,       1,      len(pxxstr), nxxuser,   itype, &
-                 &  ifield,  rfield,  cfield,  lenchr,  maxfld,  .true., &
+                 &  ifield,  rfield,  cfield,  lenchr,  max_nuserfrac,  .true., &
                  & .false., .false.)
        if (nxxuser < 0) then
           errmsg = 'Cannot interpret Percentiles string in '//trim(filmor)
@@ -762,8 +859,7 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
        !
        inquire (file = filmor(1:lfile), exist = ex)
        if (ex) then
-          ilun = newunit()
-          open (ilun, file = filmor(1:lfile), form = 'formatted',               &
+          open (newunit=ilun, file = filmor(1:lfile), form = 'formatted',               &
               & status = 'old')
           !
           version = 0
@@ -870,6 +966,7 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
        xx(i) = xxmin / 100.0_fp
        !
        if (abs(xxmin-10.0_fp) < 0.01_fp) i10 = i
+       if (abs(xxmin-15.0_fp) < 0.01_fp) i15 = i
        if (abs(xxmin-50.0_fp) < 0.01_fp) i50 = i
        if (abs(xxmin-90.0_fp) < 0.01_fp) i90 = i
        !
@@ -887,7 +984,7 @@ subroutine rdmor(lundia    ,error     ,filmor    ,lsec      ,lsedtot   , &
     endif
     !
     call rdmorlyr (lundia    ,error     ,filmor    , &
-                 & nmaxus    ,nto       , &
+                 & nmaxus    ,nto       ,lfbedfrm  , &
                  & nambnd    ,version   ,lsedtot   ,namsed    , &
                  & morpar    ,morlyr    ,sedpar    ,mor_ptr   , &
                  & griddim   )
@@ -943,7 +1040,6 @@ subroutine rdmor0(ilun      ,morfac    ,tmor      ,thresh    ,morupd    , &
     read (ilun, *) morfac
     ! start for calculating morphological changes
     read (ilun, *) tmor
-    ! calculation of ITMOR has been moved to TRICOM
     ! threshold value for slowing erosion near a fixed layer (m)
     read (ilun, *) thresh
     ! flag for doing bottom updates
@@ -1036,7 +1132,6 @@ subroutine rdmor1(ilun      ,morfac    ,tmor      ,thresh    ,morupd    , &
     read (ilun, *) morfac
     ! start for calculating morphological changes
     read (ilun, *) tmor
-    ! calculation of ITMOR has been moved to TRICOM
     ! threshold value for slowing erosion near a fixed layer (m)
     read (ilun, *) thresh
     ! flag for doing bottom updates
@@ -1085,7 +1180,7 @@ end subroutine rdmor1
 
 
 subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
-                 & nambnd    ,sedpar    ,morpar    )
+                 & nambnd    ,sedpar    ,morpar    ,dtunit    )
 !!--description-----------------------------------------------------------------
 !
 ! Report morphology settings to diag file
@@ -1104,10 +1199,10 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     !
     integer                                , pointer :: subiw
     integer                                , pointer :: i10
+    integer                                , pointer :: i15
     integer                                , pointer :: i50
     integer                                , pointer :: i90
     integer                                , pointer :: ihidexp
-    integer                                , pointer :: itmor
     integer                                , pointer :: iopkcw
     integer                                , pointer :: islope
     integer                                , pointer :: morfacpar
@@ -1149,7 +1244,11 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     real(fp)                               , pointer :: fpco
     real(fp)                               , pointer :: factcr
     real(fp)                               , pointer :: wetslope
+    real(fp)                               , pointer :: dryslope
+    logical                                , pointer :: duneavalan
     real(fp)                               , pointer :: avaltime
+    real(fp)                               , pointer :: hswitch
+    real(fp)                               , pointer :: dzmaxdune
     real(fp)              , dimension(:)   , pointer :: xx
     logical                                , pointer :: bedupd
     logical                                , pointer :: cmpupd
@@ -1173,11 +1272,6 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     type(mornumericstype)                  , pointer :: mornum
     type(bedbndtype)       , dimension(:)  , pointer :: morbnd
 !
-! Local parameters
-!
-    integer, parameter :: maxfld     = 20
-    integer, parameter :: maxfldprog = 10
-!
 ! Call variables
 !
     integer                        , intent(in)  :: nto
@@ -1186,6 +1280,7 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     integer                        , intent(in)  :: lsedtot !  Description and declaration in iidim.f90
     logical                        , intent(out) :: error
     character(20) , dimension(nto)               :: nambnd  !  Description and declaration in ckdim.f90
+    character(*)                   , intent(in)  :: dtunit
     type(sedpar_type)              , pointer     :: sedpar
     type(morpar_type)              , pointer     :: morpar
 !
@@ -1198,7 +1293,7 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     integer                                                           :: l
     integer                                                           :: nval
     character(20)                                                     :: parname
-    character(40)                                                     :: txtput1
+    character(45)                                                     :: txtput1
     character(20)                                                     :: txtput2
     character(120)                                                    :: txtput3
     character(256)                                                    :: errmsg
@@ -1239,10 +1334,10 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     asklhe              => morpar%asklhe
     mwwjhe              => morpar%mwwjhe
     i10                 => morpar%i10
+    i15                 => morpar%i15
     i50                 => morpar%i50
     i90                 => morpar%i90
     ihidexp             => morpar%ihidexp
-    itmor               => morpar%itmor
     iopkcw              => morpar%iopkcw
     islope              => morpar%islope
     morfacpar           => morpar%morfacpar
@@ -1275,6 +1370,10 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     fpco                => morpar%fpco
     factcr              => morpar%factcr
     wetslope            => morpar%wetslope
+    dryslope            => morpar%dryslope
+    duneavalan          => morpar%duneavalan
+    hswitch             => morpar%hswitch
+    dzmaxdune           => morpar%dzmaxdune
     avaltime            => morpar%avaltime
     subiw               => morpar%subiw
     eulerisoglm         => morpar%eulerisoglm
@@ -1314,7 +1413,7 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     else
        write (lundia, '(2a,e20.4)') txtput1, ':', morfac
     endif
-    txtput1 = 'Morphological Changes Start Time (min)'
+    txtput1 = 'Morphological Changes Start Time ('//trim(dtunit)//')'
     write (lundia, '(2a,e20.4)') txtput1, ':', tmor
     txtput1 = 'Fixed Layer Erosion Threshold'
     write (lundia, '(2a,e20.4)') txtput1, ':', thresh
@@ -1404,6 +1503,7 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     else
        txtput2 = '                  NO'
     endif
+    write (lundia, '(3a)') txtput3(1:82), ':', txtput2
     txtput3 = 'GLM velocities i.s.o Eulerian velocities for' //       &
              & ' bed load transport and reference concentrations'
     if (glmisoeuler) then
@@ -1514,12 +1614,25 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
     case default
     endselect
     !
-    if (wetslope<9.99_fp) then
+    if (wetslope<9.99_fp .and. .not. duneavalan) then
        txtput1 = 'Maximum wet slope used for avalanching'
-       write (lundia, '(2a,e20.4)') txtput1, ':', wetslope
+       write (lundia, '(2a,e20.4)') txtput1, ':', wetslope  
        txtput1 = 'Time scale avalanching (in seconds)'
        write (lundia, '(2a,f20.0)') txtput1, ':', avaltime
     endif
+    !
+    if (duneavalan) then
+       txtput1 = 'Dune slope slumping mechanism activated :'
+       write (lundia, '(a)') txtput1
+       txtput1 = '   Maximum wet slope'
+       write (lundia, '(2a,e20.4)') txtput1, ':', wetslope
+       txtput1 = '   Maximum dry slope'
+       write (lundia, '(2a,e20.4)') txtput1, ':', dryslope
+       txtput1 = '   Max bed level change/timestep'
+       write (lundia, '(2a,e20.4)') txtput1, ':', dzmaxdune
+       txtput1 = '   Depth switch wetslope to dryslope'
+       write (lundia, '(2a,e20.4)') txtput1, ':', hswitch
+    end if
     !
     ! User requested sediment percentiles
     !
@@ -1603,6 +1716,24 @@ subroutine echomor(lundia    ,error     ,lsec      ,lsedtot   ,nto       , &
           txtput1 = '  Transport excl pores prescribed'
           txtput2 = '         time series'
           parname = 'transport excl pores'
+          ibndtyp = 2
+          nval    = lsedtot - nmudfrac
+       case (6)
+          txtput1 = '  Bed level prescribed'
+          txtput2 = '         time series'
+          parname = 'bed level           '
+          ibndtyp = 1
+          nval    = 1
+       case (7)
+          txtput1 = '  Bed level change prescribed'
+          txtput2 = '         time series'
+          parname = 'bed level change    '
+          ibndtyp = 1
+          nval    = 1
+       case (8)
+          txtput1 = '  Transport mass prescribed'
+          txtput2 = '         time series'
+          parname = 'transport mass'
           ibndtyp = 2
           nval    = lsedtot - nmudfrac
        end select
@@ -1722,6 +1853,7 @@ subroutine rdflufflyr(lundia   ,error    ,filmor   ,lsed     ,mor_ptr ,flufflyr,
     use morphology_data_module
     use message_module, only: write_error !, write_warning, FILE_NOT_FOUND, FILE_READ_ERROR, PREMATURE_EOF
     use grid_dimens_module, only: griddimtype
+    use m_depfil_stm
     !
     implicit none
 !
@@ -1826,9 +1958,10 @@ subroutine rdflufflyr(lundia   ,error    ,filmor   ,lsed     ,mor_ptr ,flufflyr,
             !
             ! read data from file
             !
-            call depfil(lundia    ,error     ,filfluff  ,fmttmp    , &
-                      & bfluff0   ,lsed      ,1         ,griddim)
+            call depfil_stm(lundia    ,error     ,filfluff  ,fmttmp    , &
+                          & bfluff0   ,lsed      ,1         ,griddim   ,errmsg )
             if (error) then
+                call write_error(errmsg, unit=lundia)
                 errmsg = 'Unable to read burial term 1 from ' // trim(filfluff)
                 call write_error(errmsg, unit=lundia)
                 return
@@ -1873,9 +2006,10 @@ subroutine rdflufflyr(lundia   ,error    ,filmor   ,lsed     ,mor_ptr ,flufflyr,
             !
             ! read data from file
             !
-            call depfil(lundia    ,error     ,filfluff  ,fmttmp    , &
-                      & bfluff1   ,lsed      ,1         ,griddim)
+            call depfil_stm(lundia    ,error     ,filfluff  ,fmttmp    , &
+                          & bfluff1   ,lsed      ,1         ,griddim   ,errmsg)
             if (error) then
+                call write_error(errmsg, unit=lundia)
                 errmsg = 'Unable to read burial term 2 from ' // trim(filfluff)
                 call write_error(errmsg, unit=lundia)
                 return
@@ -1923,9 +2057,10 @@ subroutine rdflufflyr(lundia   ,error    ,filmor   ,lsed     ,mor_ptr ,flufflyr,
             !
             ! read data from file
             !
-            call depfil(lundia    ,error     ,filfluff  ,fmttmp    , &
-                      & depfac    ,lsed      ,1         ,griddim)
+            call depfil_stm(lundia    ,error     ,filfluff  ,fmttmp    , &
+                          & depfac    ,lsed      ,1         ,griddim   , errmsg)
             if (error) then
+                call write_error(errmsg, unit=lundia)
                 errmsg = 'Unable to read deposition factor from ' // trim(filfluff)
                 call write_error(errmsg, unit=lundia)
                 return
@@ -1951,10 +2086,10 @@ subroutine rdflufflyr(lundia   ,error    ,filmor   ,lsed     ,mor_ptr ,flufflyr,
             endif
             depfac(1,:) = depfac(1,1)
         endif
-    endif
-    do l = 2, lsed
-        depfac(l,:) = depfac(1,:)
-    enddo                                                                                                                                                             
+        do l = 2, lsed
+            depfac(l,:) = depfac(1,:)
+        enddo 
+    endif                                                                                                                                                         
 end subroutine rdflufflyr
 
 subroutine echoflufflyr(lundia    ,error    ,flufflyr)

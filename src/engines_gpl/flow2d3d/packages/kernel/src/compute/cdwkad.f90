@@ -5,7 +5,7 @@ subroutine cdwkad(nmmax     ,kmax      ,zmodel    ,kspu      ,kfsmax    , &
                 & cdwztu    ,cdwzbu    ,cdwlsu    ,gdp    )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine cdwkad(nmmax     ,kmax      ,zmodel    ,kspu      ,kfsmax    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: cdwkad.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/cdwkad.f90 $
+!  $Id: cdwkad.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/cdwkad.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Computes POROSU/V and UBRLSU/V values for gates with fixed position
@@ -93,7 +93,8 @@ subroutine cdwkad(nmmax     ,kmax      ,zmodel    ,kspu      ,kfsmax    , &
     dzmin => gdp%gdzmodel%dzmin
     zbot  => gdp%gdzmodel%zbot
 !
-! if KSPU/KSPV (NM,0) /= 10 then POROSU(NM,K)=1.0 and UBRLSU(NM,K)=0.0
+! POROSU(NM,K) is initialized to 1.0 for whole model domain 
+! in case of a CDW (KSPU/KSPV (NM,0) = 10) UBRLSU(NM,K) is initialized to 0.0
 ! 
 do nm = 1, nmmax
    do k = 1,kmax
@@ -101,8 +102,9 @@ do nm = 1, nmmax
       zkbot(k) = 0.0
       dzk(k)   = 0.0
       porosu(nm, k) = 1.0
-      kspu  (nm, k) = 0
-      ubrlsu(nm, k) = 0.0 
+      if (abs(kspu(nm,0))==10) then
+         kspu  (nm, k) = 0 
+      endif    
    enddo
    kfrst = 1
    klast = kmax

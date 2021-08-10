@@ -6,7 +6,7 @@ function hNew = qp_scalarfield(Parent,hNew,presentationtype,datatype,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -31,8 +31,8 @@ function hNew = qp_scalarfield(Parent,hNew,presentationtype,datatype,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_scalarfield.m $
-%   $Id: qp_scalarfield.m 5507 2015-10-20 09:50:46Z jagers $ 
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_scalarfield.m $
+%   $Id: qp_scalarfield.m 65778 2020-01-14 14:07:42Z mourits $ 
 
 switch datatype
     case 'TRI'
@@ -62,16 +62,20 @@ switch presentationtype
             hNew=genfaces(hNew,Ops,Parent,Val,X,Y);
         end
         
-    case 'values'
-        I=~isnan(Val);
+    case {'labels','values'}
         if numel(X)==numel(Val)+1
             X = (X(1:end-1)+X(2:end))/2;
             Y = (Y(1:end-1)+Y(2:end))/2;
         end
-        hNew=gentextfld(hNew,Ops,Parent,Val(I),X(I),Y(I));
+        if isnumeric(Val) && Ops.clipnans
+            I=~isnan(Val);
+            hNew=gentextfld(hNew,Ops,Parent,Val(I),X(I),Y(I));
+        else
+            hNew=gentextfld(hNew,Ops,Parent,Val(:),X(:),Y(:));
+        end
         
     case 'continuous shades'
-        if size(X,2)==1
+        if size(X,1)==1 || size(X,2)==1
             XY = [X(:) Y(:);NaN NaN];
             SEG = 1:size(XY,1);
             Val = [Val(:);NaN];
@@ -122,7 +126,7 @@ switch presentationtype
             set(hNew,Ops.LineParams{:});
         end
         
-    case 'edge'
+    case 'edges'
         XY = [X(:) Y(:)];
         SEG = 1:numel(X);
         Val = cat(1,Val(:),NaN);
@@ -202,7 +206,7 @@ end
 function hNew = qp_scalarfield_ugrid(Parent,hNew,presentationtype,data,Ops)
 set(Parent,'NextPlot','add')
 unknown_ValLocation = 0;
-Val = data.Val;
+Val = data.Val(:);
 
 if isfield(data,'TRI')
     FaceNodeConnect = data.TRI;
@@ -212,11 +216,42 @@ elseif isfield(data,'Connect')
     FaceNodeConnect = data.Connect;
 end
 
+if isfield(data,'EdgeNodeConnect')
+    EdgeNodeConnect = data.EdgeNodeConnect;
+elseif isfield(data,'SEG') && ~isempty(data.SEG)
+    EdgeNodeConnect = data.SEG;
+end
+
+if ndims(data.X)>2 || size(data.X,2)>1
+    data.X = data.X(:,1);
+    data.Y = data.Y(:,1);
+    data.Z = data.Z(:,1);
+end
+
 switch data.ValLocation
     case 'NODE'
         switch presentationtype
             case {'patches','patches with lines'}
-                hNew=genfaces(hNew,Ops,Parent,Val,XYZ,TRI);
+                XY = reshape([data.X data.Y],[1 length(data.X) 1 2]);
+                nNodes = sum(~isnan(FaceNodeConnect),2);
+                uNodes = unique(nNodes);
+                delete(hNew)
+                hNew = {};
+                %
+                % compute face values
+                %
+                Msk = isnan(FaceNodeConnect);
+                FaceNodeConnect(Msk) = 1;
+                Val = Val(FaceNodeConnect);
+                Val(Msk) = 0;
+                Val = sum(Val,2)./sum(~Msk,2);
+                %
+                for i = length(uNodes):-1:1
+                    I = nNodes == uNodes(i);
+                    hOld = [];
+                    hNew{i} = genfaces(hOld,Ops,Parent,Val(I),XY,FaceNodeConnect(I,1:uNodes(i)));
+                end
+                hNew = cat(2,hNew{:});
                 
             case 'values'
                 X = data.X;
@@ -232,23 +267,41 @@ switch data.ValLocation
                 
             case 'continuous shades'
                 XY = [data.X data.Y];
-                nNodes = sum(~isnan(FaceNodeConnect),2);
-                uNodes = unique(nNodes);
-                first = isempty(hNew);
-                for i = length(uNodes):-1:1
-                    I = nNodes == uNodes(i);
-                    if first
-                        hNew(i) = patch(...
-                            'vertices',XY, ...
-                            'faces',FaceNodeConnect(I,1:uNodes(i)), ...
+                if exist('FaceNodeConnect','var')
+                    nNodes = sum(~isnan(FaceNodeConnect),2);
+                    uNodes = unique(nNodes);
+                    first = isempty(hNew);
+                    for i = length(uNodes):-1:1
+                        I = nNodes == uNodes(i);
+                        if first
+                            hNew(i) = patch(...
+                                'vertices',XY, ...
+                                'faces',FaceNodeConnect(I,1:uNodes(i)), ...
+                                'facevertexcdata',Val, ...
+                                'facecolor','interp', ...
+                                'edgecolor','none', ...
+                                'parent',Parent);
+                        else
+                            set(hNew(i), ...
+                                'vertices',XY, ...
+                                'facevertexcdata',Val);
+                        end
+                    end
+                else
+                    if isempty(hNew)
+                        hNew = patch('vertices',XY,'faces',EdgeNodeConnect, ...
                             'facevertexcdata',Val, ...
-                            'facecolor','interp', ...
-                            'edgecolor','none', ...
-                            'parent',Parent);
+                            'parent',Parent, ...
+                            'edgecolor','interp', ...
+                            'linewidth',Ops.linewidth, ...
+                            'linestyle',Ops.linestyle, ...
+                            'marker',Ops.marker, ...
+                            'markersize',Ops.markersize, ...
+                            'markeredgecolor',Ops.markercolour, ...
+                            'markerfacecolor',Ops.markerfillcolour);
                     else
-                        set(hNew(i), ...
-                            'vertices',XY, ...
-                            'facevertexcdata',Val);
+                        set(hNew,'vertices',XY,'faces',EdgeNodeConnect, ...
+                            'facevertexcdata',Val)
                     end
                 end
                 
@@ -302,7 +355,7 @@ switch data.ValLocation
     case 'EDGE'
         iEdge = data.EdgeNodeConnect;
         switch presentationtype
-            case 'edge'
+            case 'edges'
                 if isempty(hNew)
                     hNew = patch(...
                         'vertices',[data.X(iEdge,:) data.Y(iEdge,:)], ...
@@ -354,7 +407,7 @@ switch data.ValLocation
                 hNew = cat(2,hNew{:});
                 
             case {'continuous shades','contour lines','coloured contour lines','contour patches','contour patches with lines'}
-                data = dual_ugrid(data);
+                data = dual_ugrid(data,Ops.extend2edge);
                 hNew = qp_scalarfield_ugrid(Parent,hNew,presentationtype,data,Ops);
                 
             case {'values','markers'}

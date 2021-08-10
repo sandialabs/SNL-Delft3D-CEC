@@ -3,7 +3,7 @@ function DataProps=auto_map_detect(FI,DataProps,nm,k,SkipGroup,SkipElem)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function DataProps=auto_map_detect(FI,DataProps,nm,k,SkipGroup,SkipElem)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/auto_map_detect.m $
-%   $Id: auto_map_detect.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/auto_map_detect.m $
+%   $Id: auto_map_detect.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin<6
     SkipElem={};
@@ -79,9 +79,9 @@ for i=1:length(Grps)
                 else
                     ediscr=Info.ElmDescription;
                 end
-                eunit=deblank2(Info.ElmUnits);
+                eunit=strtrim(Info.ElmUnits);
                 if ~isempty(eunit) && eunit(1)=='[' && eunit(end)==']'
-                    eunit = deblank2(eunit(2:end-1));
+                    eunit = strtrim(eunit(2:end-1));
                 end
                 switch eunit
                     case '-'

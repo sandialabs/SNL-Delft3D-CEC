@@ -11,7 +11,7 @@ function gsqs = cellarea(x,y,Unit)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -36,14 +36,17 @@ function gsqs = cellarea(x,y,Unit)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/cellarea.m $
-%   $Id: cellarea.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/cellarea.m $
+%   $Id: cellarea.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin>2
-    if ~isempty(strmatch(lower(Unit),{'deg','degree','degrees'},'exact'))
-        unit = 1;
-    else ~isempty(strmatch(lower(Unit),{'rad','radian','radians'},'exact'))
-        unit = 2;
+    switch lower(Unit)
+        case {'deg','degree','degrees'}
+            unit = 1;
+        case {'rad','radian','radians'}
+            unit = 2;
+        otherwise
+            error('Unkown unit specified as third argument.')
     end
 else
     unit = 0;

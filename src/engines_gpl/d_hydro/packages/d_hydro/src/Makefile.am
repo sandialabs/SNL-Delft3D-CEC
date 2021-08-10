@@ -1,10 +1,6 @@
 #-------------------------------------------------------------------------------
 #   Makefile for d_hydro
 #
-#   Irv.Elshoff@Deltares.NL
-#   Adri.Mourits@Deltares.NL
-#   29 oct 11
-#
 #   Copyright (C)  Stichting Deltares, 2011-2013.
 #-------------------------------------------------------------------------------
 
@@ -12,9 +8,9 @@
 include $(top_srcdir)/common.am
 
 
-bin_PROGRAMS = d_hydro.exe
+bin_PROGRAMS = d_hydro
 
-d_hydro_exe_SOURCES = \
+d_hydro_SOURCES = \
     d_hydro_version.cpp \
     d_hydro.cpp
 
@@ -23,16 +19,15 @@ AM_CPPFLAGS = \
     -I$(STANDARD_C_INCLUDES) \
     -I../include
 
-
 #-------------------------------------------------------------------------------
 #   Libraries
 
 
-d_hydro_exe_LDADD = \
+d_hydro_LDADD = \
     $(top_builddir)/utils_lgpl/d_hydro_lib/packages/d_hydro_lib/src/libDHydroLib.la \
-    -ldl
+    -ldl -lpthread
 
-d_hydro_exe_LDFLAGS = -export-dynamic
+d_hydro_LDFLAGS = -export-dynamic
 
 #    -lmcheck
 

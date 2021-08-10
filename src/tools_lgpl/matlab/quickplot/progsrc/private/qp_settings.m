@@ -15,7 +15,7 @@ function valo=qp_settings(param,val)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -40,8 +40,8 @@ function valo=qp_settings(param,val)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_settings.m $
-%   $Id: qp_settings.m 5634 2015-12-09 12:42:35Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_settings.m $
+%   $Id: qp_settings.m 65778 2020-01-14 14:07:42Z mourits $
 
 persistent Settings qppref
 if isempty(Settings)
@@ -118,8 +118,10 @@ Set.organizationname          = 'Deltares';
 Set.filefilterselection       = '"ARC/INFO Ascii Grid Files","Delft3D Grid Files","Delft3D Output Files","Delft3D-FLOW Bound. Cond. Files","Delft3D/SOBEK Meteo Files","Delwaq Binary Files","Delwaq Time Series Input Files","NetCDF Files","Sample Files","Simona SDS Files","Sobek Networks","Tekal Data Files"';
 Set.debugging                 = 0;
 Set.showinactiveopt           = 0;
+Set.showversion               = 'off';
 Set.stopruniferror            = 1;
 Set.timezone                  = 'Ignored';
+Set.export_max_ntimes         = 10;
 %
 Set.netcdf_use_fillvalue      = 'valid_range';
 %

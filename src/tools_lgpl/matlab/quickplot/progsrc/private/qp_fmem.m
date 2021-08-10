@@ -4,7 +4,7 @@ function [FI,FileName,Tp,Otherargs]=qp_fmem(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -29,8 +29,8 @@ function [FI,FileName,Tp,Otherargs]=qp_fmem(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_fmem.m $
-%   $Id: qp_fmem.m 5632 2015-12-09 08:50:03Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_fmem.m $
+%   $Id: qp_fmem.m 65867 2020-01-26 21:09:56Z jagers $
 
 lasttp=qp_settings('LastFileType','');
 
@@ -59,7 +59,7 @@ switch cmd
         DoDS=0;
         if strcmp(cmd,'openurl')
             DoDS=1;
-        elseif length(filterspec)>7 && isequal(lower(filterspec(1:7)),'http://')
+        elseif length(filterspec)>8 && (isequal(lower(filterspec(1:7)),'http://') || isequal(lower(filterspec(1:8)),'https://'))
             DoDS=1;
         elseif isempty(targetdir) || exist(targetdir)~=7
             targetdir=pwd;
@@ -126,20 +126,28 @@ switch cmd
         try_next='nefis';
         [pn,fn,en]=fileparts(FileName);
         
+        fn_ = lower(fn);
+        fen_ = lower([fn en]);
         if DoDS
             try_next='NetCDF';
-        elseif strmatch('sds-',lower(fn))
+        elseif strncmp('sds-',fn_,4)
             try_next='waquasds';
-        elseif strmatch('morf',lower(fn))
+        elseif strncmp('morf',fn_,4)
             try_next='morf';
-        elseif strmatch('bagdpt',lower(fn))
+        elseif strncmp('bagdpt',fn_,6)
             try_next='bagdpt';
-        elseif strcmp('gcmplt',lower(fn)) || strcmp('gcmtsr',lower(fn))
+        elseif strncmp('fourier',fn_,7)
+            try_next='tekal';
+        elseif strcmp('gcmplt',fn_) || strcmp('gcmtsr',fn_)
             try_next='ecomsed-binary';
-        elseif strcmp('network.ntw',lower([fn en])) || strcmp('deptop.1',lower([fn en]))
+        elseif strcmp('network.ntw',fen_) || strcmp('deptop.1',fen_)
             try_next='sobek1d';
         else
             switch lower(en)
+                case {'.mdf',',mdw','.md1d','.mdu'}
+                    try_next='md*-file';
+                case {'.bln'}
+                    try_next='surfer';
                 case {'.grd','.rgf'}
                     try_next='wlgrid';
                 case {'.n','.e','.node','.ele'}
@@ -212,6 +220,12 @@ switch cmd
                     try_next='NOOS time series';
                 case {'.wml'}
                     try_next='WaterML2';
+                otherwise
+                    if strncmp('hot',fn_,3)
+                        try_next='SWAN spectral';
+                    else
+                        try_next='nefis';
+                    end
             end
         end
         FileName = absfullfile(FileName);
@@ -233,12 +247,43 @@ switch cmd
         %try opening the file ...
         userasked=0;
         usertrytp='';
+        if DoDS
+            ASCII = false;
+        else
+            ASCII = verifyascii(FileName);
+        end
         while isempty(FI)
             %ui_message('','Trying %s ...\n',trytp);
             %pause
             try
                 switch try_next
+                    case 'md*-file'
+                        asciicheck(ASCII,try_next)
+                        FI=mdf('read',FileName);
+                        Tp=FI.FileType;
+                        switch Tp
+                            case 'Delft3D D-Flow1D'
+                                [p,f,e]=fileparts(FI.md1d.FileName);
+                                % by default the output is located in a subdirectory "output"
+                                % relative to the folder of the input files
+                                po = absfullfile(p,'output');
+                                d = dir(fullfile(po,'*.his'));
+                                if isempty(d)
+                                    % if the files are not there assume that they have been moved
+                                    % to another folder by DeltaShell. If the md1d-file is located
+                                    % in ...\FileWriters then the associated model output files are
+                                    % located in ...\work, so relative to the md1d file in: ..\work.
+                                    po = absfullfile(p,'..','work');
+                                    d = dir(fullfile(po,'*.his'));
+                                end
+                                for i = 1:length(d)
+                                    [fp,f,e] = fileparts(d(i).name);
+                                    f = strrep(f,'-','_');
+                                    FI.(f) = delwaq('open',fullfile(po,d(i).name));
+                                end
+                        end
                     case 'qpsession'
+                        asciicheck(ASCII,try_next)
                         PAR.X=[];
                         PAR = rmfield(PAR,'X');
                         qp_session('rebuild',FileName,PAR);
@@ -287,6 +332,16 @@ switch cmd
                                     FI = qp_option(FI,'displaytime','hydrodynamic time');
                                 case {'delft3d-trih'}
                                     FI = qp_option(FI,'displaytime','hydrodynamic time');
+                                case {'delft3d-com'}
+                                    Opt = get_matching_names(FileName,'-',-1);
+                                    if ~isempty(Opt)
+                                        FI.Partitions = Opt;
+                                        for d = Opt{1}:-1:1
+                                            FN = FileName;
+                                            FN(Opt{2}+(1:Opt{3})) = sprintf('%3.3i',d);
+                                            FI.NEFIS(d) = vs_use(FN,'quiet');
+                                        end
+                                    end
                             end
                             if isfield(FI,'SubType')
                                 Tp=FI.SubType;
@@ -320,6 +375,7 @@ switch cmd
                             FI=[];
                         end
                     case 'WaterML2'
+                        asciicheck(ASCII,try_next)
                         FI=waterml2('open',FileName);
                         Tp=FI.FileType;
                     case 'ecomsed-binary'
@@ -362,35 +418,16 @@ switch cmd
                             end
                         end
                     case 'NetCDF'
-                        [p,n,e]=fileparts(FileName);
-                        Opt = {};
-                        if length(n)>8 && strcmp(n(end-3:end),'_map') ...
-                                && strcmp(n(end-8),'_') ...
-                                && all(ismember(n(end-7:end-4),'0123456789'))
-                            iOffset  = length(n)-8;
-                            iPOffset = length(p)+1+iOffset;
-                            FileName1 = FileName(1:iPOffset);
-                            FileName2 = FileName(iPOffset+5:end);
-                            %
-                            % find all files with same structure
-                            d = dir([FileName1 '*' FileName2]);
-                            Files = {d.name}';
-                            lFiles = cellfun('length',Files);
-                            Files(lFiles~=length([n e])) = [];
-                            %
-                            Files = char(Files);
-                            N = Files(:,iOffset+(1:4));
-                            N(~all(ismember(N,'0':'9'),2),:) = [];
-                            N = str2num(N)';
-                            %
-                            if isequal(sort(N),0:length(N)-1)
-                                Opt = {length(N) iPOffset};
+                        Opt = get_matching_names(FileName,'_',-2);
+                        if ~isempty(Opt)
+                            if Opt{4}~=0 || Opt{3}~=4
+                                Opt = {};
                             end
                         end
-                        %
                         FI = nc_interpret(FileName,Opt{:});
                         %nc_dump(FileName)
                         FI.FileName = FI.Filename;
+                        FI.Options=1;
                         Tp = try_next;
                     case 'HDF5'
                         FI = hdf5info(FileName);
@@ -406,26 +443,28 @@ switch cmd
                             else
                                 Tp=FI.FileType;
                             end
-                            FI.Data={};
-                            p=fileparts(FileName);
-                            files=dir(p);
-                            fl={'flowmap.his','minmax.his','gsedmap.his','kafhmap.his', ...
-                                'kafpmap.his','kafrmap.his','kaphmap.his','kappmap.his', ...
-                                'saltmap.his','sedtmap.his','morpmap.his','sobekwq.map', ...
-                                'calcpnt.his','reachseg.his','reachvol.his'};
-                            %'calcdim.his','delwaq.his','delwaq.map','flowanal.his', ...
-                            %'nodesvol.his','nodes_cr.his','qlat.his','qwb.his', ...
-                            %'reachdim.his','reachflw.his','reachvol.his','reach_cr.his', ...
-                            %'struc.his','strucdim.his','wqbou20.his'};
-                            for i=1:length(files)
-                                if ~isempty(strmatch(lower(files(i).name),fl,'exact'))
-                                    try
-                                        FIH=delwaq('open',fullfile(p,files(i).name));
-                                    catch
-                                        FIH=[];
-                                    end
-                                    if ~isempty(FIH)
-                                        FI.Data{end+1}=FIH;
+                            if ~isempty(FI)
+                                FI.Data={};
+                                p=fileparts(FileName);
+                                files=dir(p);
+                                fl={'flowmap.his','minmax.his','gsedmap.his','kafhmap.his', ...
+                                    'kafpmap.his','kafrmap.his','kaphmap.his','kappmap.his', ...
+                                    'saltmap.his','sedtmap.his','morpmap.his','sobekwq.map', ...
+                                    'calcpnt.his','reachseg.his','reachvol.his','delwaq.map'};
+                                %'calcdim.his','delwaq.his','flowanal.his', ...
+                                %'nodesvol.his','nodes_cr.his','qlat.his','qwb.his', ...
+                                %'reachdim.his','reachflw.his','reachvol.his','reach_cr.his', ...
+                                %'struc.his','strucdim.his','wqbou20.his'};
+                                for i=1:length(files)
+                                    if ~isempty(strmatch(lower(files(i).name),fl,'exact'))
+                                        try
+                                            FIH=delwaq('open',fullfile(p,files(i).name));
+                                        catch
+                                            FIH=[];
+                                        end
+                                        if ~isempty(FIH)
+                                            FI.Data{end+1}=FIH;
+                                        end
                                     end
                                 end
                             end
@@ -517,6 +556,7 @@ switch cmd
                             end
                         end
                     case 'arcgrid'
+                        asciicheck(ASCII,try_next)
                         FI=arcgrid('open',FileName);
                         if ~isempty(FI)
                             if ~isfield(FI,'Check')
@@ -532,6 +572,7 @@ switch cmd
                         FI=surfer('open',FileName);
                         Tp=FI.FileType;
                     case 'asciiwind'
+                        asciicheck(ASCII,try_next)
                         FI=asciiwind('open',FileName);
                         if ~isfield(FI,'Check')
                             FI=[];
@@ -651,18 +692,28 @@ switch cmd
                             Tp=FI.FileType;
                         end
                     case 'adcircmesh'
+                        asciicheck(ASCII,try_next)
                         FI=adcircmesh('open',FileName);
                         if ~isempty(FI)
                             FI.Options=0;
                             Tp=FI.FileType;
                         end
+                    case 'smsmesh'
+                        asciicheck(ASCII,try_next)
+                        FI=smsmesh('open',FileName);
+                        if ~isempty(FI)
+                            FI.Options=0;
+                            Tp=FI.FileType;
+                        end
                     case 'mikemesh'
+                        asciicheck(ASCII,try_next)
                         FI=mikemesh('open',FileName);
                         if ~isempty(FI)
                             FI.Options=0;
                             Tp=FI.FileType;
                         end
                     case 'SHYFEM mesh'
+                        asciicheck(ASCII,try_next)
                         FI=shyfemmesh('open',FileName);
                         if ~isempty(FI)
                             FI.Options=0;
@@ -682,6 +733,7 @@ switch cmd
                             Tp=FI.FileType;
                         end
                     case 'tekal'
+                        asciicheck(ASCII,try_next)
                         FI=tekal('open',FileName);
                         if ~isempty(FI)
                             if ~isfield(FI,'Check')
@@ -695,13 +747,16 @@ switch cmd
                                 [pn,fn,ex]=fileparts(FI.FileName);
                                 FI.can_be_ldb=1;
                                 FI.combinelines=0;
+                                ncol = [2 3];
                                 for i=1:length(FI.Field)
                                     if length(FI.Field(i).Size)~=2
                                         FI.can_be_ldb=0;
-                                    elseif FI.Field(i).Size(2)~=2
+                                    elseif ~ismember(FI.Field(i).Size(2),ncol)
                                         FI.can_be_ldb=0;
                                     elseif ~strcmp(FI.Field(i).DataTp,'numeric')
                                         FI.can_be_ldb=0;
+                                    else
+                                        ncol = FI.Field(i).Size(2);
                                     end
                                     if ~FI.can_be_ldb
                                         break
@@ -709,7 +764,7 @@ switch cmd
                                 end
                                 can_be_kub=0;
                                 switch lower(ex)
-                                    case {'.ldb','.pol'}
+                                    case {'.ldb','.pol','.pli','.pliz'}
                                         if FI.can_be_ldb
                                             FI.combinelines=1;
                                         end
@@ -792,6 +847,7 @@ switch cmd
                             Tp=FI.FileType;
                         end
                     case 'SWAN spectral'
+                        asciicheck(ASCII,try_next)
                         FI=readswan(FileName);
                         if ~isempty(FI)
                             if ~isfield(FI,'Check')
@@ -803,11 +859,13 @@ switch cmd
                             end
                         end
                     case 'DelwaqTimFile'
+                        asciicheck(ASCII,try_next)
                         FI=delwaqtimfile(FileName);
                         if ~isempty(FI)
                             Tp=FI.FileType;
                         end
                     case 'morf'
+                        asciicheck(ASCII,try_next)
                         FI=morf('read',FileName);
                         if ~isempty(FI)
                             Tp='MorfTree';
@@ -818,6 +876,7 @@ switch cmd
                             Tp='AukePC';
                         end
                     case 'bct'
+                        asciicheck(ASCII,try_next)
                         FI=bct_io('read',FileName);
                         if ~isempty(FI)
                             if ~isfield(FI,'Check') || strcmp(FI.Check,'NotOK')
@@ -945,6 +1004,7 @@ switch cmd
                             end
                         end
                     case 'samples'
+                        asciicheck(ASCII,try_next)
                         XYZ=samples('read',FileName,'struct');
                         if isempty(XYZ)
                             FI=[];
@@ -955,6 +1015,7 @@ switch cmd
                             FI=[];
                         end
                     case 'BNA File'
+                        asciicheck(ASCII,try_next)
                         FI=bna('open',FileName);
                         if ~isempty(FI)
                             if ~isfield(FI,'Check')
@@ -966,6 +1027,7 @@ switch cmd
                             end
                         end
                     case 'ArcInfoUngenerate'
+                        asciicheck(ASCII,try_next)
                         FI=ai_ungen('open',FileName);
                         if ~isempty(FI)
                             if ~isfield(FI,'Check')
@@ -988,6 +1050,7 @@ switch cmd
                             end
                         end
                     case 'NOOS time series'
+                        asciicheck(ASCII,try_next)
                         FI=noosfile('open',FileName);
                         Tp=try_next;
                     case 'shipma'
@@ -1064,3 +1127,64 @@ if isempty(FI)
     lasttp=[];
 end
 qp_settings('LastFileType',lasttp)
+
+
+function ASCII = verifyascii(arg)
+if ischar(arg)
+    fid = fopen(arg,'r');
+    pos = -1;
+else
+    fid = arg;
+    pos = ftell(fid);
+end
+S = fread(fid,[1 100],'char');
+ASCII = ~any(S~=9 & S~=10 & S~=13 & S<32); % TAB,LF,CR allowed
+if pos>=0
+    fseek(fid,pos,-1);
+else
+    fclose(fid);
+end
+
+
+function asciicheck(ASCII,filetype)
+if ~ASCII
+    error('%s should be an ASCII file. Reading unexpected characters.',filetype)
+end
+
+
+function Opt = get_matching_names(FileName,sep,nr)
+[p,n,e]=fileparts(FileName);
+Opt = {};
+locsep = find(n==sep);
+if nr==-2 && length(locsep)>=2
+    iOffset = locsep(end-1);
+    nDigits = locsep(end)-iOffset-1;
+elseif nr==-1 && length(locsep)>=1
+    iOffset = locsep(end);
+    nDigits = length(n)-iOffset;
+else
+    nDigits = 0;
+end
+if nDigits>0 && all(ismember(n(iOffset+(1:nDigits)),'0123456789'))
+    iPOffset  = length(p)+1+iOffset;
+    if length(p)>=1 && p(end)==filesep
+        iPOffset = iPOffset-1;
+    end
+    FileName1 = FileName(1:iPOffset);
+    FileName2 = FileName(iPOffset+nDigits+1:end);
+    %
+    % find all files with same structure
+    d = dir([FileName1 '*' FileName2]);
+    Files = {d.name}';
+    lFiles = cellfun('length',Files);
+    Files(lFiles~=length([n e])) = [];
+    %
+    Files = char(Files);
+    N = Files(:,iOffset+(1:nDigits));
+    N(~all(ismember(N,'0':'9'),2),:) = [];
+    N = sort(str2num(N))';
+    %
+    if isequal(N,0:length(N)-1) || isequal(N,1:length(N))
+        Opt = {length(N) iPOffset nDigits N(1)};
+    end
+end

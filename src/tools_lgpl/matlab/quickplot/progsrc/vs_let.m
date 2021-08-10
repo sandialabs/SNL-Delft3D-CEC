@@ -53,7 +53,7 @@ function [X,Success]=vs_let(varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -78,8 +78,8 @@ function [X,Success]=vs_let(varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/vs_let.m $
-%   $Id: vs_let.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/vs_let.m $
+%   $Id: vs_let.m 65778 2020-01-14 14:07:42Z mourits $
 
 X=[];
 outputtype=1; % 1=vs_let default, 2=vs_get
@@ -248,6 +248,10 @@ if ~isequal(eName,eNameDefault)
             else
                 i=ElmsInCell(strmatch(eName,{VS.ElmDef(ElmsInCell).Name},'exact'));
                 if ~isempty(i)
+                    if length(i)>1
+                        ui_message('warning','Element %s occurs multiple times in group %s; reading first one.',eName,gName)
+                        i = i(1);
+                    end
                     if isempty(eIndex)
                         eIndex=num2cell(zeros(1,length(VS.ElmDef(i).Size)));
                     end
@@ -601,6 +605,9 @@ while ~AllCorrect
             j_new=[];
         else
             j_new=ElmsInCell(strmatch(eName,{VS.ElmDef(ElmsInCell).Name},'exact'));
+            if length(j_new)>1
+                j_new = j_new(1); % Element .. occurs multiple times in group .. message already given above, so just go ahead
+            end
         end
         if (~iscell(gIndex)) | ...
                 (~all(sort(size(gIndex))==[1 length(VS.GrpDat(i_new).SizeDim)]))
@@ -1186,8 +1193,8 @@ try
         PointerList(4,:)=fread(fidat,[1 256],AddressType);
         if vs_debug
             fprintf(vs_debug,'Pointer list 4 at offset %u:\n',Offset+AddressBytes);
-            fprintf(vs_debug,[repmat(' %7u',[1 10]) '\n'],PointerList(4,:));
-            fprintf(vs_debug,'\n\n');
+            printPointers(vs_debug,PointerList(4,:),Nil)
+            fprintf(vs_debug,'\n');
         end
     end
     for VarDimCnt=1:VarDimCntMax
@@ -1211,14 +1218,18 @@ try
                     LastVD(bt1)=Nil;       % make sure that PointerList(bt-2) is reloaded
                     if vs_debug
                         fprintf(vs_debug,'Pointer list %i at offset %u:\n',bt1,PointerList(bt,VDByte(bt)+1));
-                        fprintf(vs_debug,[repmat(' %7u',[1 10]) '\n'],PointerList(bt1,:));
-                        fprintf(vs_debug,'\n\n');
+                        printPointers(vs_debug,PointerList(bt1,:),Nil)
+                        fprintf(vs_debug,'\n');
                     end
                 end
             end
             Offset=PointerList(1,VDByte(1)+1);
             if vs_debug
-                fprintf(vs_debug,'The offset of datagroup %i is %u.\n',VDIndex(VarDimCnt),Offset);
+                if Offset==Nil
+                    fprintf(vs_debug,'The offset of datagroup %i is -1.\n',VDIndex(VarDimCnt));
+                else
+                    fprintf(vs_debug,'The offset of datagroup %i is %u.\n',VDIndex(VarDimCnt),Offset);
+                end
             end
         end
         if GroupOptimized
@@ -1232,6 +1243,9 @@ try
         if VD & (Offset==Nil)
             % reading from a pointer that has not been set is not possible
             % zeros and blanks returned by default
+            if vs_debug
+                fprintf(vs_debug,'  No data to read.\n');
+            end
         else
             if GroupOptimized
                 status=0;
@@ -1424,6 +1438,24 @@ catch % end of catch
     error(lasterr) % error out
 end
 if jn>0
+    eNames= X(1,:);
+    uENames = unique(eNames);
+    if length(uENames)~=length(eNames)
+        % there is at least one duplicate element
+        for i = 1:length(uENames)
+            j = strmatch(uENames{i},X(1,:),'exact');
+            if length(j)>1
+                XX = cell(2,length(j));
+                XX(2,:) = X(2,j);
+                for k = 1:length(j)
+                    XX{1,k} = sprintf('Occurence_%i',k);
+                end
+                X{2,j(1)} = struct(XX{:});
+                %
+                X(:,j(2:end)) = [];
+            end
+        end
+    end
     X=struct(X{:});
 else
     X=X{2,1};
@@ -1550,11 +1582,26 @@ if vs_debug
     fprintf(vs_debug,Str);
 end
 
+function printPointers(vs_debug,PointerList,Nil)
+for i=0:25
+    if i==25
+        nAddresses=6;
+    else
+        nAddresses=10;
+    end
+    sc  = repmat({'       -1'},1,nAddresses);
+    HTline = PointerList(i*10+(1:nAddresses));
+    sc(HTline~=Nil) = {' %8u'};
+    sc{nAddresses+1} = '\n';
+    LineFormat = strcat(sc{:});
+    fprintf(vs_debug,LineFormat,HTline(HTline~=Nil));
+end
+
 function Ind = subcript2ind(Siz,Sub)
 Nsub = cellfun('length',Sub);
 Nind = prod(Nsub);
 for i = 1:length(Nsub)
-    Sub{i} = reshape(repmat(Sub{i},[prod(Nsub(1:i-1)) 1 prod(Nsub(i+1:end))]),Nind,1);
+    Sub{i} = reshape(repmat(Sub{i}(:)',[prod(Nsub(1:i-1)) 1 prod(Nsub(i+1:end))]),Nind,1);
 end
 if Nind==0
     Ind = zeros(0,1);

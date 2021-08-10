@@ -41,7 +41,7 @@ fi;
 
 
 # Generate version number source module using version_number.exe
-$VN_DIR/version_number.exe $SVN_VERSION $3 $1.svn $1.temp
+$VN_DIR/version_number $SVN_VERSION $3 $1.svn $1.temp
 
 if [ -f $1 ]; then
     diff $1 $1.temp > nul

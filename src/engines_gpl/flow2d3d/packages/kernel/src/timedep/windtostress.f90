@@ -1,9 +1,9 @@
 subroutine windtostress(mmax      ,nmax      ,nmaxus    ,grdang    ,kcs       , &
                       & w10mag    ,windu     ,windv     ,windsu    ,windsv    , &
-                      & gdp       )
+                      & windcd    , gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine windtostress(mmax      ,nmax      ,nmaxus    ,grdang    ,kcs       , 
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: windtostress.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/timedep/windtostress.f90 $
+!  $Id: windtostress.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/timedep/windtostress.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Conversion from wind velocity to stresses
@@ -50,6 +50,8 @@ subroutine windtostress(mmax      ,nmax      ,nmaxus    ,grdang    ,kcs       , 
     real(fp)               , pointer :: rhoa
     real(fp)               , pointer :: ag
     real(fp), dimension(:) , pointer :: wstcof
+    integer                , pointer :: wslake
+    integer                , pointer :: sdlake
 !
 ! Global variables
 !
@@ -63,6 +65,7 @@ subroutine windtostress(mmax      ,nmax      ,nmaxus    ,grdang    ,kcs       , 
     real(fp), dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub), intent(out) :: windsv !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub), intent(in)  :: windu  !  Description and declaration in esm_alloc_real.f90
     real(fp), dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub), intent(in)  :: windv  !  Description and declaration in esm_alloc_real.f90
+    real(fp), dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub), intent(out) :: windcd !  Description and declaration in esm_alloc_real.f90
 !
 ! Local variables
 !
@@ -78,12 +81,15 @@ subroutine windtostress(mmax      ,nmax      ,nmaxus    ,grdang    ,kcs       , 
     real(fp):: wangle ! Wind angle 
     real(fp):: wsp    ! Wind speed 
     real(fp):: wsp2   ! WSP*WSP 
+    real(fp):: cdwl   ! Cd according to Wuest & Lorke (2003)
 !
 !! executable statements -------------------------------------------------------
 !
     rhoa      => gdp%gdphysco%rhoa
     ag        => gdp%gdphysco%ag
     wstcof    => gdp%gdphysco%wstcof
+    wslake    => gdp%gdheat%wslake
+    sdlake    => gdp%gdheat%sdlake   
     !
     w1 = wstcof(1)
     w2 = wstcof(2)
@@ -96,7 +102,7 @@ subroutine windtostress(mmax      ,nmax      ,nmaxus    ,grdang    ,kcs       , 
        do n = 1, nmaxus
           if (kcs(n,m) > 0) then
              if (windu(n, m)==0. .and. windv(n, m)==0.) then
-                wangle = 0.0
+                wangle = 0.0_fp
              else
                 !
                 ! GRDANG allows for y-axis not pointing to the north
@@ -117,10 +123,28 @@ subroutine windtostress(mmax      ,nmax      ,nmaxus    ,grdang    ,kcs       , 
                 cd = w1 + (min(wsp,w4) - w2) / (w4 - w2) * (w3 - w1)
              else
                 cd = w3 + (min (wsp,w6) - w4) / (w6 - w4) * (w5 - w3)
-             endif   
-             windsu(n, m) = cd*wsp2*cos(wangle)*rhoa
-             windsv(n, m) = cd*wsp2*sin(wangle)*rhoa
-             w10mag(n, m) = wsp
+             endif
+             !
+             ! Wuest & Lorke (2003)
+             !
+             if(wslake == 1) then
+                 ! Limit wsp to > 0.5. Stay on the safe side in case cd is copied to Stanton/Dalton, see code below
+                 cdwl  = 0.0044_fp/max(wsp,0.5_fp)**1.15_fp
+             else
+                 cdwl = 0.0_fp
+             endif
+             !
+             ! find the max.
+             !
+             windcd(n,m) = max(cdwl, cd)
+             !
+             windsu(n,m) = windcd(n,m) * wsp2 * cos(wangle) * rhoa
+             windsv(n,m) = windcd(n,m) * wsp2 * sin(wangle) * rhoa
+             w10mag(n,m) = wsp
+             if((sdlake == 1) .and. (wslake == 1)) then
+                gdp%gdheat%stanton = windcd(n, m)
+                gdp%gdheat%dalton  = windcd(n, m)
+             endif
           endif
        enddo
     enddo

@@ -1,0 +1,1 @@
+#define MOR_USE_ECMODULE 1

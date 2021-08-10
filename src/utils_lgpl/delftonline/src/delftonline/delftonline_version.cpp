@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,12 +24,12 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: delftonline_version.cpp 4612 2015-01-21 08:48:09Z mourits $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftonline/src/delftonline/delftonline_version.cpp $
+// $Id: delftonline_version.cpp 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftonline/src/delftonline/delftonline_version.cpp $
 #include <stdio.h>
 #include "delftonline_version.h"
 
-static char delftonline_version_id [] = {"@(#)Deltares, "delftonline_program" Version "delftonline_major"."delftonline_minor"."delftonline_revision"."delftonline_build", "__DATE__", "__TIME__""};
+static char delftonline_version_id [] = {"@(#)Deltares, " delftonline_program " Version " delftonline_major "." delftonline_minor "." delftonline_revision "." delftonline_build ", " __DATE__ ", " __TIME__ ""};
 
 char * getfullversionstring_delftonline(void)
 {

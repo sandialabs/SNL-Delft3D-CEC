@@ -3,7 +3,7 @@ function S=readswan(FileName)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function S=readswan(FileName)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/readswan.m $
-%   $Id: readswan.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/readswan.m $
+%   $Id: readswan.m 65778 2020-01-14 14:07:42Z mourits $
 
 S.FileName=FileName;
 S.FileType='SWAN spectral';
@@ -136,7 +136,7 @@ while ischar(Line)
                 if isfield(S,'Directions')
                     S.Spectrum = cell(NQuant,NLoc);
                 else
-                    S.Spectrum = cell(1,NLoc);
+                    S.Spectrum = cell(NLoc,1);
                 end
                 %
             case 'FACTOR'

@@ -3,7 +3,7 @@ function Fcn=qp_file2function(Info)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function Fcn=qp_file2function(Info)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_file2function.m $
-%   $Id: qp_file2function.m 5632 2015-12-09 08:50:03Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_file2function.m $
+%   $Id: qp_file2function.m 65778 2020-01-14 14:07:42Z mourits $
 
 persistent MissingFileTypes
 %
@@ -60,6 +60,11 @@ F={'Delft3D-com'                'd3d_comfil'
     'DelwaqHIS'                  'd3d_waqfil'
     'DelwaqLGA'                  'd3d_waqfil'
     'DelparPLOT'                 'd3d_waqfil'
+    'Delft3D D-Flow FM'          'd3d_simfil'
+    'Delft3D D-Wave'             'd3d_simfil'
+    'Delft3D D-Flow1D'           'd3d_simfil'
+    'Delft3D D-Flow2D3D'         'd3d_simfil'
+    'Delft3D Coupled Model'      'd3d_simfil'
     'Skylla'                     'skyllafil'
     'Pharos'                     'pharosfil'
     'arcgrid'                    'arcgridfil'
@@ -67,8 +72,9 @@ F={'Delft3D-com'                'd3d_comfil'
     'asciiwind'                  'asciiwindfil'
     'PCraster'                   'pcrasterfil'
     'SIMONA SDS FILE'            'waquafil'
-    'mikeCTDT'                   'mikezerofil'
-    'mikeDFS'                    'mikezerofil'
+    'MikeCTDT'                   'mikezerofil'
+    'MikeDFS'                    'mikezerofil'
+    'MikeXFS'                    'mikezerofil'
     'FLS-inc'                    'flsfil'
     'FLS-bin'                    'flsfil'
     'FLS-his'                    'flsfil'
@@ -111,6 +117,7 @@ F={'Delft3D-com'                'd3d_comfil'
     'SHYFEM mesh'                'flexmeshfil'
     'GeoSystems mesh'            'flexmeshfil'
     'Gmsh'                       'flexmeshfil'
+    'SMS mesh'                   'flexmeshfil'
     'diff'                       'difffil'
     'shipma'                     'shipmafil'
     'geodata'                    'geodatafil'
@@ -132,6 +139,7 @@ F={'Delft3D-com'                'd3d_comfil'
 %#function d3d_hwgxyfil
 %#function d3d_bagrfil
 %#function d3d_waqfil
+%#function d3d_simfil
 %#function skyllafil
 %#function arcgridfil
 %#function asciiwindfil

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -104,7 +104,8 @@
          case ( -1 )                     ! old style <other ASCII file>
             write ( lunut, 2000 )  idopt1
             call opt1   ( idopt1  , lun     , 0       , lchar   , filtype ,
-     &                    ldummy  , ldummy  , 0       , ierr2   , iwar    )
+     &                    ldummy  , ldummy  , 0       , ierr2   , iwar    ,
+     &                    .false. )
             if ( ierr2 .gt. 0 ) goto 20
             if ( gettoken( ndmpar, ierr2 ) .gt. 0 ) goto 20
          case ( 0 )                      ! new style (October 2012) no dump areas

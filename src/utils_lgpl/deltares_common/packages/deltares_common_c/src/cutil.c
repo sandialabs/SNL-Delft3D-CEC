@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: cutil.c 4612 2015-01-21 08:48:09Z mourits $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common_c/src/cutil.c $
+// $Id: cutil.c 65828 2020-01-21 13:14:42Z mooiman $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common_c/src/cutil.c $
 //------------------------------------------------------------------------------*/
 //  Delft3D - C Utilities
 //  Internal (legacy) utility functions
@@ -36,7 +36,33 @@
 
 
 #include "util_mf.h"
+#if !defined (WIN32)
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <inttypes.h>
+#endif
 
+#if defined(_WIN32)
+#  define FILE_READ  _read
+#  define FILE_WRITE _write
+#  define FILE_SEEK  _fseeki64
+#  define FILE_TELL  _ftelli64
+#elif defined(HAVE_CONFIG_H)
+#  define FILE_READ  read
+#  define FILE_WRITE write
+#  if defined(HAVE_FSEEKO64)
+#    define FILE_SEEK fseeko64
+#    define FILE_TELL ftello64
+#  else
+#    define FILE_SEEK FILE_SEEK_not_defined
+#    define FILE_TELL FILE_TELL_not_defined
+#  endif
+#else
+#  define FILE_READ  FILE_READ_not_defined
+#  define FILE_WRITE FILE_WRITE_not_defined
+#  define FILE_SEEK  FILE_SEEK_not_defined
+#  define FILE_TELL  FILE_TELL_not_defined
+#endif
 
 /*----- Function to determine with a path name is a directory or not.*/
 
@@ -236,10 +262,23 @@ CUTIL_SYSTEM (
     }
 
 
+void STDCALL
+CUTIL_SLEEP (
+    int *  millisec
+    ) {
+
+#if defined (WIN32)
+    Sleep(*millisec) ;
+#else
+    usleep(*millisec * 1000); // usleep takes microsec
+#endif
+    }
+
+
 
 
 ///*------------------------------------------------------------------------------*/
-//// Some routines for reading from gfortran from a single file with multiple file handles simultaneously 
+//// Some routines for reading from gfortran from a single file with multiple file handles simultaneously
 //
 //#define _MAX_LENGTH_ 6666
 //
@@ -305,22 +344,45 @@ CUTIL_SYSTEM (
 //	FileHandle* fh = (FileHandle*)ifh;
 //    /*---- close file */
 //	fclose (fh->fp);
-//	free(fh);					
+//	free(fh);
 //    return(0);
 //    }
 //
 ///*------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------*/
-// Some routines for reading from a single file with multiple file handles simultaneously 
+// Some routines for reading from a single file with multiple file handles simultaneously
 
 #define _MAX_LENGTH_ 6666
+
+int STDCALL
+CUTIL_MF_SETMAXSTDIO(
+int* max_size
+) {
+#if !defined (WIN32)
+    struct rlimit old, new;
+
+    getrlimit(RLIMIT_NOFILE, &old);
+    new.rlim_max = old.rlim_max;
+    new.rlim_cur = *max_size;
+    if ( setrlimit(RLIMIT_NOFILE, &new) == 0)
+    {
+        return *max_size;
+    }
+    else
+    {
+        return -1;
+    }
+#else
+    return _setmaxstdio(*max_size);
+#endif
+}
 
 long long int STDCALL
 CUTIL_MF_OPEN (
     char* fname
     ) {
-	FILE *fh; 
+	FILE *fh;
 	fh = fopen(fname,"rb");
     /*---- Open file, return filepointer */
     return ((long long int) fh);
@@ -331,7 +393,7 @@ CUTIL_MF_BACKSPACE (
     long long int* ifh,
 	long long int* prevpos
     ) {
-	fseek((FILE*)*ifh, *prevpos, SEEK_SET);
+	FILE_SEEK((FILE*)*ifh, *prevpos, SEEK_SET);
     return (0);
     }
 
@@ -358,9 +420,18 @@ CUTIL_MF_READ (
     char* resultstr,
 	long long int* currentpos
     ) {
-	*currentpos = ftell((FILE*)*ifh);							/*---- save current pos in the file b4 reading */ 
+	*currentpos = FILE_TELL((FILE*)*ifh);							/*---- save current pos in the file b4 reading */
     resultstr = fgets(resultstr,_MAX_LENGTH_,(FILE*)*ifh);		/*---- read a line from file */
     return(0);
+    }
+
+int STDCALL
+CUTIL_MF_GETPOS (
+    long long int*  ifh,
+	long long int* currentpos
+    ) {
+	*currentpos = FILE_TELL((FILE*)*ifh); /*---- save current pos in the file */
+        return(0);
     }
 
 int STDCALL
@@ -371,6 +442,41 @@ CUTIL_MF_CLOSE (
 	fclose ((FILE*)*ifh);
     return(0);
     }
+
+/*-------------------------------------------------------------------------------------------*/
+// Some routines for comparing doubles and floats by converting to their integer representation
+// These two are for testing equality between floats by using integers (as a cheaper alternative
+// to comparedouble in fortran) and WILL be removed as soon as they are deemed obsolete.
+
+int STDCALL
+	CUTIL_CMP_DOUBLE (
+	    double* val1,
+		double* val2,
+		int* eps
+		) {
+		long longDiff;
+        if (*val1 == *val2)
+           return 0;                   // exactly equal
+        longDiff = abs(*(long*)val1 - *(long*)val2);
+        if (longDiff <= *eps)
+           return 0;                   // equal within tolerance
+        return ((*val1)>(*val2)?1:-1); // greater than, less than
+        }
+
+int STDCALL
+	CUTIL_CMP_SINGLE (
+	    float* val1,
+		float* val2,
+		int* eps
+		) {
+		long longDiff;
+        if (*val1 == *val2)
+           return 0;                   // exactly equal
+        longDiff = abs(*(long*)val1 - *(long*)val2);
+        if (longDiff <= *eps)
+           return 0;                   // equal within tolerance
+        return ((*val1)>(*val2)?1:-1); // greater than, less than
+        }
 
 /*------------------------------------------------------------------------------*/
 
@@ -442,8 +548,8 @@ CUTIL_GETMP (
     sprintf (buf, "%s..%cdefault", path_buffer, slash);
 
     if (!isdir(buf)) {
-        /*---- Try the (Windows) debug location way down in the source code tree itself */
-        sprintf (buf, "%s..%c..%c..%c..%cengines_gpl%cflow2d3d%cdefault", path_buffer, slash, slash, slash, slash, slash, slash);
+        /*---- Try the new (Linux) delivery location */
+        sprintf (buf, "%s..%cshare%cdelft3d", path_buffer, slash, slash);
         if (!isdir(buf)) {
             report_error ("Directory \"default\" does not exist");
             *result = FAILURE;

@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: btps.h 5266 2015-07-10 21:14:41Z mooiman $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/nefis/packages/nefis/include/btps.h $
+// $Id: btps.h 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/nefis/packages/nefis/include/btps.h $
 /*                                           */
 /* <btps.h> -  Basic types                   */
 /*                                           */
@@ -65,7 +65,7 @@
 #endif
 
 #if defined PTR8
-#if defined WIN64
+#if defined _WIN32
   typedef  __int64            BInt8    ;     /* long           :  8 bytes */
   typedef  unsigned __int64   BUInt8   ;     /* long           :  8 bytes */
 #elif defined GNU_PC
@@ -83,10 +83,12 @@
 #endif
 #endif
 
-#if defined PTR8
-# undef  ULONG_MAX
-# define ULONG_MAX (BUInt8) -1
-#endif
+# define BUINT8_MAX ((BUInt8) -1)
+
+// TODO: We can probably get rid of this, as every platform has a 64-bit seek
+// method available.
+#define NEF_SEEK_MAX (BUINT8_MAX >> 1)
+
 /*
  * TRUE and FALSE defined as enumerator
  */

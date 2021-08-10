@@ -18,7 +18,7 @@ function varargout=gridfil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -43,8 +43,8 @@ function varargout=gridfil(FI,domain,field,cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/gridfil.m $
-%   $Id: gridfil.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/gridfil.m $
+%   $Id: gridfil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 
@@ -89,7 +89,7 @@ switch cmd
         [varargout{1:2}]=gettimezone(FI,domain,Props);
         return
     case 'stations'
-        varargout={{}};
+        varargout={readsts(FI,Props,varargin{:})};
         return
     case 'subfields'
         varargout={getsubfields(FI,Props,varargin{:})};
@@ -165,12 +165,20 @@ end
 % read grid ...
 x=[];
 y=[];
+xy=[];
 z=[];
 dataongrid = DimFlag(M_) & DimFlag(N_);
 if XYRead
     if dataongrid
-        x=FI.X(idx{[M_ N_]});
-        y=FI.Y(idx{[M_ N_]});
+        x=FI.X;
+        y=FI.Y;
+        %
+        if strcmp(Props.Name,'clipped grid')
+            [x,y]=enclosure('apply',FI.Enclosure,x,y);
+        end
+        %
+        x=x(idx{[M_ N_]});
+        y=y(idx{[M_ N_]});
         if idx{M_}(1)==idx{M_}(2)
             x(1,:)=NaN;
             y(1,:)=NaN;
@@ -229,30 +237,32 @@ val={};
 ThinDam=0;
 Dpsopt='mean';
 if Props.File~=0
-    Fld=abs(Props.Fld);
-    Attribs = qp_option(FI,'AttribFiles');
-    filetp=Attribs(Props.File).FileType;
-    tmpData=qp_unwrapfi(Attribs(Props.File));
+    if Props.File==-1
+        Attrib.Data = FI.Enclosure;
+        Attrib.FileType = 'enclosure';
+        Attrib.QP_Options = [];
+    else
+        Fld=abs(Props.Fld);
+        Attribs = qp_option(FI,'AttribFiles');
+        Attrib = qp_unwrapfi(Attribs(Props.File));
+    end
+    filetp=Attrib.FileType;
     switch filetp
         case {'wldep','wlfdep','trirst','boxfile'}
-            if isfield(tmpData,'Dpsopt') && ~isempty(tmpData.Dpsopt)
-                Dpsopt=tmpData.Dpsopt;
-            else
-                Dpsopt='max';
-            end
+            Dpsopt=qp_option(Attrib,'Dpsopt','default','max');
             if ~isempty(strmatch('velocity',Props.Name))
-                val{1}=tmpData.Data{Fld(1)};
-                val{2}=tmpData.Data{Fld(2)};
+                val{1}=Attrib.Data{Fld(1)};
+                val{2}=Attrib.Data{Fld(2)};
             elseif ~isempty(strmatch('horizontal velocity',Props.Name))
                 k=length(Fld)/2;
-                val{1}=cat(3,tmpData.Data{Fld(1:k)});
-                val{2}=cat(3,tmpData.Data{Fld(k+(1:k))});
+                val{1}=cat(3,Attrib.Data{Fld(1:k)});
+                val{2}=cat(3,Attrib.Data{Fld(k+(1:k))});
             else
-                val{1}=cat(3,tmpData.Data{Fld});
+                val{1}=cat(3,Attrib.Data{Fld});
             end
             for iv=1:length(val)
-                if isfield(tmpData,'DOrder')
-                    switch tmpData.DOrder
+                if isfield(Attrib,'DOrder')
+                    switch Attrib.DOrder
                         case 1
                             sz=size(val{iv}); sz(1:2)=sz([2 1]);
                             val{iv}=reshape(val{iv},sz);
@@ -284,23 +294,23 @@ if Props.File~=0
                 end
             end
         case 'SWAN-output'
-            val{1}=tmpData.Data(:,:,Props.Fld(1));
+            val{1}=Attrib.Data(:,:,Props.Fld(1));
             if length(Props.Fld)==2
-                val{2}=tmpData.Data(:,:,Props.Fld(2));
+                val{2}=Attrib.Data(:,:,Props.Fld(2));
             end
         case {'fls','FLS-inc'}
-            if isfield(tmpData,'Times')
-                T = tmpData.Times(idx{T_});
+            if isfield(Attrib,'Times')
+                T = Attrib.Times(idx{T_});
             else
                 T = idx{T_}/60;
             end
-            [val{1},Fls]=incremental('read',tmpData,Fld,T);
+            [val{1},Fls]=incremental('read',Attrib,Fld,T);
             val{1}(val{1}==0)=NaN;
             Attribs(Props.File) = qp_wrapfi(Fls,Attribs(Props.File));
             FI=qp_option(FI,'AttribFiles',Attribs);
         case 'bagmap'
-            val{1}=bagmap('read',tmpData,idx{T_},Props.Fld);
-        case {'weir','weir-waqua','thindam','thindam-waqua','enclosure','3dgate'}
+            val{1}=bagmap('read',Attrib,idx{T_},Props.Fld);
+        case {'weir','weir-waqua','thindam','thindam-waqua','enclosure','3dgate','rigidsheet'}
             ThinDam=1;
             bedsigncorrection=-1;
             weirheight=2;
@@ -313,21 +323,21 @@ if Props.File~=0
             %val{2}=val{1}; resulteert in 4 keer dezelfde matrix in de gecompileerde versie,
             %er wordt dus geen goed onderscheid gemaakt tussen de verschillende kopieen!
             DamVal=0;
-            if isfield(tmpData,'CHARu')
-                DamVal=size(tmpData.CHARu,2)>=3;
+            if isfield(Attrib,'CHARu')
+                DamVal=size(Attrib.CHARu,2)>=3;
             end
             if DamVal
                 Props.NVal=2;
                 val{3}=zeros(size(FI.X));
                 val{4}=zeros(size(FI.X));
             end
-            if isfield(tmpData,'MNu')
-                MNu=tmpData.MNu;
-            elseif isfield(tmpData,'MNKu')
-                MNKu=tmpData.MNKu;
+            if isfield(Attrib,'MNu')
+                MNu=Attrib.MNu;
+            elseif isfield(Attrib,'MNKu')
+                MNKu=Attrib.MNKu;
                 MNu=MNKu(MNKu(:,5)<=idx{K_} & MNKu(:,6)>=idx{K_},1:4);
             else
-                [MNu,MNv]=enclosure('thindam',tmpData.Data);
+                [MNu,MNv]=enclosure('thindam',Attrib.Data);
             end
             if ~isempty(MNu)
                 MNu(:,[3 4])=MNu(:,[3 4])-MNu(:,[1 2]);
@@ -352,13 +362,13 @@ if Props.File~=0
                 val{1}(sub2ind(size(val{1}),M,N))=1;
                 %      val{1}(:)=0;
                 if DamVal
-                    val{3}(sub2ind(size(val{1}),M,N))=bedsigncorrection*tmpData.CHARu(Indu,weirheight);
+                    val{3}(sub2ind(size(val{1}),M,N))=bedsigncorrection*Attrib.CHARu(Indu,weirheight);
                 end
             end
-            if isfield(tmpData,'MNv')
-                MNv=tmpData.MNv;
-            elseif isfield(tmpData,'MNKv')
-                MNKv=tmpData.MNKv;
+            if isfield(Attrib,'MNv')
+                MNv=Attrib.MNv;
+            elseif isfield(Attrib,'MNKv')
+                MNKv=Attrib.MNKv;
                 MNv=MNKv(MNKv(:,5)<=idx{K_} & MNKv(:,6)>=idx{K_},1:4);
             else
                 % MNv already defined above
@@ -382,54 +392,156 @@ if Props.File~=0
                 val{2}(sub2ind(size(val{2}),M,N))=1;
                 %      val{2}(:)=0;
                 if DamVal
-                    val{4}(sub2ind(size(val{2}),M,N))=bedsigncorrection*tmpData.CHARv(Indv,weirheight);
+                    val{4}(sub2ind(size(val{2}),M,N))=bedsigncorrection*Attrib.CHARv(Indv,weirheight);
                 end
             end
             if DimFlag(K_)
-                DimFlag(K_)=0;
+                %DimFlag(K_)=0;
                 idx{K_}=[];
                 elidx(K_-2)=[];
             end
         case {'trtarea'}
             val{1}=zeros(size(FI.X));
-            ReqCode=tmpData.RoughnessIDs(Props.SubFld);
-            records=tmpData.Records(tmpData.Records(:,5)==ReqCode,:);
+            ReqCode=Attrib.RoughnessIDs(Props.SubFld);
+            records=Attrib.Records(Attrib.Records(:,5)==ReqCode,:);
             val{1}=val{1}+sparse(records(:,2),records(:,1),records(:,6),size(val{1},1),size(val{1},2));
-        case {'cross-sections'}
-            ThinDam=1;
-            val{1}=zeros(size(FI.X));
-            val{2}=zeros(size(FI.X));
-            for i=1:size(tmpData.MNMN,1)
-                if tmpData.MNMN(i,1)==tmpData.MNMN(i,3)
-                    val{1}(tmpData.MNMN(i,1),min(tmpData.MNMN(i,[2 4])):max(tmpData.MNMN(i,[2 4])))=1;
+        case {'cross-sections','barriers'}
+            MN = Attrib.MNMN;
+            if strcmp(Props.Geom,'POLYL')
+                i=idx{ST_};
+                if MN(i,1)==MN(i,3)
+                    m = MN(i,1);
+                    n = min(MN(i,[2 4]))-1:max(MN(i,[2 4]));
+                    xy = {[FI.X(m,n)' FI.Y(m,n)']};
                 else
-                    val{2}(min(tmpData.MNMN(i,[1 3])):max(tmpData.MNMN(i,[1 3])),tmpData.MNMN(i,2))=1;
+                    m = min(MN(i,[1 3]))-1:max(MN(i,[1 3]));
+                    n = MN(i,2);
+                    xy = {[FI.X(m,n) FI.Y(m,n)]};
+                end
+            else
+                ThinDam=1;
+                val{1}=zeros(size(FI.X));
+                val{2}=zeros(size(FI.X));
+                for i=1:size(MN,1)
+                    if MN(i,1)==MN(i,3)
+                        val{1}(MN(i,1),min(MN(i,[2 4])):max(MN(i,[2 4])))=1;
+                    else
+                        val{2}(min(MN(i,[1 3])):max(MN(i,[1 3])),MN(i,2))=1;
+                    end
                 end
             end
         case {'openboundary'}
-            ThinDam=1;
-            val{1}=zeros(size(FI.X));
-            val{2}=zeros(size(FI.X));
-            for i=1:length(tmpData.Name)
-                if strcmp(tmpData.BndType(i),Props.Fld)
-                    if tmpData.MN(i,2)~=tmpData.MN(i,4)
-                        val{1}(tmpData.MN(i,1),min(tmpData.MN(i,[2 4])):max(tmpData.MN(i,[2 4])))=1;
-                        if tmpData.MN(i,1)>1
-                            val{1}(tmpData.MN(i,1)-1,min(tmpData.MN(i,[2 4])):max(tmpData.MN(i,[2 4])))=1;
+            MN = Attrib.MN;
+            if strcmp(Props.Geom,'POLYL')
+                j=find(Attrib.BndType==Props.Fld);
+                i=j(idx{ST_});
+                %
+                if MN(i,2)~=MN(i,4) && MN(i,1)==MN(i,3)
+                    m = MN(i,1);
+                    n = max(min(MN(i,[2 4]))-1,1):max(MN(i,[2 4]));
+                    xy = {[FI.X(m,n)' FI.Y(m,n)']};
+                    if any(isnan(xy{1}(:))) && m>1
+                        xy = {[FI.X(m-1,n)' FI.Y(m-1,n)']};
+                    end
+                elseif MN(i,1)~=MN(i,3) && MN(i,2)==MN(i,4)
+                    m = max(min(MN(i,[1 3]))-1,1):max(MN(i,[1 3]));
+                    n = MN(i,2);
+                    xy = {[FI.X(m,n) FI.Y(m,n)]};
+                    if any(isnan(xy{1}(:))) && n>1
+                        xy = {[FI.X(m,n-1) FI.Y(m,n-1)]};
+                    end
+                elseif MN(i,1)~=MN(i,3) && MN(i,2)~=MN(i,4) % diagonal water level boundary
+                    dMN = MN(i,[3 4]) - MN(i,[1 2]);
+                    DM  = abs(dMN(1));
+                    dMN = sign(dMN);
+                    %
+                    % number of water level boundary points = DM+1
+                    % number of grid points representing boundary = 2*(DM+1)+1
+                    %
+                    xy = NaN(2*(DM+1)+1,2);
+                    dMN0 = [0 0];
+                    dMN0(dMN>0) = -1;
+                    j1 = 1;
+                    m = MN(i,1)+dMN0(1);
+                    n = MN(i,2)+dMN0(2);
+                    for j = 0:DM
+                        xy(j1,:) = [FI.X(m,n) FI.Y(m,n)];
+                        %
+                        m = m+dMN(1);
+                        xy(j1+1,:) = [FI.X(m,n) FI.Y(m,n)];
+                        if any(isnan(xy(j1+1,:)))
+                            xy(j1+1,:) = [FI.X(m-dMN(1),n+dMN(2)) FI.Y(m-dMN(1),n+dMN(2))];
                         end
-                    elseif tmpData.MN(i,1)~=tmpData.MN(i,3)
-                        val{2}(min(tmpData.MN(i,[1 3])):max(tmpData.MN(i,[1 3])),tmpData.MN(i,2))=1;
-                        if tmpData.MN(i,2)>1
-                            val{2}(min(tmpData.MN(i,[1 3])):max(tmpData.MN(i,[1 3])),tmpData.MN(i,2)-1)=1;
+                        n = n+dMN(2);
+                        j1= j1+2;
+                        if j==DM
+                            xy(j1,:) = [FI.X(m,n) FI.Y(m,n)];
                         end
+                    end
+                    xy = {xy};
+                else % single point
+                    if MN(i,1)>1
+                        m = MN(i,1)+(-1:0);
+                        n = MN(i,2);
+                        xy = {[FI.X(m,n) FI.Y(m,n)]};
                     else
-                        val{1}(tmpData.MN(i,1),tmpData.MN(i,2))=1;
-                        if tmpData.MN(i,1)>1
-                            val{1}(tmpData.MN(i,1)-1,tmpData.MN(i,2))=1;
-                        end
-                        val{2}(tmpData.MN(i,1),tmpData.MN(i,2))=1;
-                        if tmpData.MN(i,2)>1
-                            val{2}(tmpData.MN(i,1),tmpData.MN(i,2)-1)=1;
+                        xy = {[NaN NaN]};
+                    end
+                    if any(isnan(xy{1}(:))) && MN(i,2)>1
+                        m = MN(i,1);
+                        n = MN(i,2)+(-1:0);
+                        xy = {[FI.X(m,n)' FI.Y(m,n)']};
+                    end
+                    if any(isnan(xy{1}(:))) && MN(i,1)>1 && MN(i,2)>1
+                        m = MN(i,1)+(-1:0);
+                        n = MN(i,2)-1;
+                        xy = {[FI.X(m,n) FI.Y(m,n)]};
+                    end
+                    if any(isnan(xy{1}(:))) && MN(i,1)>1 && MN(i,2)>1
+                        m = MN(i,1)-1;
+                        n = MN(i,2)+(-1:0);
+                        xy = {[FI.X(m,n)' FI.Y(m,n)']};
+                    end
+                end
+            else
+                ThinDam=1;
+                val{1}=zeros(size(FI.X));
+                val{2}=zeros(size(FI.X));
+                for i=1:length(Attrib.Name)
+                    if strcmp(Attrib.BndType(i),Props.Fld)
+                        if MN(i,2)~=MN(i,4) && MN(i,1)==MN(i,3)
+                            val{1}(MN(i,1),min(MN(i,[2 4])):max(MN(i,[2 4])))=1;
+                            if MN(i,1)>1
+                                val{1}(MN(i,1)-1,min(MN(i,[2 4])):max(MN(i,[2 4])))=1;
+                            end
+                        elseif MN(i,1)~=MN(i,3) && MN(i,2)==MN(i,4)
+                            val{2}(min(MN(i,[1 3])):max(MN(i,[1 3])),MN(i,2))=1;
+                            if MN(i,2)>1
+                                val{2}(min(MN(i,[1 3])):max(MN(i,[1 3])),MN(i,2)-1)=1;
+                            end
+                        elseif MN(i,1)~=MN(i,3) && MN(i,2)~=MN(i,4) % diagonal water level boundary
+                            dMN = MN(i,[3 4]) - MN(i,[1 2]);
+                            DM  = abs(dMN(1));
+                            dMN = sign(dMN);
+                            for j = 0:DM
+                                val{1}(MN(i,1)+dMN(1)*j,MN(i,2)+dMN(2)*j)=1;
+                                val{2}(MN(i,1)+dMN(1)*j,MN(i,2)+dMN(2)*j)=1;
+                                if MN(i,1)+dMN(1)*j>1
+                                    val{1}(MN(i,1)+dMN(1)*j-1,MN(i,2)+dMN(2)*j)=1;
+                                end
+                                if MN(i,2)+dMN(2)*j>1
+                                    val{2}(MN(i,1)+dMN(1)*j,MN(i,2)+dMN(2)*j-1)=1;
+                                end
+                            end
+                        else % single point
+                            val{1}(MN(i,1),MN(i,2))=1;
+                            if MN(i,1)>1
+                                val{1}(MN(i,1)-1,MN(i,2))=1;
+                            end
+                            val{2}(MN(i,1),MN(i,2))=1;
+                            if MN(i,2)>1
+                                val{2}(MN(i,1),MN(i,2)-1)=1;
+                            end
                         end
                     end
                 end
@@ -437,25 +549,25 @@ if Props.File~=0
         case {'observation points','discharge stations'}
             switch filetp
                 case 'observation points'
-                    MN=tmpData.MN(idx{M_},:);
+                    MN=Attrib.MN(idx{M_},:);
                 case 'discharge stations'
                     switch Props.Fld
                         case 1
-                            MN=tmpData.MNK(idx{M_},[1 2]);
+                            MN=Attrib.MNK(idx{M_},[1 2]);
                         case 2
-                            MN=tmpData.MNK_out(idx{M_},[1 2]);
+                            MN=Attrib.MNK_out(idx{M_},[1 2]);
                     end
             end
             linidx=sub2ind(size(FI.X),MN(:,1),MN(:,2));
             [x,y]=gridinterp(0,0,'z',FI.X,FI.Y);
             x=x(linidx);
             y=y(linidx);
-            val{1}=tmpData.Name; % (idx{M_}) indexing done after this switch statement
+            val{1}=Attrib.Name; % (idx{M_}) indexing done after this switch statement
         case {'drypoint'}
             val{1}=zeros(size(FI.X));
-            for i=1:size(tmpData.MN,1)
-                i1 = tmpData.MN(i,[1 3]);
-                i2 = tmpData.MN(i,[2 4]);
+            for i=1:size(Attrib.MN,1)
+                i1 = Attrib.MN(i,[1 3]);
+                i2 = Attrib.MN(i,[2 4]);
                 val{1}(min(i1):max(i1),min(i2):max(i2))=1;
             end
         otherwise
@@ -467,8 +579,8 @@ if Props.File~=0
     end
 else
     switch(Props.Name)
-        case {'nm index','nm index (DD simulation)'}
-            if strcmp(Props.Name,'nm index (DD simulation)')
+        case {'nm cell index','nm cell index (DD simulation)','nm node index','nm node index (DD simulation)'}
+            if length(Props.Name)>14 && strcmp(Props.Name(end-14:end),'(DD simulation)')
                 ddb = 1;
             else
                 ddb = 0;
@@ -489,7 +601,7 @@ else
             full = reshape(nmlb:nmub,[nub-nlb+1 mub-mlb+1]);
             full = permute(full(1+ddb:end-ddb,3+ddb:end-2-ddb),[3 2 1]); % permute M and N and add 1 as time dimension in front
             val{1}=full(1,elidx{:});
-        case '(m,n) indices'
+        case {'(m,n) cell indices','(m,n) node indices'}
             val{1}=cell(1, length(elidx{1}), length(elidx{2}));
             for m = 1:length(elidx{1})
                 for n = 1:length(elidx{2})
@@ -667,10 +779,14 @@ end
 
 % generate output ...
 if XYRead
-    Ans.X=x;
-    Ans.Y=y;
-    Ans.XUnits='m';
-    Ans.YUnits='m';
+    if ~isempty(xy)
+        Ans.XY = xy;
+    else
+        Ans.X=x;
+        Ans.Y=y;
+        Ans.XUnits='m';
+        Ans.YUnits='m';
+    end
     if isfield(FI,'CoordinateSystem') && isequal(lower(FI.CoordinateSystem),'spherical')
         Ans.XUnits='deg';
         Ans.YUnits='deg';
@@ -714,15 +830,23 @@ varargout={Ans FI};
 
 % -----------------------------------------------------------------------------
 function Out=infile(FI,domain)
-
+%Str=sprintf('%s (%s)',Attribs(i).FileType,AttribName);
+[p,f]=fileparts(FI.FileName);
+Str = sprintf('enclosure (%s.enc)',f);
 %======================== SPECIFIC CODE =======================================
 PropNames={'Name'                    'Geom' 'Coords' 'DimFlag' 'DataInCell' 'NVal' 'VecType' 'Loc' 'ReqLoc' 'Loc3D' 'File' 'Fld'};
-DataProps={'morphologic grid'        'sQUAD' 'xy'    [0 0 1 1 0]  0          0     ''        'd'   'd'      ''      0      0
+DataProps={'morphologic grid'         'sQUAD' 'xy'    [0 0 1 1 0]  0          0     ''        'd'   'd'      ''      0      0
     'hydrodynamic grid'               'sQUAD' 'xy'    [0 0 1 1 0]  0          0     ''        'z'   'z'      'i'     0      0
+    Str                               'sQUAD' 'xy'    [0 0 1 1 0]  0          0     ''        'd'   'd'      ''     -1      1
+    'clipped grid'                    'sQUAD' 'xy'    [0 0 1 1 0]  0          0     ''        'd'   'd'      ''      0      0
     '-------'                         ''      ''      [0 0 0 0 0]  0          0     ''        ''    ''       ''      0      0
-    '(m,n) indices'                   'sQUAD' 'xy'    [0 0 1 1 0]  1          4     ''        'z'   'z'      'i'     0      0
-    'nm index'                        'sQUAD' 'xy'    [0 0 1 1 0]  1          1     ''        'z'   'z'      'i'     0      0
-    'nm index (DD simulation)'        'sQUAD' 'xy'    [0 0 1 1 0]  1          1     ''        'z'   'z'      'i'     0      0   };
+    '(m,n) node indices'              'sQUAD' 'xy'    [0 0 1 1 0]  0          4     ''        'd'   'd'      'i'     0      0
+    'nm node index'                   'sQUAD' 'xy'    [0 0 1 1 0]  0          1     ''        'd'   'd'      'i'     0      0
+    'nm node index (DD simulation)'   'sQUAD' 'xy'    [0 0 1 1 0]  0          1     ''        'd'   'd'      'i'     0      0
+    '-------'                         ''      ''      [0 0 0 0 0]  0          0     ''        ''    ''       ''      0      0
+    '(m,n) cell indices'              'sQUAD' 'xy'    [0 0 1 1 0]  1          4     ''        'z'   'z'      'i'     0      0
+    'nm cell index'                   'sQUAD' 'xy'    [0 0 1 1 0]  1          1     ''        'z'   'z'      'i'     0      0
+    'nm cell index (DD simulation)'   'sQUAD' 'xy'    [0 0 1 1 0]  1          1     ''        'z'   'z'      'i'     0      0   };
 
 %======================== SPECIFIC CODE DIMENSIONS ============================
 Attribs = qp_option(FI,'AttribFiles');
@@ -854,6 +978,10 @@ if ~isempty(Attribs)
                 l=l+1;
                 Str=sprintf('3D gate (%s)',AttribName);
                 DataProps(l,:)={Str       'sQUAD' 'xy'   [0 0 1 1 5]  0        0      ''        'd'   'd'      ''      i      1   };
+            case {'rigidsheet'}
+                l=l+1;
+                Str=sprintf('Sheet or plate (%s)',AttribName);
+                DataProps(l,:)={Str       'sQUAD' 'xy'   [0 0 1 1 5]  0        0      ''        'd'   'd'      ''      i      1   };
             case {'observation points'}
                 l=l+1;
                 Str=sprintf('observation points (%s)',AttribName);
@@ -896,14 +1024,23 @@ if ~isempty(Attribs)
                             name = Types(bndTyp);
                     end
                     Str=sprintf('%s boundaries (%s)',name,AttribName);
+                    Str2=sprintf('%s boundary (%s)',name,AttribName);
                     DataProps(l,:)={Str ...
                         'sQUAD' 'xy'  [0 0 1 1 0]  0       0    ''        'd'   'd'      ''      i      Types(bndTyp)   };
+                    l=l+1;
+                    DataProps(l,:)={Str2 ...
+                        'POLYL' 'xy'  [0 5 0 0 0]  0       0    ''        'd'   'd'      ''      i      Types(bndTyp)   };
                 end
-            case {'cross-sections'}
+            case {'cross-sections','barriers'}
+                type=Attribs(i).FileType;
                 l=l+1;
-                Str=sprintf('cross-sections (%s)',AttribName);
-                DataProps(l,:)={...
-                    Str 'sQUAD' 'xy'  [0 0 1 1 0]  0       0    ''        'd'   'd'      ''      i      1   };
+                Str=sprintf('%s (%s)',type,AttribName);
+                Str2=sprintf('%s (%s)',type(1:end-1),AttribName);
+                DataProps(l,:)={Str ...
+                    'sQUAD' 'xy'  [0 0 1 1 0]  0       0    ''        'd'   'd'      ''      i      1   };
+                l=l+1;
+                DataProps(l,:)={Str2 ...
+                    'POLYL' 'xy'  [0 5 0 0 0]  0       0    ''        'd'   'd'      ''      i      1   };
             case 'bagmap'
                 switch Attrib.Quantity
                     case 'results dredging volumes'
@@ -934,7 +1071,7 @@ if ~isempty(Attribs)
             case 'enclosure'
                 l=l+1;
                 Str=sprintf('%s (%s)',Attribs(i).FileType,AttribName);
-                DataProps(l,:)={Str      'sQUAD'     'xy' [1 0 1 1 0]  0          0      ''        'd'   'd'      ''      i      1   };
+                DataProps(l,:)={Str      'sQUAD'     'xy' [0 0 1 1 0]  0          0      ''        'd'   'd'      ''      i      1   };
             otherwise
         end
     end
@@ -953,14 +1090,13 @@ function subf=getsubfields(FI,Props,f)
 subf={};
 if Props.File>0
     Attribs = qp_option(FI,'AttribFiles');
-    FID=Attribs(Props.File);
-    switch FID.FileType
+    Attrib=qp_unwrapfi(Attribs(Props.File));
+    switch Attrib.FileType
         case 'trtarea'
-            FID=FID.Data;
-            nrid=length(FID.RoughnessIDs);
+            nrid=length(Attrib.RoughnessIDs);
             subf=cell(nrid,1);
             for i=1:nrid
-                subf{i}=sprintf('roughness code %i',FID.RoughnessIDs(i));
+                subf{i}=sprintf('roughness code %i',Attrib.RoughnessIDs(i));
             end
         otherwise
             % default no subfields
@@ -990,11 +1126,15 @@ else
             sz(M_)=size(Attrib.MN,1);
         case {'discharge stations'}
             sz(M_)=size(Attrib.MNK,1);
+        case {'openboundary'}
+            sz(ST_)=sum(Attrib.BndType==Props.Fld);
+        case {'cross-sections','barriers'}
+            sz(ST_)=length(Attrib.Name);
     end
 end
 if Props.DimFlag(K_)
-    if ~isempty(strmatch('3D',Props.Name))
-        sz(K_)=Attrib.NLyr;
+    if isfield(Attrib,'KMax')
+        sz(K_)=Attrib.KMax;
     else
         sz(K_)=length(Props.Fld)/Props.NVal;
     end
@@ -1056,6 +1196,25 @@ if Props.File>0
     end
 else
     T=t(:);
+end
+% -----------------------------------------------------------------------------
+
+% -----------------------------------------------------------------------------
+function S=readsts(FI,Props,t)
+if Props.File<=0
+    S = {};
+    return
+end
+Attribs = qp_option(FI,'AttribFiles');
+Attrib = qp_unwrapfi(Attribs(Props.File));
+switch Attrib.FileType
+    case {'openboundary'}
+        S = Attrib.Name(Attrib.BndType==Props.Fld);
+    case {'cross-sections','barriers'}
+        S = Attrib.Name;
+end
+if nargin>2
+    S=S(t);
 end
 % -----------------------------------------------------------------------------
 
@@ -1151,23 +1310,24 @@ switch cmd
     case {'rstpc','rstunix','rstascii'}
         Handle_SelectFile=findobj(mfig,'tag','selectfile');
         NrInList=get(Handle_SelectFile,'value');
+        Name  = Attribs(NrInList).Name;
         Attrib = qp_unwrapfi(Attribs(NrInList));
-        Slash=sort([strfind(Attrib.Name,'/') strfind(Attrib.Name,'\')]);
+        Slash=sort([strfind(Name,'/') strfind(Name,'\')]);
         if strcmp(cmd,'rstascii')
-            RstName = [Attrib.Name(1:max(Slash)) '*.ini'];
+            RstName = [Name(1:max(Slash)) '*.ini'];
         else
-            Dot=strfind(Attrib.Name,'.');
+            Dot=strfind(Name,'.');
             Dot(Dot<max(Slash)) = [];
             if isempty(Dot)
-                Dot=length(Attrib.Name);
+                Dot=length(Name);
             end
-            RstName = [Attrib.Name(1:Dot(1)) '*'];
+            RstName = [Name(1:Dot(1)) '*'];
         end
         [f,p]=uiputfile(RstName,'Save as ...');
         if ischar(f)
-            NLyr  = qp_option(Attrib(NrInList),'NLyr');
-            NSubs = qp_option(Attrib(NrInList),'NSubs');
-            NTurb = qp_option(Attrib(NrInList),'NTurb');
+            NLyr  = qp_option(Attrib,'NLyr');
+            NSubs = qp_option(Attrib,'NSubs');
+            NTurb = qp_option(Attrib,'NTurb');
             %
             h_nelyr = findobj(mfig,'tag','nelyr');
             NELyr = get(h_nelyr,'userdata');
@@ -1257,27 +1417,7 @@ switch cmd
                 set(Handle_SelectFile,'tooltip',Attribs(NrInList).Name)
             end
         end
-        if isempty(Attribs) || ~strcmp(Attribs(NrInList).FileType,'trirst')
-            set(findobj(mfig,'tag','rstunix'),'enable','off')
-            set(findobj(mfig,'tag','rstpc'),'enable','off')
-            set(findobj(mfig,'tag','rstascii'),'enable','off')
-            if isempty(Attribs) || ~strcmp(Attribs(NrInList).FileType,'3dgate')
-                set(findobj(mfig,'tag','nlyr'),'enable','off','backgroundcolor',Inactive,'string','')
-                set(findobj(mfig,'tag','nlyrtxt'),'enable','off')
-            else
-                set(findobj(mfig,'tag','nlyr'),'enable','on','backgroundcolor',Active,'string','')
-                set(findobj(mfig,'tag','nlyrtxt'),'enable','on')
-                NewFI=options(NewFI,mfig,'nlyr',NaN);
-            end
-            set(findobj(mfig,'tag','nelyr'),'enable','off','backgroundcolor',Inactive,'string','')
-            set(findobj(mfig,'tag','nelyrtxt'),'enable','off')
-            set(findobj(mfig,'tag','nsubs'),'enable','off','backgroundcolor',Inactive,'string','')
-            set(findobj(mfig,'tag','nsubstxt'),'enable','off')
-            set(findobj(mfig,'tag','nturb'),'enable','off','backgroundcolor',Inactive,'string','')
-            set(findobj(mfig,'tag','nturbtxt'),'enable','off')
-            set(findobj(mfig,'tag','nfld'),'enable','off','backgroundcolor',Inactive,'string','')
-            set(findobj(mfig,'tag','nfldtxt'),'enable','off')
-        else
+        if ~isempty(Attribs) && strcmp(Attribs(NrInList).FileType,'trirst')
             Attrib = qp_unwrapfi(Attribs(NrInList));
             set(findobj(mfig,'tag','nelyr'),'enable','on','backgroundcolor',Active,'string','')
             set(findobj(mfig,'tag','nelyrtxt'),'enable','on')
@@ -1300,6 +1440,26 @@ switch cmd
                 set(findobj(mfig,'tag','nturbtxt'),'enable','off')
                 NewFI.Data(NrInList).Data.NTurb=0;
             end
+        else
+            set(findobj(mfig,'tag','rstunix'),'enable','off')
+            set(findobj(mfig,'tag','rstpc'),'enable','off')
+            set(findobj(mfig,'tag','rstascii'),'enable','off')
+            if ~isempty(Attribs) && strcmp(Attribs(NrInList).FileType,'3dgate')
+                set(findobj(mfig,'tag','nlyr'),'enable','on','backgroundcolor',Active,'string','')
+                set(findobj(mfig,'tag','nlyrtxt'),'enable','on')
+                NewFI=options(NewFI,mfig,'nlyr',NaN);
+            else
+                set(findobj(mfig,'tag','nlyr'),'enable','off','backgroundcolor',Inactive,'string','')
+                set(findobj(mfig,'tag','nlyrtxt'),'enable','off')
+            end
+            set(findobj(mfig,'tag','nelyr'),'enable','off','backgroundcolor',Inactive,'string','')
+            set(findobj(mfig,'tag','nelyrtxt'),'enable','off')
+            set(findobj(mfig,'tag','nsubs'),'enable','off','backgroundcolor',Inactive,'string','')
+            set(findobj(mfig,'tag','nsubstxt'),'enable','off')
+            set(findobj(mfig,'tag','nturb'),'enable','off','backgroundcolor',Inactive,'string','')
+            set(findobj(mfig,'tag','nturbtxt'),'enable','off')
+            set(findobj(mfig,'tag','nfld'),'enable','off','backgroundcolor',Inactive,'string','')
+            set(findobj(mfig,'tag','nfldtxt'),'enable','off')
         end
         %
         if isempty(Attribs) || (~strcmp(Attribs(NrInList).FileType,'wldep') && ...

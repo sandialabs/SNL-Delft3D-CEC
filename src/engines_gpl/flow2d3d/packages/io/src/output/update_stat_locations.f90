@@ -2,7 +2,7 @@ subroutine update_stat_locations(nostat    ,ndro      ,mndro     ,xydro     ,tim
                                & julday    ,lundia    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine update_stat_locations(nostat    ,ndro      ,mndro     ,xydro     ,tim
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: update_stat_locations.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/update_stat_locations.f90 $
+!  $Id: update_stat_locations.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/update_stat_locations.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Updates the monitoring locations
@@ -55,6 +55,7 @@ subroutine update_stat_locations(nostat    ,ndro      ,mndro     ,xydro     ,tim
     integer        , dimension(:)    , pointer :: stat_tabidx
     integer        , dimension(:, :) , pointer :: mnstat
     real(fp)       , dimension(:, :) , pointer :: xystat
+    logical                          , pointer :: spheric
 !
 ! Global variables
 !
@@ -83,6 +84,7 @@ subroutine update_stat_locations(nostat    ,ndro      ,mndro     ,xydro     ,tim
     stat_tabidx      => gdp%gdstations%stat_tabidx
     mnstat           => gdp%gdstations%mnstat
     xystat           => gdp%gdstations%xystat
+    spheric          => gdp%gdtricom%sferic
     !
     do i = 1,nostat
        if (stat_type(i) == 0) then
@@ -103,7 +105,7 @@ subroutine update_stat_locations(nostat    ,ndro      ,mndro     ,xydro     ,tim
           call findnm_kcs_flowwrapper(xystat(1,i), xystat(2,i), &
                                     & mnstat(1,i), mnstat(2,i), &
                                     & rmp        , rnp        , &
-                                    & inside     , gdp)
+                                    & inside     , spheric    , gdp)
           if (.not.inside) then
              mnstat(1,i) = -999
              mnstat(2,i) = -999

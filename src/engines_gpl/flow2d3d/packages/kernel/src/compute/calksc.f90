@@ -1,11 +1,11 @@
-subroutine calksc(nmmax     ,itimtt    ,dps       ,s1        ,lsedtot   , &
+subroutine calksc(nmmax     ,dps       ,s1        ,lsedtot   , &
                 & u         ,v         ,kfs       ,z0urou    , &
                 & z0vrou    ,kfu       ,kfv       ,sig       , &
                 & kmax      ,hrms      ,rlabda    ,tp        , &
                 & deltau    ,deltav    ,icx       ,icy       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine calksc(nmmax     ,itimtt    ,dps       ,s1        ,lsedtot   , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: calksc.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/calksc.f90 $
+!  $Id: calksc.f90 65922 2020-02-03 13:22:49Z jagers $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/calksc.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Calculate ripple height, mega ripple height and dune height Van Rijn (2004)
@@ -89,7 +89,6 @@ subroutine calksc(nmmax     ,itimtt    ,dps       ,s1        ,lsedtot   , &
 !
     integer                                           , intent(in)  :: icx
     integer                                           , intent(in)  :: icy
-    integer                                           , intent(in)  :: itimtt
     integer                                           , intent(in)  :: lsedtot !  Description and declaration in esm_alloc_int.f90
     integer                                           , intent(in)  :: kmax    !  Description and declaration in dimens.igs
     integer                                           , intent(in)  :: nmmax   !  Description and declaration in dimens.igs
@@ -209,22 +208,9 @@ subroutine calksc(nmmax     ,itimtt    ,dps       ,s1        ,lsedtot   , &
        par5 = kdpar(5)
        par6 = kdpar(6)
        !
-       ! In revision 13740, the relaxation coefficients were changed such that
-       ! the meaning of the time scales to be provided by the user are better
-       ! defined and consistent for different time steps.
-       ! We keep the old code temporarily for reference and simple reactivation
-       ! for reproducing old project results.
-       !
-       !relaxr  = 5.0_fp * (dt * tunit * itimtt) / (max(1.0e-3_fp , par4*60.0_fp))
-       !relaxr  = max(min(1.0_fp - relaxr , 1.0_fp) , 0.0_fp)
-       !relaxmr = 5.0_fp * (dt * tunit * itimtt) / (max(1.0e-3_fp , par5*60.0_fp))
-       !relaxmr = max(min(1.0_fp - relaxmr , 1.0_fp) , 0.0_fp)
-       !relaxd  = 5.0_fp * (dt * tunit * itimtt) / (max(1.0e-3_fp , par6*60.0_fp))
-       !relaxd  = max(min(1.0_fp - relaxd , 1.0_fp) , 0.0_fp)
-       !
-       relaxr  = exp(- dt * itimtt / max(1.0e-20_fp, par4))
-       relaxmr = exp(- dt * itimtt / max(1.0e-20_fp, par5))
-       relaxd  = exp(- dt * itimtt / max(1.0e-20_fp, par6))
+       relaxr  = exp(- dt / max(1.0e-20_fp, par4))
+       relaxmr = exp(- dt / max(1.0e-20_fp, par5))
+       relaxd  = exp(- dt / max(1.0e-20_fp, par6))
        !
        do nm = 1, nmmax
           if (kfs(nm)>0) then
@@ -331,8 +317,7 @@ subroutine calksc(nmmax     ,itimtt    ,dps       ,s1        ,lsedtot   , &
              if (d50 < dsilt) then
                 rksr0 = 20_fp * dsilt
              endif
-             rksr0    = min(max(d90 , rksr0) , 0.02_fp*depth)
-             rksr0    = rksr0 * par1
+             rksr0    = min(max(d90 , rksr0) , 0.02_fp*depth) * par1
              rksr(nm) = relaxr*rksr(nm) + (1.0_fp-relaxr)*rksr0
              !
              ! Mega-ripples
@@ -385,19 +370,7 @@ subroutine calksc(nmmax     ,itimtt    ,dps       ,s1        ,lsedtot   , &
              else
                 rksd0 = 0.0_fp
              endif
-             !
-             ! In revision 7868, the following code was commented out because it doesn't
-             ! match the paper of Van Rijn(2007). The following code may, however, be needed
-             ! to reproduce some projects, so for the time being we leave it in such that
-             ! it can be reactivated easily when needed.
-             !
-             !if (d50 < dsilt) then
-             !   rksd0 = 0.0_fp
-             !elseif (d50 <= 1.5_fp*dsand) then
-             !   rksd0 = 200.0_fp * (d50 / (1.5_fp * dsand)) * d50
-             !else
-             !   rksd0 = 0.0_fp
-             !endif
+             rksd0 = rksd0*par3
              rksd(nm)  = relaxd*rksd(nm) + (1.0_fp-relaxd)*rksd0
           else
              rksr(nm)  = 0.01_fp

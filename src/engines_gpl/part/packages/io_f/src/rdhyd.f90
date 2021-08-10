@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -203,7 +203,7 @@ end module
      &                                         doms(i)%mmax, doms(i)%nmax, token2
                      if ( token2 .ne. "none" ) then
                         write ( lunit(2), * ) 'ERROR: aggregation not allowed !'
-                        call srstop(1)
+                        call stop_exit(1)
                      endif
                   endif
                enddo
@@ -246,7 +246,7 @@ end module
                   if ( bnds(i)%r1%did .eq. 0 .or. bnds(i)%r2%did .eq. 0 ) then
                      write ( lunit(2), * ) ' ERROR. A domain name not found: ',    &
      &                                       bnds(i)%r1%name, bnds(i)%r2%name
-                     call srstop(1)
+                     call stop_exit(1)
                   endif
                enddo
          end select

@@ -2,7 +2,7 @@ subroutine rdbedformpar(lundia    ,error     ,nmax      ,mmax      ,nmaxus    , 
                       & nmmax     ,sedim     ,gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine rdbedformpar(lundia    ,error     ,nmax      ,mmax      ,nmaxus    , 
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdbedformpar.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdbedformpar.f90 $
+!  $Id: rdbedformpar.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdbedformpar.f90 $
   !!--description-----------------------------------------------------------------
   !
   ! Read bed form parameters from MDF file
@@ -649,8 +649,8 @@ subroutine rdbedformpar(lundia    ,error     ,nmax      ,mmax      ,nmaxus    , 
     !---------------------------
     ! Reading initial dune height/dune length
     !
-    call restart_bdf_from_trim(lundia   ,nmaxus   ,mmax     ,duneheight, &
-                             & hdread   ,dunelength,ldread  ,gdp      )
+    call restart_trim_bdf(lundia   ,nmaxus   ,mmax     ,duneheight, &
+                        & hdread   ,dunelength,ldread  ,gdp      )
     !
     if (.not.hdread) then
        !

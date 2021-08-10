@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -35,6 +35,9 @@
 !     contains the following subroutine:
 !
       integer, parameter :: NAME_SIZE      =  20                ! size of descriptive names
+      integer, parameter :: STDN_SIZE      =  100               ! size of standard names
+      integer, parameter :: UNIT_SIZE      =  40                ! size of units
+      integer, parameter :: DESC_SIZE      =  60                ! size of long description
 
       integer, parameter :: IMON              =   1          ! type monitoring file
       integer, parameter :: IMO2              =   2          ! type of output file
@@ -57,11 +60,25 @@
       integer, parameter :: IHN4              =  19          ! type of output file
       integer, parameter :: IBA2              =  20          ! type of output file
       integer, parameter :: IBA3              =  21          ! type of output file
+      integer, parameter :: IHNC              =  22          ! type of output file
+      integer, parameter :: IHNC2             =  23          ! type of output file
+      integer, parameter :: IMNC              =  24          ! type of output file
+      integer, parameter :: IMNC2             =  25          ! type of output file
+      integer, parameter :: IHNC3             =  26          ! type of output file
+      integer, parameter :: IHNC4             =  27          ! type of output file
+!
+!          use NetCDF output and options
+!
+      logical               :: lncout
+      integer, dimension(4) :: ncopt
 !
 !          this is the collection of the output pointers
 !
       type OutputColl
          character(LEN=NAME_SIZE),pointer :: names(:)           ! names of variables
+         character(LEN=STDN_SIZE),pointer :: stdnames(:)        ! standard names of variables
+         character(LEN=UNIT_SIZE),pointer :: units(:)           ! units of variables
+         character(LEN=DESC_SIZE),pointer :: descrs(:)          ! descriptions of variables
          integer, pointer                 :: pointers(:)        ! ponters in waq arrays
          integer                          :: cursize            ! filled up to this size
       end type OutputColl

@@ -1,9 +1,10 @@
       subroutine detcon(lundia,fout  ,lunadm,bndval,mcbsp ,ncbsp ,
      *                  mnstat,conc  ,iwet  ,nobnd ,notims,nostat,
      *                  kmax  ,lstci                             )
+      implicit none
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +28,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: detcon.f 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/nesthd2/packages/nesthd2/src/detcon.f $
+!  $Id: detcon.f 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/nesthd2/packages/nesthd2/src/detcon.f $
 !***********************************************************************
 ! Deltares                         marine and coastal management
 !
@@ -48,14 +49,14 @@
       integer       mnstat(2,nostat),
      *              mcbsp (nobnd ,2), ncbsp(nobnd ,2)
 
-      real          weight(  4   )
-
-      real          conc  (nostat,kmax  ,lstci ,notims)
-
-      real          bndval(nobnd ,notims,kmax  ,lstci ,2)
+      double precision weight(  4   )
+      double precision conc  (nostat,kmax  ,lstci ,notims)
+      double precision bndval(nobnd ,notims,kmax  ,lstci ,2)
 
       character*1   type
-
+      integer lundia, lunadm, nobnd, notims, nostat, kmax, lstci
+      integer ibnd, isize, m, n, iwght, istat, itim, icon, k
+      double precision angle, weigght
       logical       fout
 
       write (*     ,'('' >>> Generating transport boundary '',

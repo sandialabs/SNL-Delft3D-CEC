@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !
-!  Copyright (C)  Stichting Deltares, 2011-2015.
+!  Copyright (C)  Stichting Deltares, 2011-2020.
 !
 !  This library is free software; you can redistribute it and/or
 !  modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.
 !
 !-------------------------------------------------------------------------------
-!  $Id: tree_struct.f90 5624 2015-12-01 08:16:26Z zeekant $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common/src/tree_struct.f90 $
+!  $Id: tree_struct.f90 65932 2020-02-05 11:10:04Z leander $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common/src/tree_struct.f90 $
 ! tree_struct.f90 --
 !    Module that implements a general tree structure in Fortran 90
 !
@@ -49,11 +49,12 @@
 !
 module TREE_DATA_TYPES
    type TREE_DATA
-      character(len=1), dimension(:), pointer         :: node_name
-      character(len=1), dimension(:), pointer         :: node_data
-      character(len=1), dimension(:), pointer         :: node_data_type
+      character(len=1), dimension(:), pointer         :: node_name => null()
+      character(len=1), dimension(:), pointer         :: node_data => null()
+      character(len=1), dimension(:), pointer         :: node_data_type => null()
       integer                                         :: node_visit     !< Zeroed upon construction, incremented upon node_data request (properties.f90: prop_get_string)
       type(TREE_DATA_PTR), dimension(:), pointer :: child_nodes
+      type(TREE_DATA),                   pointer :: bf_next_node => null() ! Breadth-first next node (same level)
    end type
 
    type TREE_DATA_PTR
@@ -63,6 +64,7 @@ end module
 
 module TREE_STRUCTURES
    use TREE_DATA_TYPES
+   use string_module
    implicit none
 
    private
@@ -74,18 +76,20 @@ module TREE_STRUCTURES
    !
    ! Auxiliary variable
    !
-   integer, parameter                            :: maxlen = 300
-   integer,save                                  :: traverse_level = 0
 
+   integer, public, save                              :: maxlen = 300          ! 300 default value
+   integer,save                                       :: traverse_level = 0
+   ! character(len=1), allocatable, public, save      :: node_value_helper(:)  ! flow_io variable
    !
    ! Public routines, types and parameters
    !
    public  :: TREE_DATA
    public  :: tree_create, tree_create_node, tree_add_node, tree_get_node_by_name, tree_num_nodes, &
+              tree_count_nodes_byname,                                                             &
               tree_get_data_ptr, tree_put_data, tree_get_name, tree_get_data,                      &
               tree_get_datatype, tree_get_data_string,                                             &
               tree_traverse, tree_traverse_level, print_tree,                                      &
-              tree_fold, tree_destroy
+              tree_fold, tree_destroy, tree_get_data_alloc_string
    ! nested function has to be public for gfortran
    public ::  dealloc_tree_data
 
@@ -101,18 +105,20 @@ contains
 !    The argument tree points to a new, empty tree structure or is
 !    not associated
 !
-subroutine tree_create( name, tree )
+subroutine tree_create( name, tree, maxlenpar )
    character(len=*), intent(in)    :: name
    type(TREE_DATA), pointer        :: tree
 
    integer                         :: error
    integer                         :: newsize
+   integer, optional               :: maxlenpar
 
+   if (present(maxlenpar)) maxlen  = maxlenpar
 !   GD: memory leak here
 !   if(associated(tree)) then
 !     deallocate(tree)
 !   end if
-  
+
    allocate( tree, stat = error )
 
    if ( error .ne. 0 ) then
@@ -207,6 +213,7 @@ subroutine tree_add_node(tree, node, ierror)
          if ( newsize .gt. 1 ) then
             children(1:newsize-1) = tree%child_nodes
             deallocate( tree%child_nodes )
+            children(newsize-1)%node_ptr%bf_next_node => node    ! chain previous node in the breadth-first sense to the new node
          endif
 
          tree%child_nodes => children
@@ -234,6 +241,33 @@ function tree_num_nodes(tree) result(num_nodes)
       end if
    end if
 end function tree_num_nodes
+
+
+!> Counts the number of toplevel tree nodes whose name
+!! are equal to the given name (case insensitive).
+function tree_count_nodes_byname(tree, name) result(count_nodes)
+   type(TREE_DATA), pointer               :: tree !< Tree pointer for which to count the number of matching child nodes.
+   character(len=*),        intent(in   ) :: name !< The name to search for.
+   integer                                :: count_nodes !< The counted number of child nodes with matching name.
+
+   integer :: i, num_nodes
+   character(len=len_trim(name)) :: namei
+   character(len=80)             :: node_name   
+
+   count_nodes = 0
+
+   namei = str_tolower(name) ! input name to lowercase
+
+   num_nodes = tree_num_nodes(tree)
+   do i=1,num_nodes
+      node_name = str_tolower(tree_get_name(tree%child_nodes(i)%node_ptr))
+
+      if (node_name == namei) then
+         count_nodes = count_nodes + 1
+      end if
+   end do
+
+end function tree_count_nodes_byname
 
 
 ! tree_get_name --
@@ -322,8 +356,7 @@ subroutine tree_get_node_by_name( tree, name, node, i_return )
 
    if (present(i_return)) i_return = 0
    nullify( node )
-   low_name = name
-   call lowercase(low_name,999)
+   low_name = str_tolower(name)
 
    node_name = tree_get_name( tree )
 
@@ -331,8 +364,7 @@ subroutine tree_get_node_by_name( tree, name, node, i_return )
       node => tree
    elseif ( associated(tree%child_nodes) ) then
       do i = 1,size(tree%child_nodes)
-         node_name = tree_get_name( tree%child_nodes(i)%node_ptr )
-         call lowercase(node_name,999)
+         node_name = str_tolower(tree_get_name( tree%child_nodes(i)%node_ptr ))
 
          if ( node_name .eq. low_name ) then
             node => tree%child_nodes(i)%node_ptr
@@ -664,25 +696,16 @@ recursive subroutine tree_fold( tree, tree_handler, leaf_handler, data, stop )
 end subroutine tree_fold
 
 
-! tree_get_data_string --
-!    Return data as a simple string
-!
-! Arguments:
-!    tree        The tree or node from which to get the data
-!    string      String to be filled
-!    success     Whether successful or not
-! Result:
+!> Return data as a simple string
 !    The string is filled with the data stored in the node
 !    not associated. The routine is successful if:
 !    - there is data associated with the node/tree
 !    - the data type is "STRING"
-!    If the routine is not successful, the string is
-!    not changed.
-!
+!    If the routine is not successful, the string is not changed.
 subroutine tree_get_data_string( tree, string, success )
-   type(TREE_DATA), pointer                 :: tree
-   character(len=*), intent(out)            :: string
-   logical, intent(out)                     :: success
+   type(TREE_DATA), pointer                 :: tree    !< The tree or node from which to get the data
+   character(len=*), intent(out)            :: string  !< String to be filled
+   logical, intent(out)                     :: success !< Whether successful or not
 
    character(len=1), dimension(:), pointer  :: data_ptr
    character(len=40)                        :: data_type
@@ -696,22 +719,59 @@ subroutine tree_get_data_string( tree, string, success )
       if ( .not. associated(data_ptr) ) then
          return
       endif
-      if ( data_type .ne. 'STRING' ) then
+      if ( data_type /= 'STRING' ) then
          return
       endif
 
-      success          = .true.
-      length           = size(data_ptr)
-      string           = ' '
-      if (length <= maxlen) then
-         length           = min(length,len(string))
-         do i=1,length
+      success = .true.
+      length  = size(data_ptr)
+      string  = ' '
+      if (length <= len(string)) then
+         length = min(length,len(string))
+         do i=1, length
             string(i:i) = data_ptr(i)
          end do
       endif
    endif
 
 end subroutine tree_get_data_string
+
+!> Return data as a (allocatable) string
+!    The string is filled with the data stored in the node
+!    not associated. The routine is successful if:
+!    - there is data associated with the node/tree
+!    - the data type is "STRING"
+!    If the routine is not successful, the string is not changed.
+subroutine tree_get_data_alloc_string( tree, string, success )
+   type(TREE_DATA), pointer                   :: tree    !< The tree or node from which to get the data
+   character(len=:), allocatable, intent(out) :: string  !< String to be filled
+   logical, intent(out)                       :: success !< Whether successful or not
+
+   character(len=1), dimension(:), pointer  :: data_ptr
+   character(len=40)                        :: data_type
+   integer                                  :: length
+   integer                                  :: i
+
+   success = .false.
+   if ( associated(tree) ) then
+      call tree_get_data_ptr( tree, data_ptr, data_type )
+
+      if ( .not. associated(data_ptr) ) then
+         return
+      endif
+      if ( data_type /= 'STRING' ) then
+         return
+      endif
+
+      success = .true.
+      length  = size(data_ptr)
+      allocate(character(len=length)::string)
+      do i=1, length
+         string(i:i) = data_ptr(i)
+      end do
+   endif
+
+end subroutine tree_get_data_alloc_string
 
 subroutine print_tree( tree, data, stop )
    type(TREE_DATA), pointer               :: tree
@@ -751,47 +811,6 @@ subroutine print_tree( tree, data, stop )
                  trim(type_string), ' -- ', success
    end select
 end subroutine print_tree
-!
-!
-! --------------------------------------------------------------------
-!   Subroutine: lowercase
-!   Author:     Cor van der Schelde
-!   Purpose:    Convert upper case characters to lower case
-!   Context:    This is a copy of subroutine small in Delft3D-FLOW
-!               Used inside properties module
-!   Summary:
-!               Scan string for upper case characters and
-!               convert them.
-!   Arguments:
-!   string      String to be converted
-!   lenstr      Length of string to be converted
-! --------------------------------------------------------------------
-!
-subroutine lowercase(string    ,lenstr    )
-    implicit none
-    !
-    ! Global variables
-    !
-    integer     , intent(in) :: lenstr
-    character(*)             :: string
-    !
-    ! Local variables
-    !
-    integer :: i
-    integer :: j
-    integer :: newlen
-    !
-    !! executable statements -------------------------------------------------------
-    !
-    newlen = min(lenstr, len(string))
-    do i = 1, newlen
-       j = ichar(string(i:i))
-       if ((j>64) .and. (j<91)) then
-          j = j + 32
-          string(i:i) = char(j)
-       endif
-    enddo
-end subroutine lowercase
 
 end module TREE_STRUCTURES
 

@@ -6,7 +6,7 @@ subroutine rdbndd(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                 & gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -30,8 +30,8 @@ subroutine rdbndd(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdbndd.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdbndd.f90 $
+!  $Id: rdbndd.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdbndd.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads the boundary definition records from the
@@ -105,50 +105,51 @@ subroutine rdbndd(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 ! Local variables
 !
     integer                                     :: i
-    integer                                     :: idef     ! Help var. containing default va- lue(s) for integer variable 
-    integer                                     :: inprof   ! Index number of first character in PROFIL string of TPROFC definition
-    integer                                     :: istat
-    integer                                     :: j
-    integer                                     :: lenc     ! Help var. (length of var. cvar to be looked for in the MD-file) 
-    integer                                     :: lkw
-    integer                                     :: lnto     ! Local number of boundary openings read in attribute file, test with input NTO 
-    integer                                     :: lntof    ! Local number of harmonic boundary openings read in attribute file, test with input NTO 
-    integer                                     :: lntoq    ! Local number of QH openings read in attribute file, test with input NTO 
-    integer                                     :: n        ! Help var. 
-    integer                                     :: nlook    ! Help var.: nr. of data to look for in the MD-file 
-    integer                                     :: nn
-    integer                                     :: ntest    ! Help var. 
-    integer                                     :: ntrec    ! Help. var to keep track of NRREC 
-    integer       , dimension(4)                :: ival     ! Help array (int.) where the data, recently read from the MD-file, are stored temporarily 
-    integer       , dimension(mxdnto)           :: nsd      ! integer array to store sequence numbers of arrays mnbnd, alpha, typbnd, datbnd, statns, nambnd and tprofu in own subdomain
-    integer       , dimension(:,:), allocatable :: itemp    ! work array to store mnbnd temporarily
-    logical                                     :: defaul   ! Flag set to YES if default value may be applied in case var. read is empty (ier <= 0, or nrread < nlook) 
+    integer                                     :: idef        ! Help var. containing default va- lue(s) for integer variable 
+    integer                                     :: inprof      ! Index number of first character in PROFIL string of TPROFC definition
+    integer                                     :: istat       
+    integer                                     :: j	       
+    integer                                     :: lenc        ! Help var. (length of var. cvar to be looked for in the MD-file) 
+    integer                                     :: lkw	       
+    integer                                     :: lnto        ! Local number of boundary openings read in attribute file, test with input NTO 
+    integer                                     :: lntof       ! Local number of harmonic boundary openings read in attribute file, test with input NTO 
+    integer                                     :: lntoq       ! Local number of QH openings read in attribute file, test with input NTO 
+    integer                                     :: n           ! Help var. 
+    integer                                     :: nlook       ! Help var.: nr. of data to look for in the MD-file 
+    integer                                     :: nn	       
+    integer                                     :: ntest       ! Help var. 
+    integer                                     :: ntrec       ! Help. var to keep track of NRREC 
+    integer       , dimension(4)                :: ival        ! Help array (int.) where the data, recently read from the MD-file, are stored temporarily 
+    integer       , dimension(mxdnto)           :: nsd         ! integer array to store sequence numbers of arrays mnbnd, alpha, typbnd, datbnd, statns, nambnd and tprofu in own subdomain
+    integer       , dimension(:,:), allocatable :: itemp       ! work array to store mnbnd temporarily
+    logical                                     :: defaul      ! Flag set to YES if default value may be applied in case var. read is empty (ier <= 0, or nrread < nlook) 
     logical                                     :: found
-    logical                                     :: lerror   ! Flag=TRUE if a local error is encountered 
-    logical                                     :: ltest    ! Help var. for complex if test 
-    logical                                     :: newkw    ! Logical var. specifying whether a new recnam should be read from the MD-file or just new data in the continuation line 
-    logical                                     :: nodef    ! Flag set to YES if default value may NOT be applied in case var. read is empty (ier <= 0, or nrread < nlook) 
-    logical                                     :: outsd    ! indicating whether boundary opening is outside subdomain (.TRUE.) or not (.FALSE.)
+    logical                                     :: lerror      ! Flag=TRUE if a local error is encountered 
+    logical                                     :: ltest       ! Help var. for complex if test 
+    logical                                     :: newkw       ! Logical var. specifying whether a new recnam should be read from the MD-file or just new data in the continuation line 
+    logical                                     :: nodef       ! Flag set to YES if default value may NOT be applied in case var. read is empty (ier <= 0, or nrread < nlook) 
+    logical                                     :: outsd       ! indicating whether boundary opening is outside subdomain (.TRUE.) or not (.FALSE.)
     logical                                     :: onParbndIsInside
-    real(fp)                                    :: rdef     ! Help var. containing default va- lue(s) for real variable 
-    real(fp)      , dimension(4)                :: rval     ! Help array (real) where the data, recently read from the MD-file, are stored temporarily 
-    real(fp)      , dimension(:), allocatable   :: rtemp    ! work array to store alpha temporarily
-    character(1)                                :: cdefd    ! Default value when DATBND not found 
-    character(1)                                :: cdeft    ! Default value when TYPBND not found 
-    character(11)                               :: fmtdef   ! Default file format (usually=FR) 
-    character(11)                               :: fmttmp   ! Help variable for file format 
-    character(12)                               :: cdefl    ! Default value when STATNS not found 
-    character(12)                               :: fildef   ! Default file name (usually = blank) 
-    character(20)                               :: cdefn    ! Default value when NAMBND not found 
-    character(20)                               :: cdefp    ! Default value when PROFU not found 
-    character(20) , dimension(2)                :: chulp    ! Help var. 
-    character(3)                                :: errmsg   ! Character var. containing the errormessage to be written to file. The message depends on the error. 
-    character(6)                                :: keyw     ! Name of record to look for in the MD-file (usually KEYWRD or RECNAM) 
-    character(60)                               :: profil   ! Total string of possible profiles
-    character(100)                              :: message
-    character(20) , dimension(:,:), allocatable :: ctmp1    ! work array to store nambnd/tprofu temporarily
-    character( 1) , dimension(:,:), allocatable :: ctmp2    ! work array to store typbnd/datbnd temporarily
-    character(12) , dimension(:,:), allocatable :: ctmp3    ! work array to store statns temporarily
+    logical                                     :: isSameOrien ! indicating whether the partition boundary orientation (idir) is the same as the open boundary orientation (.TRUE.) or not (.FALSE.). The default is true.
+    real(fp)                                    :: rdef        ! Help var. containing default va- lue(s) for real variable 
+    real(fp)      , dimension(4)                :: rval        ! Help array (real) where the data, recently read from the MD-file, are stored temporarily 
+    real(fp)      , dimension(:), allocatable   :: rtemp       ! work array to store alpha temporarily
+    character(1)                                :: cdefd       ! Default value when DATBND not found 
+    character(1)                                :: cdeft       ! Default value when TYPBND not found 
+    character(11)                               :: fmtdef      ! Default file format (usually=FR) 
+    character(11)                               :: fmttmp      ! Help variable for file format 
+    character(12)                               :: cdefl       ! Default value when STATNS not found 
+    character(12)                               :: fildef      ! Default file name (usually = blank) 
+    character(20)                               :: cdefn       ! Default value when NAMBND not found 
+    character(20)                               :: cdefp       ! Default value when PROFU not found 
+    character(20) , dimension(2)                :: chulp       ! Help var. 
+    character(3)                                :: errmsg      ! Character var. containing the errormessage to be written to file. The message depends on the error. 
+    character(6)                                :: keyw        ! Name of record to look for in the MD-file (usually KEYWRD or RECNAM) 
+    character(60)                               :: profil      ! Total string of possible profiles
+    character(100)                              :: message     
+    character(20) , dimension(:,:), allocatable :: ctmp1       ! work array to store nambnd/tprofu temporarily
+    character( 1) , dimension(:,:), allocatable :: ctmp2       ! work array to store typbnd/datbnd temporarily
+    character(12) , dimension(:,:), allocatable :: ctmp3       ! work array to store statns temporarily
     !
     data profil/'uniform             logarithmic         3d-profile          '/
 !
@@ -174,6 +175,7 @@ subroutine rdbndd(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     ltest  = .false.
     newkw  = .true.
     defaul = .true.
+    isSameOrien = .true.
     nodef  = .not.defaul
     fildef = ' '
     fmtdef = 'FRformatted'
@@ -586,7 +588,29 @@ subroutine rdbndd(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
           !
           ! check if boundary opening is fully (.TRUE.) or partly (.FALSE.) outside subdomain
           !
-          onParbndIsInside = .false.
+          !
+          ! idir: the partition boundary orientation: 1(row n) or 2(column m)
+          ! mnbnd: open boundary orientation.
+          ! if they are different, the onParbndIsInside should be true.
+          !
+          if (mnbnd(1, n) == mnbnd(3, n)) then
+             if (idir == 1) then
+                isSameOrien = .false.
+             else
+                isSameOrien = .true. 
+             endif 
+          elseif (mnbnd(2, n) == mnbnd(4, n)) then
+             if (idir == 1) then
+                isSameOrien = .true.
+             else
+                isSameOrien = .false. 
+             endif 
+          endif
+          if (isSameOrien) then 
+             onParbndIsInside = .false.
+          else
+             onParbndIsInside = .true.
+          endif
           call adjlin (ival, outsd, mmax, nmaxus, onParbndIsInside)
           !
           if (.not.outsd) then

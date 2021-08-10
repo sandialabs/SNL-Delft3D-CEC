@@ -37,7 +37,7 @@ function varargout=d3d_attrib(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -62,8 +62,8 @@ function varargout=d3d_attrib(cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/d3d_attrib.m $
-%   $Id: d3d_attrib.m 5227 2015-06-23 20:35:51Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/d3d_attrib.m $
+%   $Id: d3d_attrib.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin<2
     error('Not enough input arguments.')
@@ -92,13 +92,12 @@ end
 function Types = Local_supported_types
 Types = {'openboundary', 'rigidsheet', '3dgate', 'weir', 'weir-waqua', ...
     'thindam', 'thindam-waqua', 'drypoint', 'cross-sections', ...
-    'discharge stations', 'observation points'};
+    'discharge stations', 'observation points', 'barriers'};
 
 
 function Out = Local_read_attrib(filename,filetype)
-% U        4   144     4   144     1.0  100.0 1
 if (nargin==0) || strcmp(filename,'?')
-    [fname,fpath]=uigetfile('*.*','Select weir file');
+    [fname,fpath]=uigetfile('*.*','Select attribute file');
     if ~ischar(fname)
         return
     end
@@ -179,7 +178,7 @@ for tpC = types
                 Out.Profile = Profile;
                 Out.AstrSta1 = AComp1;
                 Out.AstrSta2 = AComp2;
-            case 'rigidsheet'
+            case 'rigidsheet' % or porous plate
                 fid=fopen(filename,'r');
                 [Data,N]=fscanf(fid,' %[uUvV] %i %i %i %i %i %i %f',[8 inf]);
                 erryes=~feof(fid);
@@ -304,6 +303,8 @@ for tpC = types
                         DischType{i,1}='normal discharge';
                     else
                         switch upper(char(X(1)))
+                            case 'N'
+                                DischType{i,1}='normal discharge';
                             case 'W'
                                 DischType{i,1}='walking discharge';
                             case 'P'
@@ -346,13 +347,41 @@ for tpC = types
                 fclose(fid);
                 Out.Name=Name;
                 Out.MNMN=MNMN;
+            case 'barriers'
+                fid=fopen(filename,'r');
+                i=0;
+                while 1
+                    Line=fgetl(fid);
+                    if ~ischar(Line)
+                        break
+                    end
+                    Line=strtrim(Line);
+                    if isempty(Line)
+                        % skip empty lines
+                        continue
+                    elseif Line(1)=='*'
+                        % skip comments
+                        continue
+                    end
+                    i=i+1;
+                    Name{i,1}=Line(1:20);
+                    [v,n,err,j]=sscanf(Line(21:end),'%[uUvV] %i %i %i %i',[1 5]);
+                    U(i)=upper(v(1))=='U';
+                    MNMN(i,1:4)=v(1,2:5);
+                end
+                fclose(fid);
+                Out.Name=Name;
+                Out.U   =U;
+                Out.MNMN=MNMN;
             case 'observation points'
                 fid=fopen(filename,'r');
                 i=0;
                 while 1
                     Line=fgetl(fid);
-                    if (~ischar(Line) || isempty(deblank(Line)) ) && feof(fid)
+                    if ~ischar(Line)
                         break
+                    elseif isempty(deblank(Line))
+                        continue
                     end
                     i=i+1;
                     Name{i,1}=deblank(Line(1:20));

@@ -15,7 +15,7 @@ subroutine erosed(nmmax     ,kmax      ,icx       ,icy       ,lundia    , &
                 & icall     ,deltau    ,deltav    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -39,8 +39,8 @@ subroutine erosed(nmmax     ,kmax      ,icx       ,icy       ,lundia    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: erosed.f90 5616 2015-11-27 14:35:08Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute_sediment/erosed.f90 $
+!  $Id: erosed.f90 65844 2020-01-23 20:56:06Z platzek $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute_sediment/erosed.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Computes sediment fluxes at the bed using
@@ -67,6 +67,7 @@ subroutine erosed(nmmax     ,kmax      ,icx       ,icy       ,lundia    , &
     use bedcomposition_module
     use morphology_data_module
     use sediment_basics_module
+    use compbsskin_module, only: compbsskin
     use globaldata
     use dfparall
     !
@@ -196,8 +197,6 @@ subroutine erosed(nmmax     ,kmax      ,icx       ,icy       ,lundia    , &
     character(256)   , dimension(:)      , pointer :: dll_usrfil
     logical                              , pointer :: bsskin
     real(fp)         , dimension(:)      , pointer :: thcmud
-    real(fp)                             , pointer :: kssilt
-    real(fp)                             , pointer :: kssand
     logical                              , pointer :: oldmudfrac
     logical                              , pointer :: flmd2l
     real(prec)       , dimension(:,:)    , pointer :: bodsed 
@@ -493,7 +492,6 @@ subroutine erosed(nmmax     ,kmax      ,icx       ,icy       ,lundia    , &
     epspar              => gdp%gdmorpar%epspar 
     vonkar              => gdp%gdphysco%vonkar
     vicmol              => gdp%gdphysco%vicmol
-    scour               => gdp%gdscour%scour
     timsec              => gdp%gdinttim%timsec
     timhr               => gdp%gdinttim%timhr
     julday              => gdp%gdinttim%julday
@@ -513,8 +511,6 @@ subroutine erosed(nmmax     ,kmax      ,icx       ,icy       ,lundia    , &
     dll_usrfil          => gdp%gdtrapar%dll_usrfil
     bsskin              => gdp%gdsedpar%bsskin
     thcmud              => gdp%gdsedpar%thcmud
-    kssilt              => gdp%gdsedpar%kssilt
-    kssand              => gdp%gdsedpar%kssand
     oldmudfrac          => gdp%gdmorpar%oldmudfrac
     flmd2l              => gdp%gdprocs%flmd2l
     depfac              => gdp%gdmorpar%flufflyr%depfac
@@ -823,10 +819,9 @@ subroutine erosed(nmmax     ,kmax      ,icx       ,icy       ,lundia    , &
           !
           ! Compute bed stress resulting from skin friction
           !
-          call compbsskin   (umean   , vmean     , h1      , wave    , &
-                           & uorb(nm), tp  (nm)  , teta(nm), kssilt  , &
-                           & kssand  , thcmud(nm), taub    , rhowat(nm,kbed), &
-                           & vicmol  )
+          call compbsskin(umean, vmean, h1, wave, uorb(nm), tp(nm), &
+                           & teta(nm), thcmud(nm), mudfrac(nm), taub, &
+                           & rhowat(nm,kbed), vicmol, gdp%gdsedpar)
        else
           !
           ! use max bed shear stress, rather than mean

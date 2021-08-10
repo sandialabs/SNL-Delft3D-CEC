@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: fsm.cpp 4612 2015-01-21 08:48:09Z mourits $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/esmfsm/packages/esmfsm_c/src/fsm/fsm.cpp $
+// $Id: fsm.cpp 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/esmfsm/packages/esmfsm_c/src/fsm/fsm.cpp $
 //------------------------------------------------------------------------------
 //  Delft-FSM (Fortran Shared Memory)
 //  Core functions
@@ -234,7 +234,7 @@ FSM_Init (
     // The first thread to call this routine will actually create the region;
     // subsequent calls will return a pointer to the existing region.
 
-    ktab = (KeyTable *) ESM_Alloc (cid, "FSM_KeyTable", 0);
+    ktab = (KeyTable *) ESM_Alloc (cid, "FSM_KeyTable", (size_t)(0));
     if (ktab == NULL) {
         ktab = (KeyTable *) ESM_Alloc (cid, "FSM_KeyTable", FSM_MAX_REGIONS * sizeof (KeyTable));
         if (ktab == NULL) {
@@ -288,12 +288,13 @@ FSM_MakePointer (
 #endif
     ) {
 
-    int len = 0;
+    size_t len = 0;
     int kindex;
     KeyTable * key = NULL;
     pointer ptr = (pointer) NULL;
     pointer return_value = NULL;
     int thid = -999;
+    size_t nbytes;
 
     GETTHREADLOCK (thid, "FSM_MakePointer", NULL)
     FSM_DEBUG ((output, "Entering FSM_MakePointer (name=\"%s\", length=%d, type=%d, eltsize=%d)", name, *length, *type, *eltsize))
@@ -352,8 +353,8 @@ FSM_MakePointer (
         }
 
     // The key does not exist yet; create it.
-
-    ptr = (pointer) ESM_Alloc (FSM.Threads[thid].contextid, name, (*length * *eltsize));
+	nbytes = (size_t)(*length) * (size_t)(*eltsize);
+    ptr = (pointer) ESM_Alloc (FSM.Threads[thid].contextid, name, nbytes);
     if (ptr == NULL) {
         SetError (thid, "FSM_MakePointer cannot allocate key: %s", ESM_Error ());
         UNLOCK (NULL)
@@ -409,7 +410,7 @@ FSM_GetPointer (
 #endif
     ) {
 
-    int len = 0;
+    size_t len = 0;
     int kindex;
     pointer return_value = NULL;
     int thid = -999;
@@ -439,7 +440,7 @@ FSM_GetPointer (
     if ((kindex = LookupKey (FSM.Threads[thid].keytable, name)) >= 0) {
         *type = FSM.Threads[thid].keytable[kindex].type;
         if (FSM.Pointer[kindex] == NULL) {
-            FSM.Pointer[kindex] = (pointer) ESM_Alloc (FSM.Threads[thid].contextid, name, 0);
+            FSM.Pointer[kindex] = (pointer) ESM_Alloc (FSM.Threads[thid].contextid, name, (size_t)(0));
             if (FSM.Pointer[kindex] == NULL) {
                 SetError (thid, "ESM_Alloc does not know \"%s\" in FSM_GetPointer (%s)", name, ESM_Error ());
                 }
@@ -476,7 +477,7 @@ FSM_ReleasePointer (
 #endif
     ) {
 
-    int len = 0;
+    size_t len = 0;
     int kindex;
     pointer ptr = NULL;
     pointer return_value = NULL;

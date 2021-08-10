@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -33,7 +33,6 @@ use precision_part               ! single/double precision
 !  module procedure(s)
 !
 use partfl_mod              ! explicit interface
-use stop_exit_mod           ! explicit interface
 !
 implicit none               ! force explicit typing
 !
@@ -187,7 +186,9 @@ contains
 !
 !3d
       if ( layt /= 1 ) then
-         stop 'Hydrodynamics should be based on 1 layer for part18'
+         write (*,*) ' Hydrodynamics should be based on 1 layer for part18'
+         write( lun2,*) ' Hydrodynamics should be based on 1 layer for part18'
+         call stop_exit(1)
       endif
 !3d
 !

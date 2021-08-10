@@ -1,7 +1,8 @@
-subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
+subroutine rtc_comm_init(error     ,nambar    ,namcon    ,namsrc    , &
+                       & cbuvrt    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +26,8 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rtc_comm_init.f90 4617 2015-01-22 15:46:37Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/timedep/rtc_comm_init.f90 $
+!  $Id: rtc_comm_init.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/timedep/rtc_comm_init.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! This routine initializes the communication with the RTC module
@@ -34,9 +35,11 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
 !!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
+    use string_module, only:str_lower
     use flow2d3d_timers
     use SyncRtcFlow
     use globaldata
+    use dfparall, only: parll, inode
     !
     implicit none
     !
@@ -58,13 +61,14 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
     character(20), dimension(:)   , pointer :: namrtcsta
     integer                       , pointer :: nlb
     integer                       , pointer :: nsluv
+    integer                       , pointer :: nsrc
     integer                       , pointer :: nub
     integer                       , pointer :: numdomains
     integer                       , pointer :: parget_offset
     integer                       , pointer :: parput_offset
     integer                       , pointer :: rtc_domainnr
     integer                       , pointer :: rtc_ndomains
-    logical                       , pointer :: rtcact
+    integer                       , pointer :: rtcact
     logical                       , pointer :: anyRTCtoFLOW
     logical                       , pointer :: anyFLOWtoRTC
     integer                       , pointer :: rtcmod
@@ -72,6 +76,7 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
     integer                       , pointer :: stacnt
     real(fp)                      , pointer :: timsec
     integer                       , pointer :: tnparget
+    integer                       , pointer :: tnparput
     integer                       , pointer :: tnlocput
     real(fp)     , dimension(:,:) , pointer :: tparput
     character(80), dimension(:)   , pointer :: tlocget_names
@@ -81,10 +86,11 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
 !
 ! Global variables
 !
-    logical                                                                                                   :: error  ! Flag=TRUE if an error is encountered 
-    character(20) , dimension(gdp%d%nsluv)                                                                    :: nambar ! names of all parameters to get from RTC
-    character(20) , dimension(gdp%d%lstsci)                                                                   :: namcon ! Description and declaration in ckdim.f90
-
+    logical                                              :: error  ! Flag=TRUE if an error is encountered 
+    character(20) , dimension(gdp%d%nsluv)               :: nambar ! Names of barriers
+    character(20) , dimension(gdp%d%lstsci)              :: namcon ! Names of the constituents
+    character(20) , dimension(gdp%d%nsrc)                :: namsrc ! Names of discharge points
+    real(fp)      , dimension(2,gdp%d%nsluv)             :: cbuvrt ! Description and declaration in esm_alloc_real.f90
 !
 ! Local variables
 !
@@ -115,6 +121,7 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
     namrtcsta      => gdp%gdrtc%namrtcsta
     nlb            => gdp%d%nlb
     nsluv          => gdp%d%nsluv
+    nsrc           => gdp%d%nsrc
     nub            => gdp%d%nub
     numdomains     => gdp%gdprognm%numdomains
     parget_offset  => gdp%gdrtc%parget_offset
@@ -129,6 +136,7 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
     stacnt         => gdp%gdrtc%stacnt
     timsec         => gdp%gdinttim%timsec
     tnparget       => gdp%gdrtc%tnparget
+    tnparput       => gdp%gdrtc%tnparput
     tnlocput       => gdp%gdrtc%tnlocput
     tparput        => gdp%gdrtc%tparput
     tlocget_names  => gdp%gdrtc%tlocget_names
@@ -136,11 +144,28 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
     tparput_names  => gdp%gdrtc%tparput_names
     zrtcsta        => gdp%gdrtc%zrtcsta
     !
+    cbuvrt = -999.0_fp
+    if (rtcact == RTCviaBMI) then
+      anyRTCtoFLOW = .true.
+      anyFLOWtoRTC = .true.
+      if (numdomains > 1) then
+         !
+         ! Notify the rtc iterator that this subdomain
+         ! is not interested in rtc communication
+         ! If numdomains=1, there is no rtc iterator
+         !
+         call dd_rtcnocommunication()
+      endif
+      return
+    endif
     if (rtcmod /= noRTC) then
       !
       call timer_start(timer_wait, gdp)
-      if (numdomains > 1) then
-         call rtcstartcommunication(rtc_domainnr, rtc_ndomains)
+      if (parll) then
+         rtc_domainnr = inode
+         rtc_ndomains = 1 ! set the number of domains to 1 to avoid most of the communications
+      elseif (numdomains > 1) then
+         call dd_rtcstartcommunication(rtc_domainnr, rtc_ndomains)
          rtc_domainnr = rtc_domainnr+1
       else
          rtc_ndomains = 1
@@ -150,15 +175,18 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
       ! Determine total number of parameters to be received
       ! and collect all parameter names
       !
+      tnparput = 0
       if (rtc_ndomains > 1) then
          allocate(nparams(2,rtc_ndomains),stat=istat)
          if (istat /= 0) goto 999
          nparams = 0.0_fp
          !
-         nparams(1,rtc_domainnr) = real(nsluv,fp) ! # parameters get
-         nparams(2,rtc_domainnr) = real(stacnt*kmax,fp) ! # parameters put
+         nparams(1,rtc_domainnr) = real(nsluv+nsrc,fp) ! # parameters get
+         if (stacnt>0) then ! temporary compatibility solution: don't provide setpoints if there is no station in this domain ... :(
+            nparams(2,rtc_domainnr) = real(stacnt*kmax + nsluv+nsrc,fp) ! # parameters put
+         endif
          !
-         call rtccommunicate(nparams, 2*rtc_ndomains)
+         call dd_rtccommunicate(nparams, 2*rtc_ndomains)
          !
          tnparget = 0
          tnlocput = 0
@@ -176,9 +204,12 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
          deallocate(nparams,stat=istat)
          if (istat /= 0) goto 999
       else
-         tnparget = nsluv
+         tnparget = nsluv+nsrc
          parget_offset = 0
-         tnlocput = stacnt * kmax
+         if (stacnt>0) then ! temporary compatibility solution: don't provide setpoints if there is no station ... :(
+                            ! to do: check if RTC needs data and only put data to RTC if RTC asks for it
+            tnlocput = stacnt * kmax + nsluv+nsrc
+         endif
          parput_offset = 0
       endif
       anyRTCtoFLOW = tnparget > 0
@@ -193,20 +224,25 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
       do i = 1,nsluv
          tlocget_names(parget_offset+i) = nambar(i)
       enddo
+      do i = 1,nsrc
+         tlocget_names(parget_offset+nsluv+i) = namsrc(i)
+         call str_lower(tlocget_names(parget_offset+nsluv+i))
+      enddo
       !
       if (rtc_ndomains > 1) then
-         call rtccharcommunicate(tlocget_names, tnparget)
+         call dd_rtccharcommunicate(tlocget_names, tnparget)
       endif
       !
       if (anyFLOWtoRTC) then
          !
          ! Collect parameters for this domain
          !
-         allocate(gdp%gdrtc%tparput(2+lstsci,tnlocput),stat=istat)
+         tnparput = 3+lstsci
+         allocate(gdp%gdrtc%tparput(tnparput,tnlocput),stat=istat)
          if (istat /= 0) goto 999
          allocate(gdp%gdrtc%tlocput_names(tnlocput),stat=istat)
          if (istat /= 0) goto 999
-         allocate(gdp%gdrtc%tparput_names(2+lstsci),stat=istat)
+         allocate(gdp%gdrtc%tparput_names(tnparput),stat=istat)
          if (istat /= 0) goto 999
          tparput => gdp%gdrtc%tparput
          tlocput_names => gdp%gdrtc%tlocput_names
@@ -219,6 +255,7 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
          do l = 1,lstsci
             tparput_names(2+l) = namcon(l)
          enddo
+         tparput_names(lstsci+3) = 'Flow Rate'
          !
          iloc = parput_offset
          tlocput_names = ' '
@@ -228,11 +265,17 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
                write(tlocput_names(iloc),'(2a,i0)') trim(namrtcsta(i)), '_', k
             enddo
          enddo
+         do i = 1,nsluv
+            tlocput_names(iloc+i) = nambar(i)
+         enddo
+         do i = 1,nsrc
+            tlocput_names(iloc+nsluv+i) = namsrc(i)
+         enddo
          !
          ! Collect parameters from all domains
          !
          if (rtc_ndomains>1) then
-            call rtccharcommunicate(tlocput_names, tnlocput)
+            call dd_rtccharcommunicate(tlocput_names, tnlocput)
          endif
       endif
       !
@@ -243,14 +286,14 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
          !
          call syncflowrtc_init(error, tlocget_names, tnparget, 80, &
                              & itfinish - itstrt, anyFLOWtoRTC, &
-                             & anyRTCtoFLOW, iacdat, hdt)
+                             & anyRTCtoFLOW, iacdat, itstrt, hdt)
       endif
       call timer_stop(timer_wait, gdp)
       if (error) then
-         rtcact = .false.
+         rtcact = noRTC
          call prterr(lundia    ,'J020'    ,'SyncFlowRtc_Init'   )
       else
-         rtcact = .true.
+         rtcact = RTCmodule
       endif
     else
       anyRTCtoFLOW = .false.
@@ -261,7 +304,7 @@ subroutine rtc_comm_init(error     ,nambar    ,namcon    ,gdp       )
          ! is not interested in rtc communication
          ! If numdomains=1, there is no rtc iterator
          !
-         call rtcnocommunication()
+         call dd_rtcnocommunication()
       endif
     endif
     return

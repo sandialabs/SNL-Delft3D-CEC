@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2013.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -23,8 +23,8 @@
 !  are registered trademarks of Stichting Deltares, and remain the property of  
 !  Stichting Deltares. All rights reserved.                                     
 
-!  $Id: ec_stringbuffer.f90 5609 2015-11-25 17:21:04Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/ec_module/packages/ec_module/src/ec_stringbuffer.f90 $
+!  $Id: ec_stringbuffer.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/ec_module/packages/ec_module/src/ec_stringbuffer.f90 $
 
 !> This module contains all the methods for the datatype tEcElementSet.
 module m_ec_stringbuffer

@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: rt.c 5481 2015-10-08 08:03:19Z mooiman $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/nefis/packages/nefis/src/rt.c $
+// $Id: rt.c 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/nefis/packages/nefis/src/rt.c $
 /*
  *   <rt.c> - Retrieve information about group - element from file or
  *            from structure with retrieved elements
@@ -454,7 +454,7 @@ BInt4 RT_retrieve_var  ( BInt4    set           ,
   BInt4   gd    = -1;    /*      group descriptor */
   BInt4   i         ;
 
-  *var_pointer = (BUInt8) ULONG_MAX;
+  *var_pointer = (BUInt8) BUINT8_MAX;
 
 /*
  *  search for first free group descriptor and for group descriptor if
@@ -469,7 +469,7 @@ BInt4 RT_retrieve_var  ( BInt4    set           ,
       break;
     }
     if ( ( fgd == -1                            ) &&
-         ( retrieve_var[set][i][0] == ULONG_MAX )    )
+         ( retrieve_var[set][i][0] == BUINT8_MAX )    )
     {
       fgd = i;
     }
@@ -520,7 +520,7 @@ static BInt4 RT_update_var_array( BInt4    set         ,
     BInt4   error     =  1;
     BInt4   level     =  0;
     BInt4   index     =  0;
-    BUInt4  max_index = (BUInt4) ULONG_MAX;
+    BUInt4  max_index = (BUInt4) BUINT8_MAX;
     BUInt8  start_table;
 
     start_table = *grp_pointer+(BUInt8)SIZE_DAT_BUF+SIZE_BINT8;
@@ -607,7 +607,7 @@ BInt4 RT_update_var_index_array( BInt4    set          ,
 /*
  *  Look for the first valid file pointer value which points to a data block
  */
-        if ( ( data.ptr[k] != ULONG_MAX) &&
+        if ( ( data.ptr[k] != BUINT8_MAX) &&
              ( found[gd]  == 0         )   )
         {
             index += k;
@@ -639,7 +639,7 @@ BInt4 RT_update_var_index_array( BInt4    set          ,
                  */
                 for ( i=0; i<*index_copy+3; i++ )
                 {
-                    retrieve_var[set][gd][i] = (BUInt8) ULONG_MAX;
+                    retrieve_var[set][gd][i] = (BUInt8) BUINT8_MAX;
                 }
                 retrieve_var[set][gd][index+2] = data.ptr[k];
             }
@@ -660,7 +660,7 @@ BInt4 RT_update_var_index_array( BInt4    set          ,
                 }
                 else if ( index == 0 )
                 {
-                    retrieve_var[set][gd][index+2] = (BUInt8) ULONG_MAX;
+                    retrieve_var[set][gd][index+2] = (BUInt8) BUINT8_MAX;
                 }
             }
         }

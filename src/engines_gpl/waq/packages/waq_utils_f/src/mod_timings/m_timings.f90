@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -32,7 +32,7 @@
 !
 !   Programmer: Edwin Vollebregt (VORtech)
 !
-!   $URL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/waq/packages/waq_utils_f/src/mod_timings/m_timings.f90 $
+!   $URL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/waq/packages/waq_utils_f/src/mod_timings/m_timings.f90 $
 !   $Revision: 33 $, $Date: 2007-11-02 16:51:48 +0100 (Fri, 02 Nov 2007) $
 !
 !   Version 1.0  21-09-2007  initial version
@@ -154,14 +154,14 @@ integer :: itimer, iinstn, ninstn
    if (ntimer.le.0 .or. ninstn.le.0) then
       write(LOUTTM,*) 'timer_table_size: Error: dimensions must be >0!'
       write(LOUTTM,*) '   ntimer=', ntimer,', ninstn=',ninstn
-      stop
+      call srstop(1)
    endif
 
    if (ntimer.gt.MAX_NTIMER .or. ninstn.gt.MAX_NINSTN) then
       write(LOUTTM,*) 'timer_table_size: Error: requested dimensions too large!'
       write(LOUTTM,*) '   ntimer=', ntimer,', max=',MAX_NTIMER
       write(LOUTTM,*) '   ninstn=', ninstn,', max=',MAX_NINSTN
-      stop
+      call srstop(1)
    endif
 
 !  Check that table has not been allocated before
@@ -170,7 +170,7 @@ integer :: itimer, iinstn, ninstn
    if (allocated(timer_table)) then
       deallocate(timer_table)
 !      write(LOUTTM,*) 'timer_table_size: Error: table is already allocated!'
-!      stop
+!      call srstop(1)
    endif
 
 !  Allocate the table
@@ -232,7 +232,7 @@ integer      :: ntimer, ninstn, iinstn
 
    if (.not.allocated(timer_table)) then
       write(LOUTTM,*) 'timer_name: Error: timer_table has not been allocated yet!'
-      stop
+      call srstop(1)
    endif
 
    ntimer = size(timer_table,1)
@@ -241,7 +241,7 @@ integer      :: ntimer, ninstn, iinstn
        iinstn.le.0 .or. iinstn.gt.ninstn) then
       write(LOUTTM,91) 'timer_name: Error: requested timer (',itimer,',',&
          iinstn, ') is out of bounds; ntimer=',ntimer,', ninstn=',ninstn,'.'
-      stop
+      call srstop(1)
    endif
 
 !  register the name/description of the timer in timer_table
@@ -295,7 +295,7 @@ real(kind=8) :: curcpu, curwal
    if (.not.allocated(timer_table)) then
       write(LOUTTM,*) 'timer_start: Error: timer_table has not been allocated ',&
          'yet!'
-      stop
+      call srstop(1)
    endif
 
    ntimer = size(timer_table,1)
@@ -304,7 +304,7 @@ real(kind=8) :: curcpu, curwal
        iinstn.le.0 .or. iinstn.gt.ninstn) then
       write(LOUTTM,91) 'timer_start: Error: requested timer (',itimer,',',&
          iinstn, ') is out of bounds; ntimer=',ntimer,', ninstn=',ninstn,'.'
-      stop
+      call srstop(1)
    endif
 
 !  Check that no timing is active yet for the requested timer
@@ -373,7 +373,7 @@ type(t_one_timer), pointer :: timer
 
    if (.not.allocated(timer_table)) then
       write(LOUTTM,*) 'timer_stop: Error: timer_table has not been allocated yet!'
-      stop
+      call srstop(1)
    endif
 
    ntimer = size(timer_table,1)
@@ -382,7 +382,7 @@ type(t_one_timer), pointer :: timer
        iinstn.le.0 .or. iinstn.gt.ninstn) then
       write(LOUTTM,91) 'timer_stop: Error: requested timer (',itimer,',',iinstn, &
                   ') is out of bounds; ntimer=',ntimer,', ninstn=',ninstn,'.'
-      stop
+      call srstop(1)
    endif
 
 !  Check that a timing is active for the requested timer
@@ -463,7 +463,7 @@ real(kind=8) :: curcpu, curwal
 
    if (.not.allocated(timer_table)) then
       write(LOUTTM,*) 'timer_read: Error: timer_table has not been allocated yet!'
-      stop
+      call srstop(1)
    endif
 
    ntimer = size(timer_table,1)
@@ -472,7 +472,7 @@ real(kind=8) :: curcpu, curwal
        iinstn.le.0 .or. iinstn.gt.ninstn) then
       write(LOUTTM,91) 'timer_read: Error: requested timer (',itimer,',',iinstn, &
                   ') is out of bounds; ntimer=',ntimer,', ninstn=',ninstn,'.'
-      stop
+      call srstop(1)
    endif
 
 !  Get current accumulated timings from timer_table
@@ -539,7 +539,7 @@ integer      :: ntimer, ninstn, iinstn
    if (.not.allocated(timer_table)) then
       write(LOUTTM,*) 'timer_reset: Error: timer_table has not been allocated ',&
          'yet!'
-      stop
+      call srstop(1)
    endif
 
    ntimer = size(timer_table,1)
@@ -548,7 +548,7 @@ integer      :: ntimer, ninstn, iinstn
        iinstn.le.0 .or. iinstn.gt.ninstn) then
       write(LOUTTM,91) 'timer_reset: Error: requested timer (',itimer,',',&
          iinstn, ') is out of bounds; ntimer=',ntimer,', ninstn=',ninstn,'.'
-      stop
+      call srstop(1)
    endif
 
 !  Check that no timing is active for the requested timer

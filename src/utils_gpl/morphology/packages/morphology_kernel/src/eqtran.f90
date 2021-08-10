@@ -15,7 +15,7 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
 
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -39,8 +39,8 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: eqtran.f90 5226 2015-06-23 16:33:52Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/eqtran.f90 $
+!  $Id: eqtran.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/eqtran.f90 $
 !!--description-----------------------------------------------------------------
 !
 !
@@ -50,6 +50,7 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
     use precision
     use message_module, only: write_error
     use mathconsts, only: pi, ee
+    use iso_c_binding, only: c_char
     use morphology_data_module
     !
     implicit none
@@ -70,7 +71,7 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
     real(fp)                            , intent(in)    :: bed
     real(fp)                            , intent(in)    :: bedw
     real(fp)                            , intent(in)    :: camax
-    real(fp), dimension(kmax)           , intent(inout):: concin
+    real(fp)     , dimension(kmax)      , intent(inout) :: concin
     real(fp)     , dimension(0:kmax)    , intent(in)    :: dicww    !  Description and declaration in esm_alloc_real.f90
     real(fp)                            , intent(in)    :: dzduu     !  Description and declaration in esm_alloc_real.f90
     real(fp)                            , intent(in)    :: dzdvv     !  Description and declaration in esm_alloc_real.f90
@@ -120,6 +121,7 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
 !
 ! Local variables
 !
+    integer                     :: i
     integer(pntrsize)           :: ierror_ptr
     integer                     :: k
     integer(pntrsize), external :: perf_function_eqtran
@@ -131,6 +133,7 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
     real(fp)                    :: chezy
     real(fp)                    :: cosa
     real(fp)                    :: d10
+    real(fp)                    :: d15
     real(fp)                    :: d90
     real(fp)                    :: dg
     real(fp)                    :: dgsd
@@ -170,24 +173,35 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
     real(fp)                    :: z0cur
     real(fp)                    :: z0rou
     real(fp)                    :: zumod
+    real(fp)                    :: kwtur
+    real(fp)                    :: dzbdt
+    real(fp)                    :: dzdx
+    real(fp)                    :: dzdy
+    real(fp)                    :: poros
+    real(fp)                    :: ua
+    real(fp)                    :: va
+    real(fp)                    :: uamg
     !
     ! Interface to dll is in High precision!
     !
-    real(hp)          :: cesus_dll
-    real(hp)          :: sbc_dll
-    real(hp)          :: sbcu_dll
-    real(hp)          :: sbcv_dll
-    real(hp)          :: sbwu_dll
-    real(hp)          :: sbwv_dll
-    real(hp)          :: ssus_dll
-    real(hp)          :: sswu_dll
-    real(hp)          :: sswv_dll
-    real(hp)          :: t_relax_dll
-    character(1024)   :: errmsg
-    character(256)    :: message     ! Contains message from internal or external transport formula
-    logical           :: equi_conc   ! equilibrium concentration given (instead of susp. transport rate)
-    logical           :: sbc_total   ! total bed load given (instead of m,n components)
-    logical           :: sus_total   ! total suspended load given (instead of m,n components)
+    real(hp)               :: cesus_dll
+    real(hp)               :: sbc_dll
+    real(hp)               :: sbcu_dll
+    real(hp)               :: sbcv_dll
+    real(hp)               :: sbwu_dll
+    real(hp)               :: sbwv_dll
+    real(hp)               :: ssus_dll
+    real(hp)               :: sswu_dll
+    real(hp)               :: sswv_dll
+    real(hp)               :: t_relax_dll
+    character(1024)        :: errmsg
+    character(256)         :: message        ! Contains message from internal or external transport formula
+    character(kind=c_char) :: message_c(257) ! C- version of "message", including C_NULL_CHAR
+                                             ! Calling perf_function_eqtran with "message" caused problems
+                                             ! Solved by using "message_c"
+    logical                :: equi_conc      ! equilibrium concentration given (instead of susp. transport rate)
+    logical                :: sbc_total      ! total bed load given (instead of m,n components)
+    logical                :: sus_total      ! total suspended load given (instead of m,n components)
 !
 !! executable statements -------------------------------------------------------
 !
@@ -208,10 +222,15 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
     teta      = real(realpar(RP_TETA) ,fp)
     rlabda    = real(realpar(RP_RLAMB),fp)
     uorb      = real(realpar(RP_UORB) ,fp)
+    kwtur     = real(realpar(RP_KWTUR),fp)
+    dzbdt     = real(realpar(RP_BLCHG),fp)
+    dzdx      = real(realpar(RP_DZDX) ,fp)
+    dzdy      = real(realpar(RP_DZDY) ,fp)
     di50      = real(realpar(RP_D50)  ,fp)
     dss       = real(realpar(RP_DSS)  ,fp)
     dstar     = real(realpar(RP_DSTAR),fp)
     d10       = real(realpar(RP_D10MX),fp)
+    d15       = real(realpar(RP_D15MX),fp)
     d90       = real(realpar(RP_D90MX),fp)
     mudfrac   = real(realpar(RP_MUDFR),fp)
     hidexp    = real(realpar(RP_HIDEX),fp)
@@ -246,6 +265,9 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
     sbwv   = 0.0_fp
     sswu   = 0.0_fp
     sswv   = 0.0_fp
+    ua     = 0.0_fp
+    va     = 0.0_fp
+    uamg   = 0.0_fp
     sag    = sqrt(ag)
     bakdif = vicmol / sigmol
     !
@@ -492,13 +514,43 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
        sus_total = .true.
     elseif (iform == 18) then 
        !
-       ! Gaeuman et al. (development of Wilcock & Crowe
+       ! Gaeuman et al. (development of Wilcock & Crowe)
        !
        call trabg(utot       ,di50      ,taub       ,par       ,sbot      , &
                 & ssus       ,dg        ,dgsd       ,chezy     )
        !
        sbc_total = .true.
        sus_total = .true.
+    elseif (iform == 19) then
+       !
+       ! van Thiel / Van Rijn (2008)
+       !
+       call trab19(u         ,v         ,hrms      ,rlabda    ,teta      ,h1        ,tp        , &
+                 & di50      ,d15       ,d90       ,par       ,dzbdt     ,vicmol    ,poros     , &
+                 & chezy     ,dzdx      ,dzdy      ,sbcu      ,sbcv      ,sscu      ,sscv     , &
+                 & ua        ,va        ,ubot      ,kwtur     ,vonkar    ,ubot_from_com        )
+       !
+       uamg = sqrt(ua*ua+va*va)
+       realpar(RP_UAU) = real(ua      ,hp)  ! needed for suspended transport
+       realpar(RP_VAU) = real(va      ,hp)
+       !
+       sbc_total = .false.
+       sus_total = .false.
+    elseif (iform == 20) then
+       !
+       ! Soulsby / Van Rijn with XBeach adaptations
+       !
+       call trab20(u         ,v         ,hrms      ,rlabda    ,teta      ,h1        ,tp        , &
+                 & di50      ,d15       ,d90       ,par       ,dzbdt     ,vicmol    ,poros     , &
+                 & chezy     ,dzdx      ,dzdy      ,sbcu      ,sbcv      ,sscu      ,sscv     , &
+                 & ua        ,va        ,ubot      ,kwtur     ,vonkar    ,ubot_from_com        )
+       !
+       uamg = sqrt(ua*ua+va*va)
+       realpar(RP_UAU) = real(ua      ,hp)  ! needed for suspended transport
+       realpar(RP_VAU) = real(va      ,hp)
+       !
+       sbc_total = .false.
+       sus_total = .false.
     elseif (iform == 15) then
        !
        ! User defined formula in DLL
@@ -525,6 +577,10 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
        sswv_dll    = 0.0_hp
        t_relax_dll = 0.0_hp
        message     = ' '
+       do i=1,256
+          message_c(i) = message(i:i)
+       enddo
+       message_c(257) = C_NULL_CHAR
        !
        ! psem/vsem is used to be sure this works fine in DD calculations
        !
@@ -537,7 +593,8 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
                                          sbcv_dll , sbwu_dll , sbwv_dll      , &
                                          equi_conc, cesus_dll, ssus_dll      , &
                                          sswu_dll , sswv_dll , t_relax_dll   , &
-                                         message)
+                                         message_c)
+       message = transfer(message_c(1:256), message)
        call vsemlun
        if (ierror_ptr /= 0) then
           errmsg = 'Cannot find function "'//trim(dllfunc)//'" in dynamic library.'
@@ -620,7 +677,7 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
              alphaspir = 0.0_fp
           else
              alphaspir = sqrt(ag) / 0.4_fp / chezy
-             alphaspir = 12.5_fp * espir * (1.0_fp-0.5_fp*alphaspir)
+             alphaspir = 12.5_fp * espir * (1.0_fp-alphaspir) ! 12.5 = 2.0_fp/(von Karman)^2
              alphaspir = alphaspir * spirint / umod
           endif
           txg  = ust2 * (uuu + alphaspir*vvv) / umod
@@ -688,9 +745,10 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
           else
               !
               ! Suspended transport rate given by transport formula,
-              ! derive concentration
+              ! derive concentration. Add non-zero uamg for van Thiel
+              ! and XBeach like Soulsby / Van Rijn (iform=19, 20)
               !
-              cesus = ssus / (utot+eps) / h1
+              cesus = ssus / (utot+uamg+eps) / h1
           endif
           !
           ! Concentration needs to be multiplied by frac to match Van Rijn
@@ -752,4 +810,5 @@ subroutine eqtran(sig       ,thick     ,kmax      ,ws        ,ltur      , &
            sbcv = sbcv + sscv
        endif
     endif
+    dss = real(realpar(RP_DSS)  ,fp)
 end subroutine eqtran

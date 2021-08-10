@@ -7,7 +7,6 @@
 
 include $(top_srcdir)/common.am
 
-SUBDIRS = proc_preprocess \
-          ods \
+SUBDIRS = ods \
           waq_io \
           mpidum

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -73,28 +73,30 @@
 
 !     local
 
-      integer, parameter ::  nokey = 18
+      integer, parameter ::  nokey = 19
       character*(40)  lockey
       character*(40), save ::  keywords(nokey)
       character*(40), save ::  defkeys(nokey)
-      data keywords / 'NODISP-AT-NOFLOW     ' , 'NODISP-AT-BOUND      ' ,
-     &                'LOWER-ORDER-AT-BOUND ' , 'BALANCES-OLD-STYLE   ' ,
-     &                'BALANCES-GPP-STYLE   ' , 'BALANCES-SOBEK-STYLE ' ,
-     &                'FORESTER             ' , 'ANTICREEP            ' ,
-     &                'BAL_NOLUMPPROCESSES  ' , 'BAL_NOLUMPLOADS      ' ,
-     &                'BAL_NOLUMPTRANSPORT  ' , 'BAL_UNITAREA         ' ,
-     &                'BAL_UNITVOLUME       ' , 'BAL_NOSUPPRESSSPACE  ' ,
-     &                'BAL_NOSUPPRESSTIME   ' , 'SCHEME15_UNSTRUCTURED' ,
-     &                'ANTIDIFFUSION        ' , 'PARTICLE_TRACKING    ' /
-      data defkeys   /'DISP-AT-NOFLOW       ' , 'DISP-AT-BOUND        ' ,
-     &                'HIGHER-ORDER-AT-BOUND' , 'NO-BALANCES          ' ,
-     &                'x xxxxxxxxxxxxxxxxxxx' , 'x xxxxxxxxxxxxxxxxxxx' ,
-     &                'NO-FORESTER          ' , 'NO-ANTICREEP         ' ,
-     &                'BAL_LUMPPROCESSES    ' , 'BAL_LUMPLOADS        ' ,
-     &                'BAL_LUMPTRANSPORT    ' , 'x xxxxxxxxxxxxxxxxxxx' ,
-     &                'x xxxxxxxxxxxxxxxxxxx' , 'BAL_SUPPRESSSPACE    ' ,
-     &                'BAL_SUPPRESSTIME     ' , 'SCHEME15_STRUCTURED  ' ,
-     &                'NO-ANTIDIFFUSION     ' , 'x xxxxxxxxxxxxxxxxxxx' /
+      data keywords / 'NODISP-AT-NOFLOW          ' , 'NODISP-AT-BOUND           ' ,
+     &                'LOWER-ORDER-AT-BOUND      ' , 'BALANCES-OLD-STYLE        ' ,
+     &                'BALANCES-GPP-STYLE        ' , 'BALANCES-SOBEK-STYLE      ' ,
+     &                'FORESTER                  ' , 'ANTICREEP                 ' ,
+     &                'BAL_NOLUMPPROCESSES       ' , 'BAL_NOLUMPLOADS           ' ,
+     &                'BAL_NOLUMPTRANSPORT       ' , 'BAL_UNITAREA              ' ,
+     &                'BAL_UNITVOLUME            ' , 'BAL_NOSUPPRESSSPACE       ' ,
+     &                'BAL_NOSUPPRESSTIME        ' , 'SCHEME15_UNSTRUCTURED     ' ,
+     &                'ANTIDIFFUSION             ' , 'PARTICLE_TRACKING         ' ,
+     &                'SCHEME24_VERTICAL_CENTRAL ' /
+      data defkeys   /'DISP-AT-NOFLOW            ' , 'DISP-AT-BOUND             ' ,
+     &                'HIGHER-ORDER-AT-BOUND     ' , 'NO-BALANCES               ' ,
+     &                'x xxxxxxxxxxxxxxxxxxxxxxxx' , 'x xxxxxxxxxxxxxxxxxxxxxxxx' ,
+     &                'NO-FORESTER               ' , 'NO-ANTICREEP              ' ,
+     &                'BAL_LUMPPROCESSES         ' , 'BAL_LUMPLOADS             ' ,
+     &                'BAL_LUMPTRANSPORT         ' , 'x xxxxxxxxxxxxxxxxxxxxxxxx' ,
+     &                'x xxxxxxxxxxxxxxxxxxxxxxxx' , 'BAL_SUPPRESSSPACE         ' ,
+     &                'BAL_SUPPRESSTIME          ' , 'SCHEME15_STRUCTURED       ' ,
+     &                'NO-ANTIDIFFUSION          ' , 'x xxxxxxxxxxxxxxxxxxxxxxxx' ,
+     &                'SCHEME24_VERTICAL_UPWIND  ' /
       integer ikey                ! number of the found key
       integer(4) :: ithndl = 0
       if (timon) call timstrt( "dlwq0i", ithndl )

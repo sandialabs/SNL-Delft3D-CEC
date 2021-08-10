@@ -1,8 +1,8 @@
-subroutine chklod(lundia    ,error     ,nto       ,kmax      ,nsrc      , &
+subroutine chklod(lundia    ,error     ,nto       ,nsrc      , &
                 & gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,13 +26,13 @@ subroutine chklod(lundia    ,error     ,nto       ,kmax      ,nsrc      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: chklod.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/chklod.f90 $
+!  $Id: chklod.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/chklod.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Checks the local array dimension, which has been
 !              specified in various routines. If the specified
-!              input parameters (Number Total Openings and KMAX)
+!              input parameters (Number Total Openings and NSRC)
 !              in the MD-file exceeds these dimensions then error
 !              message will be written to diagnostics file
 ! Method used:
@@ -53,7 +53,6 @@ subroutine chklod(lundia    ,error     ,nto       ,kmax      ,nsrc      , &
 !
 ! Global variables
 !
-    integer, intent(in)  :: kmax   !  Description and declaration in esm_alloc_int.f90
     integer              :: lundia !  Description and declaration in inout.igs
     integer, intent(in)  :: nsrc   !  Description and declaration in esm_alloc_int.f90
     integer, intent(in)  :: nto    !  Description and declaration in esm_alloc_int.f90
@@ -67,14 +66,6 @@ subroutine chklod(lundia    ,error     ,nto       ,kmax      ,nsrc      , &
     !
     if (nto>mxnto) then
        call prterr(lundia    ,'G015'    ,' '       )
-       !
-       error = .true.
-    endif
-    !
-    !-----test KMAX from DIMRD with maximum value MXKMAX
-    !
-    if (kmax>mxkmax) then
-       call prterr(lundia    ,'G016'    ,' '       )
        !
        error = .true.
     endif

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -128,7 +128,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                ierr = 3
             end select
@@ -138,7 +138,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -148,7 +148,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -158,7 +158,7 @@
                case (  1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
                case (  2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case ( 11, 12 )
                   open ( lun, file = finam, err = 910, form='unformatted' )
                case ( 21, 22 )
@@ -202,7 +202,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -212,7 +212,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'   )
                case ( 11, 12 )
                   open ( lun, file = finam, err = 910, form='unformatted' )
                case ( 21, 22 )
@@ -230,7 +230,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'   )
                case ( 11, 12 )
                   open ( lun, file = finam, err = 910, form='unformatted' )
                case ( 21, 22 )
@@ -248,7 +248,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -258,7 +258,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'   )
                case ( 11, 12 )
                   open ( lun, file = finam, err = 910, form='unformatted' )
                case ( 21, 22 )
@@ -276,7 +276,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -286,7 +286,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -296,7 +296,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -306,7 +306,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'   )
                case ( 11, 12 )
                   open ( lun, file = finam, err = 910, form='unformatted' )
                case ( 21, 22 )
@@ -324,7 +324,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -351,7 +351,7 @@
             select case ( opmode )
                case ( 1 )
                   call dhdelf ( finam, ierr2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case default
                   ierr = 3
             end select
@@ -360,7 +360,7 @@
             select case ( opmode )
                case ( 1 )
                   call dhdelf ( finam, ierr2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case default
                   ierr = 3
             end select
@@ -369,7 +369,7 @@
             select case ( opmode )
                case ( 1 )
                   call dhdelf ( finam, ierr2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case default
                   ierr = 3
             end select
@@ -379,7 +379,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -389,7 +389,7 @@
                case ( 1 )
                   open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'replace'  )
                case ( 2 )
-                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'  )
                case default
                   ierr = 3
             end select
@@ -542,6 +542,24 @@
             select case ( opmode )
                case ( 1 )
                   open ( lun, file = finam, err = 900, status = 'old' )
+               case default
+                  ierr = 3
+            end select
+
+         case ( 44 )                          !     pointer file
+            select case ( opmode )
+               case ( 1 )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream'  )
+               case ( 2 )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream', status = 'old'   )
+               case ( 11, 12 )
+                  open ( lun, file = finam, err = 910, form='unformatted' )
+               case ( 21, 22 )
+                  open ( lun, file = finam, err = 910, form='unformatted', access='stream' ,
+     &                                                 convert='big_endian' )
+               case ( 31, 32 )
+                  open ( lun, file = finam, err = 910, form='unformatted',
+     &                                                 convert='big_endian' )
                case default
                   ierr = 3
             end select

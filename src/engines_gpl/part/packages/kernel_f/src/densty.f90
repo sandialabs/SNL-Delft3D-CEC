@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -97,6 +97,8 @@
 !     calculate the temperature dependent coefficients
 !
       tmpold = temp
+      temp = min(100.0e0, max(0.0e0, tmpold))
+
       dens0  =   999.842594                       &
                 +  6.793952e-02 * temp            &
                 -  9.095290e-03 * temp**2         &

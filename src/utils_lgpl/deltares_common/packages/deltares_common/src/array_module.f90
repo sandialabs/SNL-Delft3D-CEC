@@ -1,7 +1,7 @@
 module array_module
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -25,8 +25,8 @@ module array_module
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: array_module.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common/src/array_module.f90 $
+!  $Id: array_module.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common/src/array_module.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Various array processing routines
@@ -48,6 +48,7 @@ implicit none
 private 
 
 public array_div_const
+public convert_start_index
 
 interface array_div_const
    module procedure arraySp1_div_constSp
@@ -137,8 +138,27 @@ subroutine arrayHp2_div_constHp(arr, denominator)
       enddo
    enddo
 end subroutine arrayHp2_div_constHp
-
-
-
+!
+!
+!
+!===============================================================================
+function convert_start_index(arr, imiss, providedIndex, requestedIndex) result(ierr)
+    !
+    ! Parameters
+    integer, dimension(:), intent(inout) :: arr
+    integer, intent(in)                  :: imiss
+    !
+    ! Locals
+    integer, intent(in)                  :: providedIndex, requestedIndex
+    integer                              :: shift, ierr
+    !
+    ! Body
+    shift = requestedIndex - providedIndex
+    where(arr .ne. imiss) 
+      arr= arr + shift   
+    end where
+    ierr = 0
+    
+end function convert_start_index
 
 end module array_module

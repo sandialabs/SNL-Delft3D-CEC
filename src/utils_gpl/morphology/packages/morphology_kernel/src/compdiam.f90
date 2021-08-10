@@ -4,7 +4,7 @@ subroutine compdiam(frac      ,seddm     ,sedd50    ,sedtyp    ,lsedtot   , &
                   & dg        ,dxx       ,dgsd      )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -211,7 +211,7 @@ subroutine compdiam(frac      ,seddm     ,sedd50    ,sedtyp    ,lsedtot   , &
           i        = 1
           fracreq  = xx(1)
           !
-          outerfracloop: do while (fracreq > fraccum)
+          outerfracloop: do while (fracreq >= fraccum)
              !
              ! Find the smallest diameter not yet considered and calculate
              ! the density (cdf) in the considered range.
@@ -241,7 +241,7 @@ subroutine compdiam(frac      ,seddm     ,sedd50    ,sedtyp    ,lsedtot   , &
              !
              ! Check if we have not reached the end of the composition, due to
              ! some numerical roundoff errors we might not have determined the
-             ! diameter of fractions equal (or close) to 100%. Finish them of
+             ! diameter of fractions equal (or close) to 100%. Finish them off
              ! now! (This may also happen if we have only mud fractions in the
              ! simulation.)
              !

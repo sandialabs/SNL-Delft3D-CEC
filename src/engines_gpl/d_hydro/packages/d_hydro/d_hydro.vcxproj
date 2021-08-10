@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -28,24 +28,24 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -78,6 +78,10 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">d_hydro</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">d_hydro</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">d_hydro</TargetName>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -85,8 +89,8 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>include;../../../../utils_lgpl/d_hydro_lib/include;../../../../utils_lgpl/deltares_common/packages/deltares_common_c/include/win32;../../../../third_party_open/expat/lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;../../../../utils_lgpl/d_hydro_lib/include;../../../../third_party_open/expat/lib;%(AdditionalIncludeDirectories);../../../../third_party_open/pthreads/include/$(PlatformName)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_STRUCT_TIMESPEC;WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <PrecompiledHeader>
@@ -104,6 +108,7 @@
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <LargeAddressAware>true</LargeAddressAware>
+      <StackReserveSize>20000000</StackReserveSize>
     </Link>
     <PostBuildEvent>
       <Command>..\..\..\..\scripts_lgpl\win32\oss-install_debug.cmd d_hydro
@@ -117,8 +122,8 @@ echo "This file is overwritten by the post-build command of the project d_hydro"
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\..\third_party_open\pthreads\include\x64;include;..\..\..\..\utils_lgpl\d_hydro_lib\include;../../../../third_party_open\expat\x64\include;../../../../third_party_open\expat\x64\x64\release;..\..\..\..\utils_lgpl\delftonline\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;..\..\..\..\utils_lgpl\d_hydro_lib\include;../../../../third_party_open\expat\x64\include;../../../../third_party_open\expat\x64\x64\release;..\..\..\..\utils_lgpl\delftonline\include;%(AdditionalIncludeDirectories);../../../../third_party_open/pthreads/include/$(PlatformName)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_STRUCT_TIMESPEC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -127,12 +132,14 @@ echo "This file is overwritten by the post-build command of the project d_hydro"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>..\..\..\..\utils_lgpl\d_hydro_lib\lib\$(PlatformName)\$(ConfigurationName)\static\d_hydro_lib.lib;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static\deltares_common.lib;pthreadVC2.lib;..\..\..\..\third_party_open\expat\x64\$(PlatformName)\$(ConfigurationName)\libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\..\..\utils_lgpl\d_hydro_lib\lib\$(PlatformName)\$(ConfigurationName)\static\d_hydro_lib.lib;deltares_common.lib;deltares_common_c.lib;pthreadVC2.lib;..\..\..\..\third_party_open\expat\x64\$(PlatformName)\$(ConfigurationName)\libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)d_hydro.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\..\..\..\third_party_open\expat\x64\x64\Release;..\..\..\..\third_party_open\pthreads\bin\x64;..\..\..\..\utils_lgpl\d_hydro_lib\lib\x64\Release\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\third_party_open\expat\x64\x64\Release;..\..\..\..\third_party_open\pthreads\bin\x64;..\..\..\..\utils_lgpl\d_hydro_lib\lib\x64\Release\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMTD.lib;LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
+      <LargeAddressAware>true</LargeAddressAware>
+      <StackReserveSize>20000000</StackReserveSize>
     </Link>
     <PostBuildEvent>
       <Command>..\..\..\..\scripts_lgpl\win64\oss-install_debug_x64.cmd d_hydro
@@ -147,8 +154,8 @@ echo "This file is overwritten by the post-build command of the project d_hydro"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>include;../../../../utils_lgpl/d_hydro_lib/include;../../../../utils_lgpl/deltares_common/packages/deltares_common_c/include/win32;../../../../third_party_open/expat/lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>include;../../../../utils_lgpl/d_hydro_lib/include;../../../../third_party_open/expat/lib;%(AdditionalIncludeDirectories);../../../../third_party_open/pthreads/include/$(PlatformName)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_STRUCT_TIMESPEC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
@@ -166,9 +173,11 @@ echo "This file is overwritten by the post-build command of the project d_hydro"
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
+      <LargeAddressAware>true</LargeAddressAware>
+      <StackReserveSize>20000000</StackReserveSize>
     </Link>
     <PostBuildEvent>
-      <Command>..\..\..\..\scripts_lgpl\win32\oss-install.cmd d_hydro ..\bin
+      <Command>..\..\..\..\scripts_lgpl\win32\oss-install.cmd d_hydro bin
 echo "This file is overwritten by the post-build command of the project d_hydro" &gt; .\include\d_hydro_version.h</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -179,8 +188,8 @@ echo "This file is overwritten by the post-build command of the project d_hydro"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\..\..\third_party_open\pthreads\include\x64;include;..\..\..\..\utils_lgpl\d_hydro_lib\include;../../../../third_party_open\expat\x64\include;../../../../third_party_open\expat\x64\x64\release;..\..\..\..\utils_lgpl\delftonline\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\..\third_party_open\pthreads\include\x64;include;..\..\..\..\utils_lgpl\d_hydro_lib\include;../../../../third_party_open\expat\x64\include;../../../../third_party_open\expat\x64\x64\release;..\..\..\..\utils_lgpl\delftonline\include;%(AdditionalIncludeDirectories);../../../../third_party_open/pthreads/include/$(PlatformName)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_STRUCT_TIMESPEC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
@@ -189,17 +198,19 @@ echo "This file is overwritten by the post-build command of the project d_hydro"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>..\..\..\..\utils_lgpl\d_hydro_lib\lib\$(PlatformName)\$(ConfigurationName)\static\d_hydro_lib.lib;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static\deltares_common.lib;pthreadVC2.lib;..\..\..\..\third_party_open\expat\x64\$(PlatformName)\$(ConfigurationName)\libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\..\..\utils_lgpl\d_hydro_lib\lib\$(PlatformName)\$(ConfigurationName)\static\d_hydro_lib.lib;deltares_common.lib;deltares_common_c.lib;pthreadVC2.lib;..\..\..\..\third_party_open\expat\x64\$(PlatformName)\$(ConfigurationName)\libexpat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)d_hydro.exe</OutputFile>
-      <AdditionalLibraryDirectories>..\..\..\..\third_party_open\expat\x64\x64\Release;..\..\..\..\third_party_open\pthreads\bin\x64;..\..\..\..\utils_lgpl\d_hydro_lib\lib\x64\Release\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\third_party_open\expat\x64\x64\Release;..\..\..\..\third_party_open\pthreads\bin\x64;..\..\..\..\utils_lgpl\d_hydro_lib\lib\x64\Release\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMTD.lib;LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LargeAddressAware>true</LargeAddressAware>
+      <StackReserveSize>20000000</StackReserveSize>
     </Link>
     <PostBuildEvent>
-      <Command>..\..\..\..\scripts_lgpl\win64\oss-install_x64.cmd d_hydro ..\bin</Command>
+      <Command>..\..\..\..\scripts_lgpl\win64\oss-install_x64.cmd d_hydro bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -91,6 +91,7 @@
       integer             :: ierr2         ! error count in this routine
       integer             :: nosegl        ! number of computational volumes per layer
       integer             :: nolay_tmp     ! temp number of layers
+      integer             :: nosegl_bottom ! number of segments per layer (required in read_grid)
       integer             :: igrid         ! a grid number in the collection
       integer             :: noseg2        ! number of additional bed cells
       integer             :: kseg          ! volume number counter
@@ -110,6 +111,7 @@
       zmodel     = .false.
       read_input = .false.
       multigrid  = .false.
+      nosegl_bottom = nosegl
 
 !       Always add base grid to the collection of grids
 
@@ -208,6 +210,7 @@
 
                ! z model temp do not do this here but at the end of the routine
 
+               nosegl_bottom = noseg/nolay_tmp
                if ( .not. zmodel ) then
                   nolay = nolay_tmp
                   nosegl = noseg/nolay
@@ -221,7 +224,7 @@
 
             case ( 'BOTTOMGRID', 'BEDGRID' )
                aGrid%itype = Bottomgrid
-               call read_grid( lun    , aGrid  , GridPs , .false., ierr   )
+               call read_grid( lun    , aGrid  , GridPs , .false., nosegl_bottom, ierr   )
                igrid = GridPointerCollAdd(GridPs,aGrid)
                if ( GridPs%bottom_grid .ne. 0 ) then
                   write ( lunut, 2070 )
@@ -232,12 +235,12 @@
 
             case ( 'PROCESSGRID' )
                aGrid%itype = ProcessGrid
-               call read_grid ( lun    , aGrid  , GridPs , .false., ierr   )
+               call read_grid ( lun    , aGrid  , GridPs , .false., nosegl_bottom, ierr   )
                igrid = GridPointerCollAdd(GridPs,aGrid)
 
             case ( 'SUBGRID' )
                aGrid%itype = ProcessGrid
-               call read_grid ( lun    , aGrid  , GridPs , .false., ierr   )
+               call read_grid ( lun    , aGrid  , GridPs , .false., nosegl_bottom, ierr   )
                igrid = GridPointerCollAdd(GridPs,aGrid)
 
             case ( 'NOBOTTOMLAY' )
@@ -258,7 +261,7 @@
                if ( .not. newinput ) then
                   aGrid%itype = ProcessGrid
                   push = .true.
-                  call read_grid ( lun    , aGrid  , GridPs , .true., ierr   )
+                  call read_grid ( lun    , aGrid  , GridPs , .true., nosegl_bottom, ierr   )
                   igrid = GridPointerCollAdd(GridPs,aGrid)
                   exit
                else

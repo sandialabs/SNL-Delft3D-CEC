@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,23 +24,23 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: nefis_version.cpp 5489 2015-10-13 12:54:40Z mooiman $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/nefis/packages/nefis/src/nefis_version.cpp $
+// $Id: nefis_version.cpp 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/nefis/packages/nefis/src/nefis_version.cpp $
 //#include <stdio.h>
 #include "nefis_version.h"
 
 #if defined(W32)
-static char nefis_version [] = {nefis_major"."nefis_minor"."nefis_revision"."nefis_build" (Win32)"};
-static char nefis_version_id [] = {"@(#)Deltares, "nefis_program" Version "nefis_major"."nefis_minor"."nefis_revision"."nefis_build" (Win32), "__DATE__", "__TIME__""};
+static char nefis_version [] = {nefis_major "." nefis_minor "." nefis_revision "." nefis_build " (Win32)"};
+static char nefis_version_id [] = {"@(#)Deltares, " nefis_program " Version " nefis_major "." nefis_minor "." nefis_revision "." nefis_build " (Win32), " __DATE__ ", " __TIME__ ""};
 #elif defined(W64)
-static char nefis_version [] = {nefis_major"."nefis_minor"."nefis_revision"."nefis_build" (Win64)"};
-static char nefis_version_id [] = {"@(#)Deltares, "nefis_program" Version "nefis_major"."nefis_minor"."nefis_revision"."nefis_build" (Win64), "__DATE__", "__TIME__""};
+static char nefis_version [] = {nefis_major "." nefis_minor "." nefis_revision "." nefis_build " (Win64)"};
+static char nefis_version_id [] = {"@(#)Deltares, " nefis_program " Version " nefis_major "." nefis_minor "." nefis_revision "." nefis_build " (Win64), " __DATE__ ", " __TIME__ ""};
 #elif defined(LINUX64)
-static char nefis_version [] = {nefis_major"."nefis_minor"."nefis_revision"."nefis_build" (Win64)"};
-static char nefis_version_id [] = {"@(#)Deltares, "nefis_program" Version "nefis_major"."nefis_minor"."nefis_revision"."nefis_build" (Linux64), "__DATE__", "__TIME__""};
+static char nefis_version [] = {nefis_major "." nefis_minor "." nefis_revision "." nefis_build " (Linux64)"};
+static char nefis_version_id [] = {"@(#)Deltares, " nefis_program " Version " nefis_major "." nefis_minor "." nefis_revision "." nefis_build " (Linux64), " __DATE__ ", " __TIME__ ""};
 #else
-static char nefis_version [] = {nefis_major"."nefis_minor"."nefis_revision"."nefis_build" (Unknown)"};
-static char nefis_version_id [] = {"@(#)Deltares, "nefis_program" Version "nefis_major"."nefis_minor"."nefis_revision"."nefis_build" (Unknown), "__DATE__", "__TIME__""};
+static char nefis_version [] = {nefis_major "." nefis_minor "." nefis_revision "." nefis_build " (Unknown)"};
+static char nefis_version_id [] = {"@(#)Deltares, " nefis_program " Version " nefis_major "." nefis_minor "." nefis_revision "." nefis_build " (Unknown), " __DATE__ ", " __TIME__ ""};
 #endif
 static char nefis_file_version [] = {"5.00.00"};
 static char nefis_company_name [] = {"Deltares"};

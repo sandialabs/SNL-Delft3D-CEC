@@ -65,10 +65,12 @@ libDataParallelMPI_la_SOURCES = \
 	 dfupdgeo.F90 \
 	 dfstrip.F90 \
 	 dfmassc.F90 \
-	 dffunctionals.F90 \
-	 dfgather.F90 \
+     dfgather_module.F90 \
+     dfscatter_module.F90 \
+     dffunctionals.F90 \
+	 dfgather_lowlevel.F90 \
 	 dfgather_grddim.F90 \
-	 dfwrirst.F90 \
+     dfscatter_lowlevel.F90 \
 	 adjlin.F90 \
 	 rdencl.F90 \
 	 removeDuplicateDDBFiles.f90 \

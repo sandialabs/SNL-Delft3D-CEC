@@ -1,7 +1,7 @@
 function getpointer(pntnam, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ function getpointer(pntnam, gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: getpointer.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/allocation/getpointer.f90 $
+!  $Id: getpointer.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/allocation/getpointer.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! ESM function gtcpnt/gtipnt/gtrpnt can only be used during initialization phase.
@@ -214,6 +214,7 @@ function getpointer(pntnam, gdp)
     integer(pntrsize) , pointer :: rhowat
     integer(pntrsize) , pointer :: rich
     integer(pntrsize) , pointer :: rint
+    integer(pntrsize) , pointer :: rintsm
     integer(pntrsize) , pointer :: rlabda
     integer(pntrsize) , pointer :: rmneg
     integer(pntrsize) , pointer :: rnpl
@@ -288,6 +289,7 @@ function getpointer(pntnam, gdp)
     integer(pntrsize) , pointer :: vsus
     integer(pntrsize) , pointer :: w1
     integer(pntrsize) , pointer :: w10mag
+    integer(pntrsize) , pointer :: windcd
     integer(pntrsize) , pointer :: windsu
     integer(pntrsize) , pointer :: windsv
     integer(pntrsize) , pointer :: windu
@@ -342,6 +344,7 @@ function getpointer(pntnam, gdp)
     integer(pntrsize) , pointer :: zwl
     integer(pntrsize) , pointer :: zws
     integer(pntrsize) , pointer :: zwndsp
+    integer(pntrsize) , pointer :: zwndcd
     integer(pntrsize) , pointer :: zwnddr
     integer(pntrsize) , pointer :: zairp
     integer(pntrsize) , pointer :: zevap
@@ -567,6 +570,7 @@ function getpointer(pntnam, gdp)
     rhowat     => gdp%gdr_i_ch%rhowat
     rich       => gdp%gdr_i_ch%rich
     rint       => gdp%gdr_i_ch%rint
+    rintsm     => gdp%gdr_i_ch%rintsm
     rlabda     => gdp%gdr_i_ch%rlabda
     rmneg      => gdp%gdr_i_ch%rmneg
     rnpl       => gdp%gdr_i_ch%rnpl
@@ -643,6 +647,7 @@ function getpointer(pntnam, gdp)
     w10mag     => gdp%gdr_i_ch%w10mag
     windsu     => gdp%gdr_i_ch%windsu
     windsv     => gdp%gdr_i_ch%windsv
+    windcd     => gdp%gdr_i_ch%windcd
     windu      => gdp%gdr_i_ch%windu
     windv      => gdp%gdr_i_ch%windv
     wlen       => gdp%gdr_i_ch%wlen
@@ -695,6 +700,7 @@ function getpointer(pntnam, gdp)
     zwl        => gdp%gdr_i_ch%zwl
     zws        => gdp%gdr_i_ch%zws
     zwndsp     => gdp%gdr_i_ch%zwndsp
+    zwndcd     => gdp%gdr_i_ch%zwndcd
     zwnddr     => gdp%gdr_i_ch%zwnddr
     zairp      => gdp%gdr_i_ch%zairp
     zevap      => gdp%gdr_i_ch%zevap
@@ -1083,6 +1089,8 @@ function getpointer(pntnam, gdp)
        returnval = rich
     case ('rint')
        returnval = rint
+    case ('rintsm')
+       returnval = rintsm
     case ('rlabda')
        returnval = rlabda
     case ('rmneg')
@@ -1235,6 +1243,8 @@ function getpointer(pntnam, gdp)
        returnval = windsu
     case ('windsv')
        returnval = windsv
+    case ('windcd')
+       returnval = windcd
     case ('windu')
        returnval = windu
     case ('windv')
@@ -1339,6 +1349,8 @@ function getpointer(pntnam, gdp)
        returnval = zws
     case ('zwndsp')
        returnval = zwndsp
+    case ('zwndcd')
+       returnval = zwndcd
     case ('zwnddr')
        returnval = zwnddr
     case ('zairp')

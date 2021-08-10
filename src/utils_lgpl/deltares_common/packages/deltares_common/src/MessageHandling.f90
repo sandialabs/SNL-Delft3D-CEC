@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !
-!  Copyright (C)  Stichting Deltares, 2011-2015.
+!  Copyright (C)  Stichting Deltares, 2011-2020.
 !
 !  This library is free software; you can redistribute it and/or
 !  modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.
 !
 !-------------------------------------------------------------------------------
-!  $Id: MessageHandling.f90 5314 2015-08-04 20:14:31Z baart_f $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common/src/MessageHandling.f90 $
+!  $Id: MessageHandling.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common/src/MessageHandling.f90 $
 
 !> Specifies the interface for MessageHandling's callback functionality.
 ! (A bit awkward, but including it in MessageHandling's module header
@@ -39,7 +39,7 @@ module MHCallBack
    end interface
 
    abstract interface
-      subroutine c_callbackiface(level, msg)
+      subroutine c_callbackiface(level, msg) bind(C)
         use iso_c_binding
         use iso_c_utils
         integer(c_int), value, intent(in) :: level !< severity
@@ -56,7 +56,7 @@ module MHCallBack
 
 
    abstract interface
-      subroutine progress_c_iface(msg, progress)
+      subroutine progress_c_iface(msg, progress) bind(C)
         use iso_c_binding
         use iso_c_utils
         character(c_char), intent(in) :: msg(MAXSTRINGLEN) !< c message null terminated
@@ -64,6 +64,16 @@ module MHCallBack
       end subroutine progress_c_iface
    end interface
 
+!> Shows a message in a GUI dialog.
+!! This interface is to be used by utility libraries that want to call back
+!! a GUI routine in the parent program to display a message box.
+   abstract interface
+      subroutine msgbox_callbackiface(title, msg, level)
+        character(len=*), intent(in) :: title !< Title string
+        character(len=*), intent(in) :: msg   !< Message string
+        integer,          intent(in) :: level !< Severity level (e.g., LEVEL_ERROR).
+      end subroutine msgbox_callbackiface
+   end interface
 
 end module MHCallBack
 
@@ -85,6 +95,10 @@ module MessageHandling
    procedure(progress_iface), pointer :: progress_callback => null()
    procedure(progress_c_iface), pointer :: progress_c_callback => null()
 
+   !> Callback routine invoked upon any mess/err (i.e. SetMessage)
+   procedure(msgbox_callbackiface), pointer :: msgbox_callback => null()
+
+
    integer, parameter, public    :: BUFLEN = 1024
    !> The message buffer allows you to write any number of variables in any
    !! order to a character string. Call msg_flush or err_flush to output
@@ -103,15 +117,20 @@ module MessageHandling
    public getMaxErrorLevel
    public resetMaxerrorLevel
    public set_logger
+   public set_progress_c_callback
    public set_mh_callback
+   public set_msgbox_callback
+   public msgbox
    public msg_flush
    public dbg_flush
    public warn_flush
    public err_flush
+   public fatal_flush
    public set_progress_callback
    public progress
    public stringtolevel
    
+   integer,parameter, public     :: LEVEL_ALL   = 0
    integer,parameter, public     :: LEVEL_DEBUG = 1
    integer,parameter, public     :: LEVEL_INFO  = 2
    integer,parameter, public     :: LEVEL_WARN  = 3
@@ -143,6 +162,7 @@ module MessageHandling
    module procedure message1char2int
    module procedure message1char3int
    module procedure message1char1double
+   module procedure message2double
    module procedure message2int1char
    module procedure message1char1int1double
    module procedure message1double1int1char
@@ -178,6 +198,7 @@ private
    integer,                                    public  :: thresholdLvl_log    = 0 !< Threshold level specific for the logging queue channel.
    integer,                                    public  :: thresholdLvl_file   = 0 !< Threshold level specific for the file output channel.
    integer,                                    public  :: thresholdLvl_callback   = LEVEL_WARN !< Threshold level specific for the c callback.
+   character(len=idlen),                       public  :: prefix_callback   = "kernel" !< prefix specific for the c callback.
 
    !> For the above threshold levels to become active, each channel must be separately enabled:
    integer, save                  :: lunMess             = 0       !< The file pointer to be used for the file output channel.
@@ -200,16 +221,18 @@ function stringtolevel(levelname) result(ilevel)
    ilevel = LEVEL_NONE  
 
    select case (trim(levelname))
+   case ('ALL')
+      ilevel = LEVEL_ALL
    case ('DEBUG')
-      ilevel = LEVEL_DEBUG 
+      ilevel = LEVEL_DEBUG
    case ('INFO')
-      ilevel = LEVEL_INFO  
+      ilevel = LEVEL_INFO
    case ('WARN')
-      ilevel = LEVEL_WARN  
+      ilevel = LEVEL_WARN
    case ('ERROR')
-      ilevel = LEVEL_ERROR 
+      ilevel = LEVEL_ERROR
    case ('FATAL')
-      ilevel = LEVEL_FATAL 
+      ilevel = LEVEL_FATAL
    end select
 
 end function stringtolevel
@@ -226,7 +249,7 @@ end function stringtolevel
 !! its own threshold level. Note that the threshold level is only active if the
 !! output channel has been enabled. See the respective input arguments for enabling.
 !!
-subroutine SetMessageHandling(write2screen, useLog, lunMessages, callback, thresholdLevel, thresholdLevel_stdout, thresholdLevel_log, thresholdLevel_file, reset_counters)
+subroutine SetMessageHandling(write2screen, useLog, lunMessages, callback, thresholdLevel, thresholdLevel_stdout, thresholdLevel_log, thresholdLevel_file, reset_counters, thresholdLevel_callback, prefix_logging)
    logical, optional, intent(in)       :: write2screen           !< Enable stdout: print messages to stdout.
    logical, optional, intent(in)       :: useLog                 !< Enable logging queue: store messages in buffer.
    integer, optional, intent(in)       :: lunMessages            !< Enable file output: nonzero file pointer whereto messages can be written.
@@ -235,8 +258,10 @@ subroutine SetMessageHandling(write2screen, useLog, lunMessages, callback, thres
    integer, optional, intent(in)       :: thresholdLevel_stdout  !< Threshold level specific for stdout channel.
    integer, optional, intent(in)       :: thresholdLevel_log     !< Threshold level specific for the logging queue channel.
    integer, optional, intent(in)       :: thresholdLevel_file    !< Threshold level specific for the file output channel.
+   integer, optional, intent(in)       :: thresholdLevel_callback!< Threshold level specific for the file output channel.
    logical, optional, intent(in)       :: reset_counters         !< If present and True then reset message counters.
                                                                  !< SetMessageHandling is called more than once.
+   character(len=*), optional, intent(in) :: prefix_logging      !< prefix for logging
 
    procedure(mh_callbackiface), optional :: callback
 
@@ -252,6 +277,7 @@ subroutine SetMessageHandling(write2screen, useLog, lunMessages, callback, thres
       thresholdLvl_stdout = thresholdLevel
       thresholdLvl_log    = thresholdLevel
       thresholdLvl_file   = thresholdLevel
+      thresholdLvl_callback = thresholdLevel
    end if
 
    ! .. but override the threshold level per channel, when given.
@@ -263,6 +289,12 @@ subroutine SetMessageHandling(write2screen, useLog, lunMessages, callback, thres
    end if
    if (present(thresholdLevel_file) )  then
       thresholdLvl_file = thresholdLevel_file
+   end if
+   if (present(thresholdLevel_callback) )  then
+      thresholdLvl_callback = thresholdLevel_callback
+   end if
+   if (present(prefix_logging))  then
+      prefix_callback = prefix_logging
    end if
 
    if (present(reset_counters)) then
@@ -297,6 +329,26 @@ subroutine set_logger(c_callback) bind(C, name="set_logger")
 end subroutine set_logger
 
 
+subroutine set_msgbox_callback(callback)
+  procedure(msgbox_callbackiface) :: callback
+  msgbox_callback => callback
+end subroutine set_msgbox_callback
+
+
+!> Displays a (GUI) message box by calling a subroutine in the parent program,
+!! IF a callback subroutine has been registered.
+subroutine msgbox(title, msg, level)
+   character(len=*), intent(in) :: title !< Title string
+   character(len=*), intent(in) :: msg   !< Message string
+   integer,          intent(in) :: level !< Severity level (e.g., LEVEL_ERROR).
+
+   ! call the registered msgbox
+   if (associated(msgbox_callback)) then
+      call msgbox_callback(title, msg, level)
+   end if
+
+end subroutine msgbox
+
 
 
 
@@ -312,6 +364,7 @@ recursive subroutine SetMessage(level, string)
   character(c_char)             :: c_string(MAXSTRINGLEN)
 
   integer :: levelact
+  character(len=charln)         :: msg !< message.
 
 
   levelact = max(1,min(max_level, level))
@@ -326,7 +379,7 @@ recursive subroutine SetMessage(level, string)
         end if
      endif
 
-     if (lunMess > 0) then
+     if (lunMess .ne. 0) then
         if (level >= thresholdLvl_file) then
            write (lunMess, '(a)') level_prefix(levelact)//trim(string)
         end if
@@ -348,7 +401,7 @@ recursive subroutine SetMessage(level, string)
         write (*, '(a)') trim(string)
      endif
 
-     if (lunMess > 0) then
+     if (lunMess .ne. 0) then
         write (lunMess, '(a)') trim(string)
      end if
 
@@ -364,7 +417,8 @@ recursive subroutine SetMessage(level, string)
   if (associated(c_logger).and. .not. alreadyInCallback) then
      if (level >= thresholdLvl_callback) then
         alreadyInCallback = .true.
-        c_string = string_to_char_array(trim(string))
+        msg = trim(prefix_callback)//': '//trim(string)
+        c_string = string_to_char_array(trim(msg))        
         call c_logger(level, c_string)
         alreadyInCallback = .false.
      endif
@@ -584,6 +638,17 @@ subroutine message1char1double(level, w1, d2)
     call SetMessage(level, rec)
 end subroutine message1char1double
 
+subroutine message2double(level, d1, d2)
+    double precision, intent(in) :: d1, d2
+    integer         :: level
+
+    character(MAXSTRINGLEN) :: rec
+
+    rec = ' '
+    write (rec,'(2F20.6)') d1,d2 
+    call SetMessage(level, rec)
+end subroutine message2double
+
 subroutine message1char1int(level, w1, i2)
     integer :: i2
     character(*) :: w1
@@ -790,19 +855,16 @@ end subroutine error1char1int1double
 
 !> Output the current message buffer as a 'debug' message.
 subroutine dbg_flush()
-! We could check on empty buffer, but we omit this to stay lightweight. [AvD]
     call mess(LEVEL_DEBUG,  msgbuf)
 end subroutine dbg_flush
 
 !!> Output the current message buffer as an 'info' message.
 subroutine msg_flush()
-! We could check on empty buffer, but we omit this to stay lightweight. [AvD]
     call mess(LEVEL_INFO,  msgbuf)
 end subroutine msg_flush
 
 !> Output the current message buffer as a 'warning' message.
 subroutine warn_flush()
-! We could check on empty buffer, but we omit this to stay lightweight. [AvD]
     call mess(LEVEL_WARN,  msgbuf)
 end subroutine warn_flush
 
@@ -810,6 +872,11 @@ end subroutine warn_flush
 subroutine err_flush()
     call mess(LEVEL_ERROR, msgbuf)
 end subroutine err_flush
+
+!> Output the current message buffer as a 'fatal' message.
+subroutine fatal_flush()
+    call mess(LEVEL_FATAL, msgbuf)
+end subroutine fatal_flush
 
 !
 !

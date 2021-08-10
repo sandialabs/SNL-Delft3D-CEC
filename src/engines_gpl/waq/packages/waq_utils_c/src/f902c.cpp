@@ -1,4 +1,4 @@
-//  Copyright (C)  Stichting Deltares, 2012-2015.
+//  Copyright (C)  Stichting Deltares, 2012-2020.
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License version 3,
@@ -64,7 +64,7 @@
  */
 
 #if defined(WIN32) || defined (SALF)
-    typedef HMODULE DllHandle;
+    typedef HINSTANCE DllHandle;
 #elif defined(LINUX)
     typedef void * DllHandle;
 #endif
@@ -107,10 +107,9 @@ extern "C" {
 /*
  * OPEN_SHARED_LIBRARY and CLOSE_SHARED_LIBRARY are used from utils_lgpl\deltares_common\packages\deltares_common_c\src\shared_library_fortran_api.c
  */
-#if defined(XWIN32)
-long STDCALL PERFORM_FUNCTION(long  * sharedDLLHandle  ,
+#if defined(WIN32)
+long STDCALL PERFORM_FUNCTION(DllHandle * sharedDLLHandle  ,
                               char  * function,
-                              long    length_function,
                               float * pmsa    ,
                               float * fl      ,
                               long  * ipoint  ,
@@ -122,8 +121,10 @@ long STDCALL PERFORM_FUNCTION(long  * sharedDLLHandle  ,
                               long  * noq1    ,
                               long  * noq2    ,
                               long  * noq3    ,
-                              long  * noq4    )
-#elif defined(LINUX) || defined(SALF) || defined(WIN32)
+                              long  * noq4    ,
+                              long    length_function)
+#elif defined(LINUX) || defined(SALF)
+/* TODO: This requires thinking about! */
 long STDCALL PERFORM_FUNCTION(long  * sharedDLLHandle ,
                               char  * function,
                               float * pmsa    ,

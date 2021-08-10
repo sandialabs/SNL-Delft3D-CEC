@@ -5,7 +5,7 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                 & drodep    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdsite.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdsite.f90 $
+!  $Id: rdsite.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdsite.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads the positions of the monitoring stations
@@ -49,6 +49,7 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     use precision
     use properties
     use flow_tables
+    use split_stations, only: split_sta_parll, get_sta_node
     !
     use globaldata
     use dfparall
@@ -61,10 +62,11 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     !
     integer                          , pointer :: julday
     integer                          , pointer :: itis
-    real(fp)       , dimension(:,:)  , pointer :: zrtcsta
     integer                          , pointer :: stacnt
     integer                          , pointer :: rtcmod
+    integer                          , pointer :: rtcact
     integer        , dimension(:,:)  , pointer :: mnrtcsta
+    integer        , dimension(:,:)  , pointer :: mnrtcsta_gl
     character(20)  , dimension(:)    , pointer :: namrtcsta
     character(256)                   , pointer :: filrtc
     type (handletype)                , pointer :: moving_stat_file
@@ -168,11 +170,9 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !
     julday     => gdp%gdinttim%julday
     itis       => gdp%gdrdpara%itis
-    zrtcsta    => gdp%gdrtc%zrtcsta
     stacnt     => gdp%gdrtc%stacnt
     rtcmod     => gdp%gdrtc%rtcmod
-    mnrtcsta   => gdp%gdrtc%mnrtcsta
-    namrtcsta  => gdp%gdrtc%namrtcsta
+    rtcact     => gdp%gdrtc%rtcact
     filrtc     => gdp%gdrtc%filrtc
     !
     !
@@ -355,155 +355,7 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     ! for parallel runs, determine which observation points are inside subdomain (excluding the halo) and store them
     !
     if (parll) then
-       if (nostat == 0) then
-          !
-          ! No observation points in the complete model:
-          ! order_sta must be allocated with length 1 and value 0
-          !
-          allocate(gdp%gdparall%order_sta(1), stat=istat)
-          if (istat /= 0) then
-             call prterr(lundia, 'U021', 'Rdsite: memory alloc error')
-             call d3stop(1, gdp)
-          endif
-          order_sta => gdp%gdparall%order_sta
-          order_sta(1) = 0
-       else
-          !
-          ! nostat > 0
-          !
-          allocate(nsd(nostat), stat=istat)
-          if (istat /= 0) then
-             call prterr(lundia, 'U021', 'Rdsite: memory alloc error')
-             call d3stop(1, gdp)
-          endif
-          nn  = 0
-          nsd = 0
-          if (idir == 1) then
-             !
-             ! n direction is split
-             !
-             mfl = 1
-             mll = gdp%d%mmax
-             if (nfg == 1) then
-                !
-                ! first part; no halo in front of nfl
-                !
-                nfl = 1
-             else
-                !
-                ! exclude halo in front of nfl
-                !
-                nfl = 1 + ihalon
-             endif
-             if (nlg == gdp%gdparall%nmaxgl) then
-                !
-                ! last part; no halo behind nll
-                !
-                nll = gdp%d%nmaxus
-             else
-                !
-                ! exclude halo behind nll
-                !
-                nll = gdp%d%nmaxus - ihalon
-             endif
-          elseif (idir == 2) then
-             !
-             ! m direction is split
-             !
-             nfl = 1
-             nll = gdp%d%nmaxus
-             if (mfg == 1) then
-                !
-                ! first part; no halo in front of mfl
-                !
-                mfl = 1
-             else
-                !
-                ! exclude halo in front of mfl
-                !
-                mfl = 1 + ihalom
-             endif
-             if (mlg == gdp%gdparall%mmaxgl) then
-                !
-                ! last part; no halo behind mll
-                !
-                mll = gdp%d%mmax
-             else
-                !
-                ! exclude halo behind mll
-                !
-                mll = gdp%d%mmax - ihalom
-             endif
-          endif
-          do n = 1, nostat
-             m1 = mnstat(1,n) - mfg +1
-             n1 = mnstat(2,n) - nfg +1
-             !
-             ! check if observation point is inside or outside subdomain, excluding the halo
-             !
-             if ( m1>=mfl .and. n1>=nfl .and. m1<=mll .and. n1<=nll ) then
-                !
-                ! observation point is inside subdomain, store sequence number
-                !
-                mnstat(1,n) = m1
-                mnstat(2,n) = n1
-                nn          = nn +1
-                nsd(nn)     = n
-             endif
-          enddo
-          !
-          ! restore mnstat and namst of own subdomain
-          !
-          ! in the parallel case, the original ordering of the
-          ! stations is kept (for comparisons purpose) in order_sta
-          ! order_sta is set to 0 when the partition does not contain
-          ! any station
-          if (nn == 0) then
-             allocate(gdp%gdparall%order_sta(1), stat=istat)
-             if (istat /= 0) then
-                call prterr(lundia, 'U021', 'Rdsite: memory alloc error')
-                call d3stop(1, gdp)
-             endif
-             order_sta => gdp%gdparall%order_sta
-             order_sta(1) = 0
-          else
-             istat = 0
-             if (istat == 0) allocate(ctemp(nn)                 , stat=istat)
-             if (istat == 0) allocate(itmp1(2,nn)               , stat=istat)
-             if (istat == 0) allocate(gdp%gdparall%order_sta(nn), stat=istat)
-             if (istat /= 0) then
-                call prterr(lundia, 'U021', 'Rdsite: memory alloc error')
-                call d3stop(1, gdp)
-             endif
-             order_sta => gdp%gdparall%order_sta
-          endif
-          do n = 1, nn
-             order_sta(n) = nsd(n)
-             ctemp(n)   = namst(nsd(n))
-             itmp1(1,n) = mnstat(1,nsd(n))
-             itmp1(2,n) = mnstat(2,nsd(n))
-          enddo
-          namst  = ' '
-          mnstat = 0
-          nostat = nn
-          do n = 1, nostat
-             namst(n)    = ctemp(n)
-             mnstat(1,n) = itmp1(1,n)
-             mnstat(2,n) = itmp1(2,n)
-          enddo
-          if (nn /= 0) deallocate(ctemp,itmp1, stat=istat)
-          deallocate(nsd, stat=istat)
-          !
-          ! dummy values (nostat = 1) if final number found
-          ! is 0 to avoid using a null ptr in subsequent
-          ! routine calls
-          !
-          if (nn == 0) nostat = 1
-          if (nostat == 1 .and. order_sta(1) == 0) then
-             mnstat(1:2,1) = (/1,1/)
-             namst(1) = ''
-          endif
-       endif
+        call split_sta_parll(nostat, mnstat, namst, gdp%gdparall%order_sta, lundia, gdp)
     endif
     !
     if (nostat > 0) then
@@ -1034,6 +886,18 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
        deallocate(nsd,ctemp,itmp1,itmp2,rtemp, stat=istat)
     endif
     !
+    rtcact = noRTC
+    call prop_get_string(gdp%mdfile_ptr, '*', 'RTCact', chulp)
+    call small(chulp, 999)
+    if (chulp == "bmi") then
+       rtcact = RTCviaBMI
+       write(lundia,'(a)') '*** MESSAGE Real Time Control via BMI interface'
+       ! Array cbuvrt must be set to -1 to flag that valid values have not yet been set via BMI
+    elseif (chulp == "rtcmodule") then
+       rtcact = RTCmodule
+       write(lundia,'(a)') '*** MESSAGE Real Time Control via online RTC module'
+    endif
+    !
     !
     ! Read info of RTC input station from attribute file or md-file
     ! Initialize file name
@@ -1050,22 +914,30 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
        !  Read number of locations to be communicated with RTC
        !
        call dimstr(lunmd, filrtc, lundia, error, nrrec, stacnt, gdp)
-       !
-       istat = 0
-       if (istat == 0) allocate(gdp%gdrtc%mnrtcsta(2,stacnt)         , stat = istat)
-       if (istat == 0) allocate(gdp%gdrtc%namrtcsta(stacnt)          , stat = istat)
-       if (istat == 0) allocate(gdp%gdrtc%zrtcsta(gdp%d%kmax,stacnt) , stat = istat)
-       if (istat == 0) allocate(gdp%gdrtc%s1rtcsta(stacnt)           , stat = istat)
-       if (istat /= 0) then
-          call prterr(lundia, 'U021', 'Rdsite: memory alloc error')
-          call d3stop(1, gdp)
-       endif
-       !
-       ! Update local pointers
-       !
-       mnrtcsta   => gdp%gdrtc%mnrtcsta
-       namrtcsta  => gdp%gdrtc%namrtcsta
-       zrtcsta    => gdp%gdrtc%zrtcsta
+    else
+       stacnt = 0
+    endif
+    !
+    istat = 0
+    if (istat == 0) allocate(gdp%gdrtc%mnrtcsta(2,stacnt)                      , stat = istat)
+    if (istat == 0) allocate(gdp%gdrtc%mnrtcsta_gl(2,stacnt)                   , stat = istat)
+    if (istat == 0) allocate(gdp%gdrtc%inodertcsta(stacnt)                     , stat = istat)
+    if (istat == 0) allocate(gdp%gdrtc%namrtcsta(stacnt)                       , stat = istat)
+    if (istat == 0) allocate(gdp%gdrtc%r0rtcsta(gdp%d%lstsci,gdp%d%kmax,stacnt), stat = istat)
+    if (istat == 0) allocate(gdp%gdrtc%s1rtcsta(stacnt)                        , stat = istat)
+    if (istat == 0) allocate(gdp%gdrtc%zrtcsta(gdp%d%kmax,stacnt)              , stat = istat)
+    if (istat /= 0) then
+       call prterr(lundia, 'U021', 'Rdsite: memory alloc error')
+       call d3stop(1, gdp)
+    endif
+    !
+    ! Set local pointers
+    !
+    mnrtcsta    => gdp%gdrtc%mnrtcsta
+    mnrtcsta_gl => gdp%gdrtc%mnrtcsta_gl
+    namrtcsta   => gdp%gdrtc%namrtcsta
+    !
+    if (stacnt>0) then
        !
        ! Read RTC input station definitions from file
        ! Stop if reading error occurred or file did not exist (error = .true.)
@@ -1073,13 +945,6 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
        call stafil(lundia   , filrtc  , fmttmp, error, stacnt, &
                  & namrtcsta, mnrtcsta, gdp   )
        if (error) goto 9999
-    else
-       stacnt = 0
-       istat  = 0
-       if (istat == 0) allocate(gdp%gdrtc%mnrtcsta(2,stacnt)         , stat = istat)
-       if (istat == 0) allocate(gdp%gdrtc%namrtcsta(stacnt)          , stat = istat)
-       if (istat == 0) allocate(gdp%gdrtc%zrtcsta(gdp%d%kmax,stacnt) , stat = istat)
-       if (istat == 0) allocate(gdp%gdrtc%s1rtcsta(stacnt)           , stat = istat)
     endif
     !
     ! not twice the same name
@@ -1092,6 +957,14 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
           endif
        enddo
     enddo
+    !
+    ! for parallel runs, determine which observation points are inside subdomain (excluding the halo) and store them
+    ! first backup global m,n coordinates
+    !
+    mnrtcsta_gl = mnrtcsta
+    if (parll) then
+        call get_sta_node(stacnt, mnrtcsta, gdp%gdrtc%inodertcsta, gdp)
+    endif
     !
     ! Check whether the name of any station matches the name of any drogue
     !
@@ -1136,7 +1009,7 @@ subroutine rdsite(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     !
     ! Create trigger file for TRISIM to indicate RTC running
     !
-    if (rtcmod /= noRTC) then
+    if (rtcmod/=noRTC .and. rtcact/=RTCviaBMI) then
        luntri = newlun(gdp)
        filsim = 'TMP_SYNC.RUN'
        inquire (file = filsim, exist = lexist)

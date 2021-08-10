@@ -4,7 +4,7 @@ subroutine flhnew(lunrd     ,lundia    ,error     ,record    ,access    , &
                 & bubble    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +28,8 @@ subroutine flhnew(lunrd     ,lundia    ,error     ,record    ,access    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: flhnew.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/general/flhnew.f90 $
+!  $Id: flhnew.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/general/flhnew.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Reads keywords in the Direct access file (new)
@@ -74,7 +74,7 @@ subroutine flhnew(lunrd     ,lundia    ,error     ,record    ,access    , &
     real(fp)                       , intent(out) :: timscl
     character(*)                                 :: cntent
     character(*)                                 :: record  !!  Standard rec. length in an attribute
-                                                            !!  file (maximum MXKMAX*24*2 + 48)
+                                                            !!  file (maximum kmax*24*2 + 48)
     character(1)                                 :: interp
     character(20)                  , intent(in)  :: namloc
     character(36), dimension(npara), intent(out) :: parrd

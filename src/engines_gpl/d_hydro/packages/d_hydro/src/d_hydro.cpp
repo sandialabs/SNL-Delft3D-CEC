@@ -1,6 +1,6 @@
 //---- GPL ---------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -128,6 +128,10 @@ main (
         }
     catch (Exception *ex) {
         printf ("d_hydro ABORT: %s\n", ex->message);
+        return 1;
+        }
+    catch (char * str) {
+        printf ("ABORT in FLOW2D3D: %s\n", str);
         return 1;
         }
     }
@@ -396,7 +400,7 @@ printAbout (
     GETFULLVERSIONSTRING (strout, strlen (strout));
     printf ("\n\
 %s \n\
-Copyright (C)  Stichting Deltares, 2011-2015. \n\
+Copyright (C)  Stichting Deltares, 2011-2020. \n\
 GNU General Public License, see <http://www.gnu.org/licenses/>. \n\n\
 delft3d.support@deltares.nl \n", strout);
     GETURLSTRING (strout, strlen (strout));

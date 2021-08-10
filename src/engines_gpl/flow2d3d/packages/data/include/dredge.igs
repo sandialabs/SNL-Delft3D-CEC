@@ -1,6 +1,6 @@
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dredge.igs 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/include/dredge.igs $$
+!  $Id: dredge.igs 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/include/dredge.igs $$
 !-------------------------------------------------------------------------------
     integer, parameter :: DEPTHDEF_REFPLANE        = 1
     integer, parameter :: DEPTHDEF_WATERLVL        = 2
@@ -131,7 +131,8 @@ type dredtype
                                                                ! 3 = proportional to capacity
     integer                                 :: outletlink      ! link number of outlet (sediment removed from model)
     integer       , dimension(:)  , pointer :: inm             ! (npnt)   index 1 to npnt into nm array
-    integer       , dimension(:)  , pointer :: nm              ! (npnt)   nm points
+    integer       , dimension(:)  , pointer :: nm              ! (npnt)   local nm index
+    integer       , dimension(:)  , pointer :: nmglob          ! (npnt)   global nm index
     integer                                 :: npnt            ! number of points in dredging area
     !
     logical                                 :: active          ! T: dredge this time step
@@ -165,7 +166,8 @@ type dumptype
                                                                ! 3 = depth relative to maximum of reference plane and water level
                                                                ! 4 = depth relative to minimum of reference plane and water level
     integer       , dimension(:)  , pointer :: inm             ! (npnt)   index 1 to npnt into nm array
-    integer       , dimension(:)  , pointer :: nm              ! nm points
+    integer       , dimension(:)  , pointer :: nm              ! (npnt)   local nm index
+    integer       , dimension(:)  , pointer :: nmglob          ! (npnt)   global nm index
     integer                                 :: npnt            ! number of nm points
     integer                                 :: dumpdistr       ! 1 = dump sediment uniformly (default)
                                                                ! 2 = dump in lowest locations first

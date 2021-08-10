@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.645
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dimr_lib", "engines_gpl\dimr\packages\dimr_lib\dimr_lib.vcxproj", "{40244765-8DC2-4247-B167-9B3A8D1EB30A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{51065F4C-23D3-4C5F-AF5B-E70776409D7B} = {51065F4C-23D3-4C5F-AF5B-E70776409D7B}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dimr", "engines_gpl\dimr\packages\dimr\dimr_exe.vcxproj", "{B9D5FB4A-803E-414D-AA15-BE75F06DAB60}"
+	ProjectSection(ProjectDependencies) = postProject
+		{40244765-8DC2-4247-B167-9B3A8D1EB30A} = {40244765-8DC2-4247-B167-9B3A8D1EB30A}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deltares_common_c", "utils_lgpl\deltares_common\packages\deltares_common_c\deltares_common_c.vcxproj", "{51065F4C-23D3-4C5F-AF5B-E70776409D7B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "utils_lgpl", "utils_lgpl", "{6F70C73F-2368-4398-BA4D-60453E0A5339}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E50ADB72-1ACF-4FE5-9AED-884C1F5DFCDE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{583163E9-9943-4AA7-802E-D5E2D85DD31A}"
+EndProject
+Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "deltares_common", "utils_lgpl\deltares_common\packages\deltares_common\deltares_common.vfproj", "{2D6BCBCA-CC6C-49FE-A6AA-61AF62529118}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40244765-8DC2-4247-B167-9B3A8D1EB30A}.Debug|x64.ActiveCfg = Debug|x64
+		{40244765-8DC2-4247-B167-9B3A8D1EB30A}.Debug|x64.Build.0 = Debug|x64
+		{40244765-8DC2-4247-B167-9B3A8D1EB30A}.Release|x64.ActiveCfg = Release|x64
+		{40244765-8DC2-4247-B167-9B3A8D1EB30A}.Release|x64.Build.0 = Release|x64
+		{B9D5FB4A-803E-414D-AA15-BE75F06DAB60}.Debug|x64.ActiveCfg = Debug|x64
+		{B9D5FB4A-803E-414D-AA15-BE75F06DAB60}.Debug|x64.Build.0 = Debug|x64
+		{B9D5FB4A-803E-414D-AA15-BE75F06DAB60}.Release|x64.ActiveCfg = Release|x64
+		{B9D5FB4A-803E-414D-AA15-BE75F06DAB60}.Release|x64.Build.0 = Release|x64
+		{51065F4C-23D3-4C5F-AF5B-E70776409D7B}.Debug|x64.ActiveCfg = Debug|x64
+		{51065F4C-23D3-4C5F-AF5B-E70776409D7B}.Debug|x64.Build.0 = Debug|x64
+		{51065F4C-23D3-4C5F-AF5B-E70776409D7B}.Release|x64.ActiveCfg = Release|x64
+		{51065F4C-23D3-4C5F-AF5B-E70776409D7B}.Release|x64.Build.0 = Release|x64
+		{2D6BCBCA-CC6C-49FE-A6AA-61AF62529118}.Debug|x64.ActiveCfg = Debug|x64
+		{2D6BCBCA-CC6C-49FE-A6AA-61AF62529118}.Debug|x64.Build.0 = Debug|x64
+		{2D6BCBCA-CC6C-49FE-A6AA-61AF62529118}.Release|x64.ActiveCfg = Release|x64
+		{2D6BCBCA-CC6C-49FE-A6AA-61AF62529118}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{40244765-8DC2-4247-B167-9B3A8D1EB30A} = {E50ADB72-1ACF-4FE5-9AED-884C1F5DFCDE}
+		{B9D5FB4A-803E-414D-AA15-BE75F06DAB60} = {E50ADB72-1ACF-4FE5-9AED-884C1F5DFCDE}
+		{51065F4C-23D3-4C5F-AF5B-E70776409D7B} = {6F70C73F-2368-4398-BA4D-60453E0A5339}
+		{2D6BCBCA-CC6C-49FE-A6AA-61AF62529118} = {6F70C73F-2368-4398-BA4D-60453E0A5339}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B544B5D2-0151-43D9-ADCB-958C28BF9883}
+	EndGlobalSection
+EndGlobal

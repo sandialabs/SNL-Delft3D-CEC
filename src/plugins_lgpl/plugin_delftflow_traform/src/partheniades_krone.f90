@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,13 +24,13 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: partheniades_krone.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/plugins_lgpl/plugin_delftflow_traform/src/partheniades_krone.f90 $
+!  $Id: partheniades_krone.f90 65813 2020-01-17 16:46:56Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/plugins_lgpl/plugin_delftflow_traform/src/partheniades_krone.f90 $
 subroutine parkro(dll_integers, max_integers, &
                   dll_reals   , max_reals   , &
                   dll_strings , max_strings , &
                   sink        , source      , &
-                  error_message   )
+                  error_message_c   )
 !DEC$ ATTRIBUTES DLLEXPORT, ALIAS: 'PARKRO' :: PARKRO
 !!--description-----------------------------------------------------------------
 !
@@ -40,6 +40,7 @@ subroutine parkro(dll_integers, max_integers, &
 !!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
+use iso_c_binding, only: c_char
 implicit none
 !
 ! Local constants
@@ -58,12 +59,13 @@ character(len=256), dimension(max_strings) , intent(in)  :: dll_strings
 !
 ! Subroutine arguments: output
 !
-real(hp)          , intent(out) :: source        ! source term [kg/m2/s]
-real(hp)          , intent(out) :: sink          ! sink term [-] (to be multiplied with concentration and settling velocity)
-character(len=256), intent(out) :: error_message ! not empty: echo and stop run
+real(hp)          , intent(out) :: source                 ! source term [kg/m2/s]
+real(hp)          , intent(out) :: sink                   ! sink term [-] (to be multiplied with concentration and settling velocity)
+character(kind=c_char), intent(out) :: error_message_c(*) ! not empty: echo and stop run
 !
 ! Local variables for input parameters
 !
+integer            :: i
 integer            :: l
 integer            :: m
 integer            :: n, nm
@@ -82,6 +84,7 @@ real(hp)           :: ws
 real(hp)           :: zumod
 character(len=256) :: runid
 character(len=256) :: filenm
+character(len=256) :: error_message
 !
 ! Local variables
 !
@@ -92,6 +95,9 @@ real(hp)           :: taum, tcrero, tcrdep
 !
 if (max_integers < 4) then
    error_message = 'Insufficient integer values provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 nm      = dll_integers( 1) ! nm index of the grid cell
@@ -101,6 +107,9 @@ l       = dll_integers( 4) ! number of the sediment fraction in the computation
 !
 if (max_reals < 30) then
    error_message = 'Insufficient real values provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 timsec  = dll_reals( 1)    ! current time since reference time [s]
@@ -140,6 +149,9 @@ taub    = dll_reals(30)    ! bed shear stress [N/m2]
 !
 if (max_strings < 2) then
    error_message = 'Insufficient strings provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 runid   = dll_strings( 1)  ! user-specified run-identification
@@ -181,4 +193,8 @@ if (tcrdep > 0.0_hp) then
 else
    sink   = 0.0_hp
 endif
+!
+do i=1,256
+   error_message_c(i) = error_message(i:i)
+enddo
 end subroutine parkro

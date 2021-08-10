@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -22,40 +22,8 @@
 !!  rights reserved.
 
       subroutine gkwini ( lu , group , keywrd , value )
-!=======================================================================
-!            Rijkswaterstaat/RIZA and Deltares
-!                One Dimensional Modelling System
-!                           S O B E K
-!-----------------------------------------------------------------------
-! Subsystem:          Parse New Model Database (V2.0)
 !
-! Programmer:         J.A.G. van Gils
-!
-! Module:             Get keyword from ini file
-!
-! Module description: Reads a keyword from a "windows" type ini file
-!
-!-----------------------------------------------------------------------
-! Subprogram calls:
-! NAME    DESCRIPTION
-!=======================================================================
-!
-!***********************************************************************
-! CVS log information:
-!
-! $Id: gkwini.f 4612 2015-01-21 08:48:09Z mourits $
-!
-! History:
-! $Log: /delft3d/modules/d3d-waq/waq/libsrc/dh/gkwini.f $
-!
-!1     12-09-00 16:28 Beek_j
-CHaal keyword uit ini file
-! Revision 1.1  1998/02/13  13:23:41  kuipe_j
-! Adapt to CMT
-!
-!
-!***********************************************************************
-      USE Timers
+      use timers
       integer       lu
       character*(*) group, keywrd, value
 
@@ -237,9 +205,10 @@ CHaal keyword uit ini file
       WRITE ( CFORMA , '(''(A'',I3.3,'')'')' ) IL
       RETURN
       END
-      subroutine gi_ini ( lu , group , keywrd , ivalue )
+      subroutine gi_ini ( lu , group , keywrd , ivalue , found)
       integer       lu
       character*(*) group, keywrd
+      logical, optional :: found
       integer       ivalue
 
       ! local decalarations
@@ -248,19 +217,22 @@ CHaal keyword uit ini file
 
       call gkwini ( lu , group , keywrd , value )
       if ( value .ne. ' ' ) then
+         found = .true.
          read(value,'(i256)',iostat=ierr) ivalue
          if ( ierr .ne. 0 ) then
             ivalue = -999
          endif
       else
-         ivalue = -999.
+         found = .false.
+         ivalue = -999
       endif
 
       return
       end
-      subroutine gr_ini ( lu , group , keywrd , rvalue )
+      subroutine gr_ini ( lu , group , keywrd , rvalue, found )
       integer       lu
       character*(*) group, keywrd
+      logical, optional :: found
       real          rvalue
 
       ! local decalarations
@@ -269,19 +241,22 @@ CHaal keyword uit ini file
 
       call gkwini ( lu , group , keywrd , value )
       if ( value .ne. ' ' ) then
+         found = .true.
          read(value,'(f256.0)',iostat=ierr) rvalue
          if ( ierr .ne. 0 ) then
             rvalue = -999.
          endif
       else
+         found = .false.
          rvalue = -999.
       endif
 
       return
       end
-      subroutine gl_ini ( lu , group , keywrd , lvalue )
+      subroutine gl_ini ( lu , group , keywrd , lvalue, found )
       integer       lu
       character*(*) group, keywrd
+      logical, optional :: found
       logical       lvalue
 
       ! local decalarations
@@ -293,16 +268,21 @@ CHaal keyword uit ini file
 
       lvalue = .false.
 
-      if (.not. lvalue) call zoek('true ',1,value,5,ifound)
-      if ( ifound .eq. 1 ) lvalue = .true.
+      if ( value .ne. ' ' ) then
 
-      if (.not. lvalue) call zoek('yes  ',1,value,5,ifound)
-      if ( ifound .eq. 1 ) lvalue = .true.
+         found = .true.
+         if (.not. lvalue) call zoek('true ',1,value,5,ifound)
+         if ( ifound .eq. 1 ) lvalue = .true.
 
-      if (.not. lvalue) call zoek('1    ',1,value,5,ifound)
-      if ( ifound .eq. 1 ) lvalue = .true.
+         if (.not. lvalue) call zoek('yes  ',1,value,5,ifound)
+         if ( ifound .eq. 1 ) lvalue = .true.
 
+         if (.not. lvalue) call zoek('1    ',1,value,5,ifound)
+         if ( ifound .eq. 1 ) lvalue = .true.
 
+      else
+         found = .false.
+      endif
 
       return
       end

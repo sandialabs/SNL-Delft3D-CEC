@@ -1,7 +1,7 @@
 subroutine wrivec(nammap, u, v, xb, yb, m, n, np)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine wrivec(nammap, u, v, xb, yb, m, n, np)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrivek.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/io/src/wrivek.f90 $
+!  $Id: wrivek.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/io/src/wrivek.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -52,12 +52,10 @@ subroutine wrivec(nammap, u, v, xb, yb, m, n, np)
     integer           :: i
     integer           :: j
     integer           :: lun
-    integer, external :: new_lun
 !
 !! executable statements -------------------------------------------------------
 !
-    lun=new_lun()
-    open(lun,file=nammap)
+    open(newunit=lun,file=nammap)
     write(lun,'(a4)') 'VECT'
     write(lun,*)np,4,n,m
     do i=1,m

@@ -29,7 +29,7 @@ function [varargout]=arbcross(varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -54,8 +54,8 @@ function [varargout]=arbcross(varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/arbcross.m $
-%   $Id: arbcross.m 5507 2015-10-20 09:50:46Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/arbcross.m $
+%   $Id: arbcross.m 65778 2020-01-14 14:07:42Z mourits $
 
 varargout=cell(1,nargout);
 if (nargout+1==nargin || nargout-1==nargin) && nargin>1 && isstruct(varargin{1})
@@ -269,6 +269,13 @@ end
 % starting after the grid information (unless it is a 3D grid) and stopping
 % before the last two arguments.
 %
+if strcmp(VGRIDStr,'VGRID')
+    vdim = 3;
+    hdims = {':',':'};
+else
+    vdim = 2;
+    hdims = {':'};
+end
 for i=1:nargin-input_offset-input_skip_end
     VLOC = '?';
     VGRID = varargin{input_offset+i};
@@ -279,15 +286,17 @@ for i=1:nargin-input_offset-input_skip_end
     szVGRID = size(VGRID);
     if strcmp(VLOC,'NODE') || ...
             (strcmp(VLOC,'?') && ...
-             (isequal(szVGRID(1:2),szXGRID) || ...
-              (isequal(szVGRID([2 1]),szXGRID) && szXGRID(2)==1)))
+             (isequal(prod(szVGRID(1:vdim-1)),prod(szXGRID))))
+%             (isequal(szVGRID(1:2),szXGRID) || ...
+%              (isequal(szVGRID([2 1]),szXGRID) && szXGRID(2)==1)))
         %
         % Values defined at mesh nodes
         %
         v=[];
-        for k = size(VGRID,3):-1:1
-            vgrid = VGRID(:,:,k);
-            v(:,1,k) = sum(wght.*vgrid(iNode),2);
+        szVGRID = size(VGRID);
+        for k = prod(szVGRID(vdim:end)):-1:1
+            vgrid = VGRID(hdims{:},k);
+            v(:,k) = sum(wght.*vgrid(iNode),2);
         end
     elseif strcmp(VLOC,'FACE') || ...
             (strcmp(VLOC,'?') && ...
@@ -297,17 +306,19 @@ for i=1:nargin-input_offset-input_skip_end
         % Values defined on mesh patches
         %
         v=[];
-        for k = size(VGRID,3):-1:1
-            vgrid = VGRID(:,:,k);
-            v(:,1,k) = vgrid(iFace);
-            v(outside,1,k) = NaN;
+        szVGRID = size(VGRID);
+        for k = prod(szVGRID(vdim:end)):-1:1
+            vgrid = VGRID(hdims{:},k);
+            v(:,k) = vgrid(iFace);
+            v(outside,k) = NaN;
         end
     elseif strcmp(VLOC,'EDGE')
         noEdge = isnan(iEdge);
         iEdge(noEdge) = 1;
-        for k = size(VGRID,3):-1:1
-            vgrid = VGRID(:,:,k);
-            v(:,1,k) = vgrid(iEdge);
+        szVGRID = size(VGRID);
+        for k = prod(szVGRID(vdim:end)):-1:1
+            vgrid = VGRID(hdims{:},k);
+            v(:,k) = vgrid(iEdge);
         end
         v(noEdge,:) = NaN;
     else

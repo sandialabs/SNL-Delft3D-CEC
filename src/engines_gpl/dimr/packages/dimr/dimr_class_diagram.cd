@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="DimrExe">
+    <Position X="1.25" Y="0.5" Width="1.75" />
+    <Members>
+      <Field Name="libHandle" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AACCAAAAQQEIgAQIAAEACACAogAAAAgAEIpCBAAAQBA=</HashCode>
+      <FileName>include\dimr_exe.h</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="clock" />
+      <Field Name="libHandle" />
+      <Field Name="libHandle" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Exception">
+    <Position X="4.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAABAAABAAAAAACA=</HashCode>
+      <FileName>include\exception.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Log" Collapsed="true">
+    <Position X="4.5" Y="4.5" Width="1.5" />
+    <NestedTypes>
+      <Typedef Name="Log::Mask" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>include\log.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAgQFgAAQAwAC4CCgAABCUYACQgIgLMIAAIiAFkkgAg=</HashCode>
+      <FileName>include\log.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Clock" Collapsed="true">
+    <Position X="4.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAACAABAAAAAAgAAAAACAAAAAAAAAAAAAACgA=</HashCode>
+      <FileName>include\clock.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Typedef Name="HINSTANCE" Collapsed="true">
+    <Position X="4.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>c:\Program Files (x86)\Windows Kits\8.1\Include\shared\wtypes.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

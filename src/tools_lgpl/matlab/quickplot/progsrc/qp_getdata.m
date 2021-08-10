@@ -47,7 +47,7 @@ function [varargout]=qp_getdata(varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -72,8 +72,8 @@ function [varargout]=qp_getdata(varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/qp_getdata.m $
-%   $Id: qp_getdata.m 5632 2015-12-09 08:50:03Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/qp_getdata.m $
+%   $Id: qp_getdata.m 65778 2020-01-14 14:07:42Z mourits $
 
 %
 % Initialize output array. Set the Success flag to 0.
@@ -91,7 +91,15 @@ else
     Info=[];
     if ~isempty(X) && isstruct(X{1})
         tp = qp_gettype(X{1});
-        if ~strcmp(tp,'unknown file type')
+        if strcmp(tp,'unknown file type')
+            % the second argument should then be of type DataFld
+            if  ~isfield(X,'Name') || ~isfield(X,'Units') || ~isfield(X,'DimFlag') || ~isfield(X,'NVal')
+                % This isn't a DataFld structure, so there is something
+                % wrong. Most likely the filetype cannot be identified
+                % because the structure didn't come from qpfopen.
+                error('Unable to identify filetype associated with the first argument.')
+            end
+        else
             Info=X{1};
             X=X(2:end);
         end
@@ -104,7 +112,7 @@ else
         %
         Info=vs_use('lastread');
         if isempty(Info)
-            error('No data file specified or data file not recognized.');
+            error('No data file specified or data file not recognized.')
         end
     end
 end
@@ -483,27 +491,35 @@ catch Ex
     if ~isempty(calltype)
         calltype = ['/' calltype];
     end
-    stacklist = stack2str(Ex.stack,'d3d_qp_core');
-    ui_message('error',{sprintf('Caught in qp_getdata%s:',calltype),Ex.message,stacklist{:}})
+    qp_error(sprintf('Caught in qp_getdata%s:',calltype),Ex)
 end
 
 
 function [arg2,arg3] = hvslice(Fcn,FI,X)
+T_=1; ST_=2; M_=3; N_=4; K_=5;
+Props   = X{2};
+DimFlag = Props.DimFlag;
+%
 v_slice=[];
 h_slice=[];
-if iscell(X{end})
-    switch X{end}{1}
-        case 'k'
-            X{end}=X{end}{2};
-        case {'z'}
-            h_slice=X{end};
-            X{end}=0;
+if isfield(Props,'SubFld') && ~isempty(Props.SubFld)
+    sf = 1;
+else
+    sf = 0;
+end
+if DimFlag(K_)
+    idxK = 3+sf+sum(DimFlag(1:K_)~=0);
+    if length(X)>=idxK && iscell(X{idxK})
+        h_slice = X{idxK};
+        X{idxK}=0;
     end
 end
-m = 3+find(cellfun('isclass',X(4:end),'cell'));
-if ~isempty(m)
-    v_slice=X{m};
-    X{m}=0;
+if DimFlag(M_)
+    idxM = 3+sf+sum(DimFlag(1:M_)~=0);
+    if length(X)>=idxM && iscell(X{idxM})
+        v_slice = X{idxM};
+        X{idxM}=0;
+    end
 end
 %
 % If function does not support delivery of DataInCell but
@@ -521,7 +537,7 @@ end
 %
 % Get all data needed.
 %
-[arg2 arg3]=feval(Fcn,FI,X{:});
+[arg2,arg3]=feval(Fcn,FI,X{:});
 %
 % Take average if cell data was required, but not provided.
 % The following code does not yet work for 3D slices!
@@ -546,10 +562,7 @@ end
 % Handle h_slice options as needed.
 %
 if ~isempty(h_slice)
-    switch h_slice{1}
-        case 'z'
-            arg2 = hslice(arg2,h_slice{2});
-    end
+    arg2 = hslice(arg2,h_slice{:});
 end
 %
 % Handle v_slice options as needed.
@@ -571,5 +584,16 @@ if isstruct(arg2)
             Units='';
         end
         [arg2.Units]=deal(Units);
+        try
+            [conversion,SIunit,dimensions]=qp_unitconversion(Units,'relative');
+            if dimensions.temperature~=0
+                if isfield(Props,'TemperatureType')
+                    TempType = Props.TemperatureType;
+                else
+                    TempType = 'unspecified';
+                end
+                [arg2.TemperatureType] = deal(TempType);
+            end
+        end
     end
 end

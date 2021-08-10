@@ -7,7 +7,7 @@
 #-------------------------------------------------------------------------------
 
 include $(top_srcdir)/common.am
-bin_PROGRAMS = test_09
+noinst_PROGRAMS = test_09
 
 test_09_SOURCES = \
 	test_09.f

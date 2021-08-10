@@ -10,7 +10,7 @@ subroutine taubot(j         ,nmmaxj    ,nmmax     ,kmax      ,icx       , &
                 & z0ucur    ,cvalu0    ,grmsur    ,grfacu    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -34,8 +34,8 @@ subroutine taubot(j         ,nmmaxj    ,nmmax     ,kmax      ,icx       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: taubot.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/taubot.f90 $
+!  $Id: taubot.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/taubot.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Computation coefficients bottom stresses in U-
@@ -932,9 +932,9 @@ subroutine taubot(j         ,nmmaxj    ,nmmax     ,kmax      ,icx       , &
              ! Added breaker delay adjustment
              !
              if (rolcorr==1) then
-                taubsu(nm) = taubpu(nm)*(costu*ustokes + grfacu(nm) + grmsur(nm))/hu(nm)
+                taubsu(nm) = taubpu(nm)*(costu*ustokes + (grfacu(nm) + grmsur(nm))/hu(nm))
              else
-                taubsu(nm) = taubpu(nm)*(costu*ustokes + grfacu(nm))/hu(nm) 
+                taubsu(nm) = taubpu(nm)*(costu*ustokes + grfacu(nm)/hu(nm) )
              endif
              !
           endif

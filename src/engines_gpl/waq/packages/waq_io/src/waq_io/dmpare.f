@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -256,7 +256,9 @@
                         write ( lurep , 2040 ) ierr2, max_ntdmpq
                         goto 1000
                      endif
-                     p2_ipdmpq(1:ntdmpq-1) = ipdmpq(1:ntdmpq-1)
+                     do idmpq = 1, ntdmpq-1
+                        p2_ipdmpq(idmpq) = ipdmpq(idmpq)
+                     end do
                      deallocate(ipdmpq)
                      ipdmpq => p2_ipdmpq
                   endif

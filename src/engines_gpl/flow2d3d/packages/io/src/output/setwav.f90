@@ -8,10 +8,10 @@ subroutine setwav(comfil    ,lundia    ,error     ,mmax       ,nmax       , &
                 & msvcom    ,ubcom     ,wlcom      ,rlabda     , &
                 & dircos    ,dirsin    ,ewave0    ,roller     ,wavcmp     , &
                 & ewabr0    ,wsbodyu   ,wsbodyv   ,wsbodyucom ,wsbodyvcom , &
-                & gdp       )
+                & waveol    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -35,8 +35,8 @@ subroutine setwav(comfil    ,lundia    ,error     ,mmax       ,nmax       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: setwav.f90 4672 2015-02-09 11:05:01Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/setwav.f90 $
+!  $Id: setwav.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/setwav.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Method used:
@@ -82,6 +82,7 @@ subroutine setwav(comfil    ,lundia    ,error     ,mmax       ,nmax       , &
     integer                                                          , intent(in)  :: norow      !  Description and declaration in esm_alloc_int.f90
     integer                                                          , intent(in)  :: ntwav      !!  Total number of timesteps on com-
                                                                                                  !!  munication file (to read from)
+    integer                                                          , intent(in)  :: waveol     !  Wave setting (0 = offline, 1 = offline mimicking online, 2 = online)
     integer   , dimension(2)                                                       :: ifcore     !!  Time indices (cell id's) of the wave
                                                                                                  !!  functions which are in core available
     integer   , dimension(5, noroco)                                 , intent(in)  :: irocol     !  Description and declaration in esm_alloc_int.f90
@@ -246,7 +247,7 @@ subroutine setwav(comfil    ,lundia    ,error     ,mmax       ,nmax       , &
        !
        ! Read the actual COM-file version from the COM-file
        !
-       fd_nef               = 0
+       fd_nef               = -1
        ierror               = 0
        ierror               = crenef(fd_nef, datnam(1:datlen), defnam(1:deflen), ' ', 'r')
        uindex(1:3)          = 1
@@ -277,8 +278,20 @@ subroutine setwav(comfil    ,lundia    ,error     ,mmax       ,nmax       , &
     ! determination of reduced time and extrapolation coefficient
     !
     nready = 0
+    tact   = itimc
     if (ntwav == 1) then
        ntimwa = 1
+       ntimwb = 0
+       atimw  = 1.0_fp
+       btimw  = 0.0_fp
+    elseif (waveol>0) then
+       ntimwa = 1
+       do i = ntwav, 2, -1
+          if (tact>timwav(i)) then
+             ntimwa = i
+             exit
+          endif
+       enddo
        ntimwb = 0
        atimw  = 1.0_fp
        btimw  = 0.0_fp
@@ -287,7 +300,6 @@ subroutine setwav(comfil    ,lundia    ,error     ,mmax       ,nmax       , &
           !
           ! periodic functions
           !
-          tact = itimc
           if (tact>=timwav(ntwav)) then
              nhulp = (tact - timwav(ntwav))/itlen + 1
              tact = tact - nhulp*itlen
@@ -314,7 +326,6 @@ subroutine setwav(comfil    ,lundia    ,error     ,mmax       ,nmax       , &
           !
           ! a-periodic functions
           !
-          tact = itimc
           if (tact <= timwav(1)) then
              ntimwa = 1
              ntimwb = 2

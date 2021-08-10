@@ -23,7 +23,7 @@ function out=vardiff(var1,var2,fid,formatflag,var1name,var2name)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -48,8 +48,8 @@ function out=vardiff(var1,var2,fid,formatflag,var1name,var2name)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/vardiff.m $
-%   $Id: vardiff.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/vardiff.m $
+%   $Id: vardiff.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin<2
     error('Not enough input arguments.')
@@ -58,13 +58,17 @@ if nargin<3
     fid = double(nargout==0);
 end
 if nargin>3
-    switch lower(formatflag)
+    formatflag = lower(formatflag);
+    switch formatflag
         case 'html'
             br='<br>\n';
+        case 'latex'
+            br='\\newline\n';
         otherwise
             br='\n';
     end
 else
+    formatflag='';
     br='\n';
 end
 if fid
@@ -82,7 +86,7 @@ try
     if isequal(var1,var2)
         myfprintf(fid,['The variables are identical and they don''t contain NaNs.' br]);
     else
-        DiffFound=1+detailedcheck(var1,var2,fid,br,'');
+        DiffFound=1+detailedcheck(var1,var2,fid,formatflag,br,'');
         switch DiffFound
             case 1
                 myfprintf(fid,['The variables are identical, but they do contain NaNs.' br])
@@ -159,10 +163,12 @@ switch pflag
             sfn2 = char(fn2);
             [f1,i1] = sort(fn1);
             [f2,i2] = sort(fn2);
-            [ii,r1] = sort(i1);
+            [ii,r2] = sort(i2);
             for i = 1:length(fn1)
-               if ~strcmp(fn1{i},fn2{i})
-                  myfprintf(fid,['  %2i %s - %2i %s' br],i1(r1(i)),sfn1(i,:),i2(r1(i)),sfn2(i,:));
+               if strcmp(fn1{i},fn2{i})
+                  myfprintf(fid,['  %2i %s [same]' br],i,sfn1(i,:));
+               else
+                  myfprintf(fid,['  %2i %s [%s] - %2i %s [%s]' br],i,sfn1(i,:),var1,i1(r2(i)),sfn2(i,:),var2);
                end
             end
         end
@@ -172,7 +178,7 @@ end
 % -----------------------------------------------------------------------
 %  Function used for recursive checking ...
 % -----------------------------------------------------------------------
-function DiffFound=detailedcheck(s1,s2,fid,br,substr)
+function DiffFound=detailedcheck(s1,s2,fid,formatflag,br,substr)
 DiffFound=0;
 if ~isequal(class(s1),class(s2))  % different classes?
     DiffFound=1;
@@ -187,20 +193,36 @@ elseif iscell(s1)  % & s2 is also cell! if cell -> check per element
     else
         ivec = cell(1,ndims(s1));
     end
+    CellEqual = cellfun(@(x,y)isequal(x,y),s1,s2);
     for i=1:numel(s1)  % s2 has same size!
+        if CellEqual(i)
+            continue
+        end
         if length(ivec)>1
             [ivec{:}] = ind2sub(size(s1),i);
             istr = sprintf('%i,',ivec{:});
-            str = sprintf('%s{%s}',substr,istr(1:end-1));
+            switch formatflag
+                case 'latex'
+                    str = sprintf('%s\\{%s\\}',substr,istr(1:end-1));
+                otherwise
+                    str = sprintf('%s{%s}',substr,istr(1:end-1));
+            end
         else
-            str = sprintf('%s{%i}',substr,i);
+            switch formatflag
+                case 'latex'
+                    str = sprintf('%s\\{%i\\}',substr,i);
+                otherwise
+                    str = sprintf('%s{%i}',substr,i);
+            end
         end
-        Diff=detailedcheck(s1{i},s2{i},fid,br,str);
-        if Diff
-            if ~DiffFound
-                DiffFound=Diff;
-            else
-                DiffFound=min(Diff,DiffFound);
+        if ~isequal(s1{i},s2{i})
+            Diff=detailedcheck(s1{i},s2{i},fid,formatflag,br,str);
+            if Diff
+                if ~DiffFound
+                    DiffFound=Diff;
+                else
+                    DiffFound=min(Diff,DiffFound);
+                end
             end
         end
     end
@@ -215,13 +237,24 @@ elseif isstruct(s1) || isobject(s1)
     fn1=fieldnames(s1);
     fn2=fieldnames(s2);
     nf=length(fn1);
-    if ~isequal(fn1,fn2)  % fieldnames the same?
+    [sfn1,i1] = sort(fn1);
+    [sfn2,i2] = sort(fn2);
+    if ~isequal(fn1,fn2) && isequal(sfn1,sfn2)
+        s1=struct2cell(s1);
+        s2=struct2cell(s2);
+        s1 = s1(i1,:);
+        s2 = s2(i2,:);
+        fields = sfn1;
+        printdiff(fid,br,'fieldnames',fn1,fn2,substr);
+    elseif ~isequal(fn1,fn2)  % fieldnames the same?
         DiffFound=1;
         printdiff(fid,br,'fieldnames',fn1,fn2,substr);
         return
+    else
+        s1=struct2cell(s1);
+        s2=struct2cell(s2);
+        fields = fn1;
     end
-    s1=struct2cell(s1);
-    s2=struct2cell(s2);
     j=0;
     for i=1:numel(s1)  % s2 has same size! (array size is the same and fields are the same)
         j=j+1;
@@ -229,16 +262,18 @@ elseif isstruct(s1) || isobject(s1)
             j=1;
         end
         if numel(s1)~=nf
-            Nsubstr=sprintf('%s(%i).%s',substr,(i-j)/nf+1,fn1{j});
+            Nsubstr=sprintf('%s(%i).%s',substr,(i-j)/nf+1,fields{j});
         else
-            Nsubstr=sprintf('%s.%s',substr,fn1{j});
+            Nsubstr=sprintf('%s.%s',substr,fields{j});
         end
-        Diff=detailedcheck(s1{i},s2{i},fid,br,Nsubstr);
-        if Diff
-            if ~DiffFound
-                DiffFound=Diff;
-            else
-                DiffFound=min(Diff,DiffFound);
+        if ~isequal(s1{i},s2{i})
+            Diff=detailedcheck(s1{i},s2{i},fid,formatflag,br,Nsubstr);
+            if Diff
+                if ~DiffFound
+                    DiffFound=Diff;
+                else
+                    DiffFound=min(Diff,DiffFound);
+                end
             end
         end
     end

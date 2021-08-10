@@ -18,7 +18,7 @@ function varargout=difffil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,8 +43,8 @@ function varargout=difffil(FI,domain,field,cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/difffil.m $
-%   $Id: difffil.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/difffil.m $
+%   $Id: difffil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 
@@ -117,6 +117,21 @@ if Props.NVal>0
             v2 = getfield(Data2,fld{i});
             v1 = v1-v2;
             Ans = setfield(Ans,fld{i},v1);
+        end
+    end
+    %
+    % temperature units are always relative or unspecified
+    %
+    if isfield(Ans,'AbsoluteUnits')
+        Ans = rmfield(Ans,'AbsoluteUnits');
+        Ans.TemperatureType = 'relative';
+    elseif isfield(Ans,'TemperatureType')
+        % The difference of two temperature quantities will always be relative
+        % however only if the base quantities are simple temperatures and not
+        % if the quantity is e.g. a temperature flux or square of temperature
+        % So, keep TemperatureType unspecified unchanged.
+        if ~strcmp(Ans.TemperatureType,'unspecified')
+            Ans.TemperatureType = 'relative';
         end
     end
 end

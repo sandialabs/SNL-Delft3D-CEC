@@ -3,7 +3,7 @@ subroutine osmom(hrms      ,depth     ,tp        ,g         ,cr        , &
                & od2b      ,od3b      ,od4b      )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine osmom(hrms      ,depth     ,tp        ,g         ,cr        , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: osmom.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/osmom.f90 $
+!  $Id: osmom.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/osmom.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -115,13 +115,12 @@ subroutine osmom(hrms      ,depth     ,tp        ,g         ,cr        , &
        call getmp(error, pathd)
        if (error) then
           write (*, '(a)') "ERROR: Directory ""default"" not found"
-          stop
+          call throwexception()
        endif
-       utab = newunit()
-       open (utab, file = trim(pathd) // 'tabmom', status='old', action='read', iostat=ierr)
+       open (newunit = utab, file = trim(pathd) // 'tabmom', status='old', action='read', iostat=ierr)
        if (ierr /= 0) then
           write (*, '(3a)') "ERROR: File """,trim(pathd) // 'tabmom', """ not found"
-          stop
+          call throwexception()
        endif
        read (utab, *) iih, iit, dh, tstep
        do it = 1, iit

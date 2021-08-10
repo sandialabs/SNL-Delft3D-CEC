@@ -1,4 +1,4 @@
-function varargout=qp_unitconversion(unit1,unit2,varargin)
+function varargout=qp_unitconversion(varargin)
 %QP_UNITCONVERSION Convert unit strings.
 %   SystemList = QP_UNITCONVERSION('systems') returns the unit systems
 %   supported. Currently these are SI, CGS, FPS, IPS, NMM.
@@ -7,32 +7,40 @@ function varargout=qp_unitconversion(unit1,unit2,varargin)
 %   elementary unit strings. Unit strings may be combined of any
 %   combination of units. E.g. 'km/h', 'ft/s', 'N*s/kg'.
 %
-%   QP_UNITCONVERSION(UStr1,UStr2) displays a conversion table for
-%   transforming quantities expressed in UStr1 into UStr2 and vice versa.
+%   QP_UNITCONVERSION(UStr1,UStr2,TempType) displays a conversion table
+%   for transforming quantities expressed in UStr1 into UStr2 and vice
+%   versa. The TempType can be either 'absolute' or 'relative' (the latter
+%   being the default value). For temperatures you should use 'absolute' to
+%   convert actual temperatures and use 'relative' to convert temperature
+%   differences. In the latter case the offsets aren't used. The TempType
+%   can be specified at any argument location, e.g. TempType,UStr1,UStr2 is
+%   also allowed.
 %
-%   ConversionFactor = QP_UNITCONVERSION(UStr,UStr2) returns the factor
-%   needed for the conversion of quantities expressed in UStr1 into UStr2.
+%   C = QP_UNITCONVERSION(UStr,UStr2,TempType) returns the conversion
+%   factor needed for the conversion of quantities expressed in UStr1 into
+%   UStr2. If TempType equals 'absolute' and the unit contains an offset
+%   then C will be a 1x2 array. The conversion rule will in that case be
+%    [Q in UStr2] = C(1) * ([Q in UStr1] + C(2))
+%   That is, the second value is the offset. In all other cases C will be
+%   just the scalar conversion factor (no offset).
 %
-%   QP_UNITCONVERSION(UStr1,System) displays a conversion table for
-%   transforming quantities expressed in UStr1 into the equivalent in the
-%   selected unit system and vice versa.
+%   QP_UNITCONVERSION(UStr1,System,TempType) displays a conversion table
+%   for transforming quantities expressed in UStr1 into the equivalent in
+%   the selected unit system and vice versa. The default System is SI.
 %
-%   [ConversionFactor,UStr2] = QP_UNITCONVERSION(UStr1,System) returns the
-%   factor needed for the conversion of quantities expressed in unit1 into
-%   the equivalent in the selected unit system and returns the unit string
-%   UStr2 in that system as well.
+%   [ConversionFactor,UStr2] = QP_UNITCONVERSION(UStr1,System,TempType)
+%   returns the factor needed for the conversion of quantities expressed in
+%   unit1 into the equivalent in the selected unit system and returns the
+%   unit string UStr2 in that system as well.
 %
-%   DATA2 = QP_UNITCONVERSION(UStr1,UStr2,DATA1) converts the data provided by
-%   DATA1 in UStr1 unit into UStr2 units.
-%
-%   Note: The current support for temperature concerns relative
-%   temperatures only, i.e. 5 degrees celsius will be converted to 5
-%   degrees kelvin. This is correct for temperature differences but not for
-%   absolute temperatures.
+%   [DATAOUT1,DATAOUT2,...] = 
+%        QP_UNITCONVERSION(UStr1,UStr2,TempType,DATAIN1,DATAIN2,...)
+%   converts the data provided by DATAIN1, DATAIN2, ... in UStr1 unit into
+%   UStr2 units.
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -57,8 +65,8 @@ function varargout=qp_unitconversion(unit1,unit2,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/qp_unitconversion.m $
-%   $Id: qp_unitconversion.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/qp_unitconversion.m $
+%   $Id: qp_unitconversion.m 65778 2020-01-14 14:07:42Z mourits $
 
 persistent unittableread
 if isempty(unittableread)
@@ -67,17 +75,44 @@ if isempty(unittableread)
 end
 
 unitsystems={'SI','CGS','FPS','IPS','NMM'};
+PhysQuant ={'length','time','electric_current','mass','luminous_intensity','amount_of_substance','temperature','angle'};
 if nargout>0
     varargout=cell(1,nargout);
 end
 Out=[];
-if nargin==1
+
+TempType = RELATIVE;
+arguments = varargin;
+for i=1:length(arguments)
+    if ischar(arguments{i})
+        switch lower(arguments{i})
+            case {'absolute'}
+                TempType = ABSOLUTE;
+                arguments(i) = [];
+                break
+            case {'relative'}
+                TempType = RELATIVE;
+                arguments(i) = [];
+                break
+            case {'unspecified'}
+                TempType = UNSPECIFIED;
+                arguments(i) = [];
+                break
+        end
+    end 
+end
+
+unit1=arguments{1};
+if length(arguments)>1
+    unit2=arguments{2};
+else
     unit2='SI';
 end
 
 if isempty(unit1)
     unit1='-';
 end
+
 if nargin==1 && strcmpi(unit1,'systems')
     varargout={unitsystems};
 elseif nargin==1 && strcmpi(unit1,'units')
@@ -91,6 +126,7 @@ else
         if nargin<=2
             varargout{1}=convfactor(2); % maintain temporarily backward compatibility
             varargout{2}=unit2;
+            varargout{3}=zeros(1,8);
         else
             varargout=varargin;
         end
@@ -99,7 +135,7 @@ else
             factor1=[0 1];
             SI1=zeros(1,8);
         else
-            [factor1,SI1]=factor2si(unit1);
+            [factor1,SI1]=parse(unit1,TempType);
         end
         if ischar(factor1)
             Out=factor1;
@@ -110,25 +146,25 @@ else
                 SI2=zeros(1,8);
             elseif ~isempty(strmatch(unit2,unitsystems,'exact'))
                 SI2=SI1;
-                SIUnits={'m','s','A','kg','cd','mol','degK','deg'};
+                SIUnits={'m','s','A','kg','cd','mol','K','deg'};
                 switch unit2
                     case 'SI'
                         Units=SIUnits;
                     case 'CGS'
-                        Units={'cm','s','A','g','cd','mol','degK','deg'};
+                        Units={'cm','s','A','g','cd','mol','K','deg'};
                     case 'FPS'
-                        Units={'ft','s','A','lb','cd','mol','degK','deg'};
+                        Units={'ft','s','A','lb','cd','mol','K','deg'};
                     case 'IPS'
-                        Units={'in','s','A','lb','cd','mol','degK','deg'};
+                        Units={'in','s','A','lb','cd','mol','K','deg'};
                     case 'NMM'
-                        Units={'mm','s','A','g','cd','mol','degK','deg'};
+                        Units={'mm','s','A','g','cd','mol','K','deg'};
                     otherwise
                         error('Unit system %s not yet implemented.',unit2)
                 end
                 factor2=[0 1];
                 if ~strcmp(unit2,'SI')
                     for i=1:length(Units)
-                        sifactor = search_elem(Units{i});
+                        sifactor = search_elem(Units{i},TempType);
                         factor2(2)=factor2(2)*sifactor(2)^SI2(i);
                     end
                 end
@@ -137,7 +173,7 @@ else
                     unit2='-';
                 end
             else
-                [factor2,SI2]=factor2si(unit2);
+                [factor2,SI2]=parse(unit2,TempType);
             end
             if ischar(factor2)
                 Out=factor2;
@@ -167,14 +203,13 @@ else
             if factor1(1)~=0 || factor2(1)~=0
                 offset=factor1(1)-factor2(1)/convfactor;
             end
-            if nargin<=2
+            if length(arguments)<=2
                 if nargout==0
                     cf='';
                     if convfactor~=1
                         cf=sprintf('%g ',convfactor);
                     end
                     xunit1=sprintf('[quantity in %s]',unit1);
-                    absval=[];
                     if offset~=0
                         sign='+';
                         dispoffset=offset;
@@ -186,19 +221,26 @@ else
                         if ~isempty(cf)
                             xunit1=['(' xunit1 ')'];
                         end
-                        absval=[0 -offset];
                     end
+                    %
+                    f1 = [0 1 2 50 100];
+                    f2 = [f1/convfactor-offset;f1];
+                    f1(2,:) = convfactor*(f1+offset);
                     fprintf('[quantity in %s] = %s%s\n',unit2,cf,xunit1);
-                    for f=sort([absval 1 2 50 100 [1 2 50 100]/convfactor-offset])
-                        fprintf('%10g %s = %10g %s\n',f,unit1,convfactor*(f+offset),unit2)
+                    for f = unique([f1 f2]','rows')'
+                        fprintf('%10g %s = %10g %s\n',f(1),unit1,f(2),unit2)
                     end
                 else
-                    varargout={convfactor unit2};
+                    if TempType==ABSOLUTE && offset~=0
+                        varargout={[convfactor offset] unit2 SI2};
+                    else
+                        varargout={convfactor unit2 SI2};
+                    end
                 end
             else
-                for i=1:length(varargin)
-                    if isstruct(varargin{i})
-                        data=varargin{i};
+                for i=1:length(arguments)-2
+                    if isstruct(arguments{i+2})
+                        data=arguments{i+2};
                         flds={'Val','XComp','YComp','ZComp'};
                         for fldi=1:length(flds)
                             fld=flds{fldi};
@@ -212,18 +254,22 @@ else
                         [data(:).Units]=deal(unit2);
                         varargout{i}=data;
                     else
-                        varargout{i}=convfactor*(varargin{i}+offset);
+                        varargout{i}=convfactor*(arguments{i+2}+offset);
                     end
                 end
             end
         end
     end
 end
+if nargout>2
+    SI = [PhysQuant;num2cell(varargout{3})];
+    varargout{3} = struct(SI{:});
+end
 
 
 function Str=dispunit(SI,Units)
 if nargin==1
-    Units={'m','s','A','kg','cd','mol','degK','deg'};
+    Units={'m','s','A','kg','cd','mol','K','deg'};
 end
 Str='';
 if all(SI==0)
@@ -256,189 +302,228 @@ if ~isempty(Str)
 end
 
 
-function [factor,si]=factor2si(unit)
-[factor,si]=factor2si_multiply_divide(unit);
+function unit = powercheck(unit,k)
+if isequal(unit(k),'*') && k<length(unit) && isequal(unit(k+1),'*')
+    % two asteriks form a power operator instead of a multiplication operator.
+    unit(k+1) = [];
+    unit(k) = '^';
+end
 
 
-function [factor,si]=factor2si_multiply_divide(unit)
-factor=[0 1];
-si=zeros(1,8);
+function [factor1,si1]=factor_combine(cmd,factor1,si1,factor2,si2)
+switch cmd
+    case {'*','·'}
+        factor1(1)=factor1(1)*factor2(2)+factor1(2)*factor2(1);
+        factor1(2)=factor1(2)*factor2(2);
+        si1=si1+si2;
+    case '/'
+        if factor2(1)~=0
+            error('Unable to divide by offset')
+        end
+        factor1(1)=factor1(1)/factor2(2);
+        factor1(2)=factor1(2)/factor2(2);
+        si1=si1-si2;
+end
+
+
+function [factor1,si1]=parse(unit,TempType)
+%fprintf('Parsing: %s\n',unit);
+factor1=[0 1];
+si1=zeros(1,8);
+unit=strtrim(unit);
 
 nob=0;
 prevcmd='*';
 ki=1;
 if isempty(unit)
-    k=0;
-else
-    k=1;
-    while k<=length(unit)
-        switch unit(k)
-            case '('
-                nob=nob+1;
-            case ')'
-                nob=nob-1;
-                if nob<0
-                    break
-                end
-            case {'*','/'}
-                if isequal(unit(k),'*') && k<length(unit) && isequal(unit(k+1),'*')
-                    % two asteriks form a power operator instead of a multiplication
-                    % operator.
-                    unit = unit([1:k k+2:end]);
-                    unit(k) = '^';
-                elseif nob==0
-                    [factor1,si1]=factor2si_power(unit(ki:k-1));
-                    if ischar(factor1)
-                        factor=factor1;
-                        return
-                    end
-                    if factor(1)~=0 || factor1(1)~=0
-                        error('multiplying offset')
-                    end
-                    switch prevcmd
-                        case '*'
-                            factor(2)=factor(2)*factor1(2);
-                            si=si+si1;
-                        case '/'
-                            factor(2)=factor(2)/factor1(2);
-                            si=si-si1;
-                    end
-                    prevcmd=unit(k);
-                    ki=k+1;
-                end
-            otherwise
-        end
-        if k==length(unit)
-            break
-        else
-            k=k+1;
-        end
-    end
+    return
 end
-if nob>0
-    factor=['no matching bracket found: ',unit(ki:k)];
-    return
-elseif nob<0
-    factor='closing bracket preceding opening bracket';
-    return
-else
-    [factor1,si1]=factor2si_power(unit(ki:k));
-    if ischar(factor1)
-        factor=factor1;
-        return
-    end
-    if ki==1
-        factor=factor1;
-        si=si1;
+k=1;
+while k<=length(unit)+1
+    if k<=length(unit)
+        unit = powercheck(unit,k);
+        unitk = unit(k);
     else
-        if factor(1)~=0 || factor1(1)~=0
-            error('multiplying offset')
-        end
-        switch prevcmd
-            case '*'
-                factor(2)=factor(2)*factor1(2);
-                si=si+si1;
-            case '/'
-                factor(2)=factor(2)/factor1(2);
-                si=si-si1;
-        end
+        unitk = '*';
     end
-end
-
-
-function [factor,si]=factor2si_power(unit)
-factor='unknown error';
-si='';
-
-nob=0;
-cmd='';
-for k=1:length(unit)
-    switch unit(k)
+    switch unitk
         case '('
+            if nob==0 && ~isempty(deblank(unit(ki:k-1)))
+                % implicitly insert a multiply before
+                [factor2,si2]=parse(unit(ki:k-1));
+                [factor1,si1]=factor_combine(prevcmd,factor1,si1,factor2,si2);
+                prevcmd='*';
+            end
             nob=nob+1;
+            if nob==1
+                ki = k;
+            end
         case ')'
             nob=nob-1;
-            if nob<0
+            if nob==0
+                [factor2,si2]=parse(unit(ki+1:k-1));
+                if k<length(unit)
+                    unit = powercheck(unit,k);
+                    unitk = unit(k);
+                end
+            elseif nob<0
                 break
             end
-        case '^'
+        case {'*','·','/',' '}
             if nob==0
-                cmd='^';
-                shift=1;
-                break
-            end
-        case {'¹','²','³'}
-            if nob==0
-                cmd='^';
-                shift=0;
-                break
+                if unitk==' '
+                    % SPACE ... The final frontier ...
+                    %
+                    % this could be just a space in a long unit name
+                    % or this could represent an implicit multiplication *
+                    %
+                    % since the long unit name might be something like
+                    % "minute of arc" or "degrees celsius" we need to first
+                    % check the long name before going down the wrong path
+                    % of interpreting the first part as a separate unit
+                    % "minute" or "degrees".
+                    %
+                    [unit,k,factor2,si2] = checkspace(unit,ki,k,TempType);
+                    if k<=length(unit)
+                        unitk = unit(k);
+                        if unitk~='/'
+                            unitk = '*';
+                        end
+                    else
+                        unitk = '*';
+                    end
+                else
+                    [factor2,si2] = findfirst(unit(ki:k-1),TempType);
+                end
+                if isequal(factor2,-1)
+                    error('Unable to interpret unit "%s"',unit(ki:k-1))
+                elseif factor1(1)~=0 || (factor2(1)~=0 && any(si1~=0))
+                    error('Cannot multiply units with offset for %s', unit(ki:k-1))
+                else
+                    [factor1,si1]=factor_combine(prevcmd,factor1,si1,factor2,si2);
+                end
+                prevcmd=unitk;
+                ki=k+1;
             end
         otherwise
+    end
+    k=k+1;
+end
+
+
+function [unit,k,factor1,si1] = checkspace(unit,ki,k,TempType)
+% We started parsing the "unit" at position ki. We encountered a space at
+% position k. Now determine whether this should be interpreted as just a
+% space in a long unit name or as an implicit multiplication *.
+for k2 = k+1:length(unit)
+    unit = powercheck(unit,k2);
+    switch unit(k2)
+        case {'*','·','/','(',')'}
+            k2 = k2-1;
+            break
     end
 end
-if nob>0
-    factor=['no matching bracket found: ',unit(1:k)];
+% tropical year light year2
+% tropical year light year^2
+%
+[factor1,si1,kb] = findfirst(unit(ki:k2),TempType);
+if isequal(si1,-1)
+    error('Unable to interpret unit "%s"',unit(ki:k2))
+end
+k = ki-1+kb;
+
+
+function [factor,si,kb] = findfirst(unit,TempType)
+% Check which unit string is just a number.
+kp = length(unit);
+kb = kp+1;
+pow = str2double(unit);
+if ~isnan(pow)
+    factor = [0 pow];
+    si  = 0;
     return
-elseif nob<0
-    factor='closing bracket preceding opening bracket';
-    return
-elseif isequal(cmd,'^')
-    [factor,si]=factor2si_brackets(unit(1:k-1));
-    if ischar(factor)
-        return
-    end
-    switch unit(k+shift)
-        case '¹'
-            pow=1;
-        case '²'
-            pow=2;
-        case '³'
-            pow=3;
-        case '¼'
-            pow = 0.25;
-        case '½'
-            pow = 0.5;
-        case '¾'
-            pow = 0.75;
-        otherwise
-            pow=str2num(unit(k+shift:end));
-            if isempty(pow)
-                factor=sprintf('Invalid exponent ''%s''.',unit(k+shift:end));
-                return
+end
+% Check whether unit strings ends on a number.
+pow = [];
+switch unit(end)
+    case '¹'
+        pow = 1;
+        kp = kp-1;
+    case '²'
+        pow = 2;
+        kp = kp-1;
+    case '³'
+        pow = 3;
+        kp = kp-1;
+    case '¼'
+        pow = 0.25;
+        kp = kp-1;
+    case '½'
+        pow = 0.5;
+        kp = kp-1;
+    case '¾'
+        pow = 0.75;
+        kp = kp-1;
+    otherwise
+        number = ismember(unit,'1234567890');
+        if number(end)
+            if all(number)
+                kp = 0;
+            else
+                kp = max(find(~number));
             end
+            pow = str2double(unit(kp+1:end));
+        end
+end
+if ~isempty(pow)
+    if kp>0 && unit(kp)=='-'
+        kp = kp-1;
+        pow = -pow;
     end
+    if kp>1 && unit(kp)=='^'
+        kp = kp-1;
+    end
+else
+    kp = length(unit);
+end
+if kp==0
+    % shouldn't happen ... already checked at start of routine!
+else
+    [factor,si] = search_elem(unit(1:kp),TempType);
+end
+if isequal(si,-1)
+    spaces = find(unit==' ');
+    if ~isempty(spaces)
+        [factor,si,kb] = findfirst(deblank(unit(1:spaces(end))),TempType);
+    end
+elseif ~isempty(pow)
     if factor(1)~=0
-        error('power offset')
+        error('offset power')
     end
-    factor(2)=factor(2)^pow;
-    si=si*pow;
-else
-    [factor,si]=factor2si_brackets(unit(1:end));
+    factor(2) = factor(2)^pow;
+    si = si*pow;
 end
 
 
-function [factor,si]=factor2si_brackets(unit)
-factor='unknown error';
-si='';
-if isequal(unit(1),'(') && isequal(unit(end),')')
-    [factor,si]=factor2si_multiply_divide(unit(2:end-1));
-else
-    [factor,si]=search_elem(unit);
-end
-
-
-function [factor,si]=search_elem(unit,newtable)
+function [factor,si]=search_elem(unit,TempType)
 persistent unittable
 factor=[0 1];
 si='';
-if nargin == 2
-    unittable = newtable;
+if isequal(unit,'newtable')
+    unittable = TempType;
     return
 elseif isequal(unit,'retrievetable')
     factor = unittable;
     return
 end
 i=strmatch(unit,unittable{1},'exact');
+LocalTempType = TempType;
+if isempty(i) && length(unit)>5 && strcmpi(unit(end-4:end),' abs.') % this is more generic than temperature ...
+    LocalTempType = ABSOLUTE;
+    unit=unit(1:end-5);
+    i=strmatch(unit,unittable{1},'exact');
+end
+%
 prefix=1;
 if isempty(i)
     [v,n,e]=sscanf(unit,'%f',2);
@@ -491,74 +576,22 @@ if isempty(i)
         if prefixfound
             i=strmatch(unit,unittable{1},'exact');
         end
-        absfound=0;
-        if isempty(i) && length(unit)>5 && strcmpi(unit(end-4:end),' abs.')
-            absfound=1;
-            unit=unit(1:end-5);
-            i=strmatch(unit,unittable{1},'exact');
-        end
         if isempty(i)
-            unit = [pref unit];
-            %
-            % Check for space in unit string ...
-            %
-            for k=1:length(unit)
-                switch unit(k)
-                    case ' '
-                        [factor,si]=search_elem(unit(1:k-1));
-                        if ischar(factor)
-                            return
-                        end
-                        [factor1,si1]=search_elem(unit(k+1:end));
-                        if ischar(factor1)
-                            factor=factor1;
-                            return
-                        end
-                        if factor(1)~=0 || factor1(1)~=0
-                            error('multiplying offset')
-                        end
-                        factor(2)=factor(2)*factor1(2);
-                        si=si+si1;
-                        return
-                end
-            end
-            %
-            % Check for number at end of string ...
-            %
-            number = ismember(unit,'1234567890');
-            ki = max(find(~number));
-            if ki<length(unit)
-                if unit(ki)=='-'
-                    pow = str2num(unit(ki:end));
-                    [factor,si]=search_elem(unit(1:ki-1));
-                else
-                    pow = str2num(unit(ki+1:end));
-                    [factor,si]=search_elem(unit(1:ki));
-                end
-                if ischar(factor)
-                    return
-                elseif factor(1)~=0
-                    error('power offset')
-                end
-                factor(2)=factor(2)^pow;
-                si=si*pow;
-                return
-            end
-            factor=['Unit definition not found: ',unit];
-        else
-            i=unittable{2}(i);
-            factor=[0 unittable{3}(i,2)*prefix];
-            if absfound
-                factor(1)=unittable{3}(i,1);
-            end
-            si=unittable{4}(i,:);
+            % no match ...
+            factor = -1;
+            si = -1;
+            return
         end
     end
-else
-    i=unittable{2}(i);
-    factor=[0 unittable{3}(i,2)];
-    si=unittable{4}(i,:);
 end
+i=unittable{2}(i);
+factor=[0 unittable{3}(i,2)*prefix];
+if LocalTempType==ABSOLUTE
+    factor(1)=unittable{3}(i,1);
+elseif LocalTempType==UNSPECIFIED && unittable{3}(i,1)~=0
+    error('Unable to convert unit because its unknown whether "%s" should be interpreted relative or absolute.',unit)
+end
+si=unittable{4}(i,:);
 
 
 function initialize_unittable
@@ -607,7 +640,11 @@ while anychange && any(~identified)
                 Names={Names};
             end
             if ischar(Def)
-                [factor,si]=factor2si(Def);
+                try
+                    [factor,si]=parse(Def,true);
+                catch
+                    factor = 'failed';
+                end
             else
                 factor(2)=Def;
                 si=zeros(1,8);
@@ -681,7 +718,17 @@ table={'m'   [0 1]          [1 0 0 0 0 0 0 0]
     'lb'     [0 0.45359237] [0 0 0 1 0 0 0 0]
     'cd'     [0 1]          [0 0 0 0 1 0 0 0]
     'mol'    [0 1]          [0 0 0 0 0 1 0 0]
-    'degK'   [0 1]          [0 0 0 0 0 0 1 0]
+    'K'      [0 1]          [0 0 0 0 0 0 1 0]
     'deg'    [0 1]          [0 0 0 0 0 0 0 1]
     'radian' [0 180/pi]     [0 0 0 0 0 0 0 1]};
 table={table(:,1) (1:size(table,1))' cat(1,table{:,2}) cat(1,table{:,3})};
+
+
+function v = RELATIVE
+v = -1;
+
+function v = ABSOLUTE
+v = 1;
+
+function v = UNSPECIFIED
+v = 0;

@@ -26,7 +26,6 @@ libMeteo_la_SOURCES = \
          meteo.f90 \
          checkmeteoheader.f90 \
          numbersonline_m.f90 \
-         openexistingfile_meteo.f90 \
          readmeteoheader.f90
 
 #-------------------------------------------------------------------------------

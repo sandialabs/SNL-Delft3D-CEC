@@ -1,9 +1,10 @@
       subroutine corcon (bndval,thick ,namcon,itypc ,nobnd ,notims,
      *                   kmax  ,lstci ,nocon ,cgen  ,cadd  ,cmax  ,
      *                   cmin                                     )
+      implicit none
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +28,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: corcon.f 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/nesthd2/packages/nesthd2/src/corcon.f $
+!  $Id: corcon.f 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/nesthd2/packages/nesthd2/src/corcon.f $
 !***********************************************************************
 ! Deltares                         marine and coastal management
 !
@@ -44,13 +45,16 @@
 !***********************************************************************
 
       integer      cgen   (  6   )
+      integer nocon, nobnd, notims, kmax
 
-      real         thick  (kmax  ),
-     *             cadd   (  6   ), cmax  (  6   ), cmin  (  6   )
+      double precision thick  (kmax  ),
+     *                 cadd   (  6   ), cmax  (  6   ), cmin  (  6   )
 
-      real         bndval (nobnd ,notims,kmax  ,lstci,2)
+      double precision bndval (nobnd ,notims,kmax  ,lstci,2)
 
       character*20 namcon(lstci  + 2)
+      integer icon, lstci, itim
+      integer ibnd, isize, k, itypc
 !
 !----adjust boundary conditions
 !

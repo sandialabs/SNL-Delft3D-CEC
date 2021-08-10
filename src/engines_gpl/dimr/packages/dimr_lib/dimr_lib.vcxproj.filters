@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\clock.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bmi.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\component.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\coredump.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dimr.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dimr_lib_version.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\exception.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\log.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stringutils.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\xmltree.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\bmi.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\clock.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\component.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\exception.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\getopt.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\log.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\netcdf_references.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stringutils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\xmltree.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_component.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_components.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_constants.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_control_block.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_couple_item.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_coupler.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_couplers.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_logger.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dimr_unit.h">
+      <Filter>include\dimr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ixmltree.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\keyvaluell.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="include\dimr_lib_version.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\version_number.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{929cec93-c9b8-419b-a1ef-c323c8ae2d1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{5753e35c-f625-4081-b28b-d60cfe3d4f73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\dimr">
+      <UniqueIdentifier>{1a09d3ca-04dc-4710-921e-2e60da84ca52}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

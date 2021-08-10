@@ -18,7 +18,7 @@ function varargout=pharosfil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,8 +43,8 @@ function varargout=pharosfil(FI,domain,field,cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/pharosfil.m $
-%   $Id: pharosfil.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/pharosfil.m $
+%   $Id: pharosfil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 
@@ -109,7 +109,13 @@ switch cmd
         %program is a C-program).
         data = qpread(FI,Props.Data,'data',0,Location+1);
         %
-        hNew=line(Freqs,data.Val,'color',Ops.colour);
+        hNew=line(Freqs,data.Val,'color',Ops.colour, ...
+            'linestyle',Ops.linestyle, ...
+            'linewidth',Ops.linewidth, ...
+            'marker',Ops.marker, ...
+            'markersize',Ops.markersize, ...
+            'markeredgecolor',Ops.markercolour, ...
+            'markerfacecolor',Ops.markerfillcolour);
         setappdata(Parent,'AxesType','<blocking>')
         LocationStr=readsts(FI,Props,Station);
         set(get(Parent,'title'),'string',LocationStr,'interpreter','none')
@@ -176,59 +182,64 @@ end
 
 % generate output ...
 if XYRead
-    X=vs_let(FI,'GRID_coor','X_coor','quiet');
-    Y=vs_let(FI,'GRID_coor','Y_coor','quiet');
-    XYZ=[X Y];
-    %
-    PointIndices=vs_let(FI,'MESH_2','KMESHC','quiet');
-    INPELM=vs_let(FI,'MESH_1','INPELM','quiet');
-    INELEM=vs_let(FI,'MESH_1','INELEM','quiet');
-    %
-    % INPELM contains the number of points per element
-    % INELEM contains the number of elements
-    % The last "element set" contains the triangles.
-    % The other "element sets" contain the boundary conditions.
-    %
-    switch Props.Name
-        case {'closed boundaries','open boundary','transmission boundaries'}
-            LELNR=vs_let(FI,'GRID_adm',{1},'LELNR','quiet');
-            LELNR=LELNR(cumsum(INELEM))';
-            elm={};
-            ind=0;
-            for i=1:length(INPELM)-1
-                if LELNR(i)==6 & strcmp(Props.Name,'closed boundaries')
-                    elm{i}=transpose(reshape(PointIndices(ind+(1:INPELM(i)*INELEM(i))),[INPELM(i) INELEM(i)]));
-                elseif LELNR(i)==3 & strcmp(Props.Name,'open boundary')
-                    bnd=reshape(PointIndices(ind+(1:INPELM(i))),[INPELM(i) 1]);
-                    elm{i}=[bnd(1:end-1) bnd(2:end)];
-                elseif LELNR(i)==4 & strcmp(Props.Name,'transmission boundaries')
-                    bnd=reshape(PointIndices(ind+(1:INPELM(i))),[INPELM(i) 1]);
-                    elm{i}=[bnd(1:end-1) bnd(2:end)];
-                else
-                    elm{i}=zeros(0,2);
+    if strcmp(Props.Geom,'PNT')
+        % skip until after reading the data
+    else
+        X=vs_let(FI,'GRID_coor','X_coor','quiet');
+        Y=vs_let(FI,'GRID_coor','Y_coor','quiet');
+        XYZ=[X Y];
+        %
+        PointIndices=vs_let(FI,'MESH_2','KMESHC','quiet');
+        INPELM=vs_let(FI,'MESH_1','INPELM','quiet');
+        INELEM=vs_let(FI,'MESH_1','INELEM','quiet');
+        %
+        % INPELM contains the number of points per element
+        % INELEM contains the number of elements
+        % The last "element set" contains the triangles.
+        % The other "element sets" contain the boundary conditions.
+        %
+        switch Props.Name
+            case {'closed boundaries','open boundary','transmission boundaries'}
+                LELNR=vs_let(FI,'GRID_adm',{1},'LELNR','quiet');
+                LELNR=LELNR(cumsum(INELEM))';
+                elm={};
+                ind=0;
+                for i=1:length(INPELM)-1
+                    if LELNR(i)==6 & strcmp(Props.Name,'closed boundaries')
+                        elm{i}=transpose(reshape(PointIndices(ind+(1:INPELM(i)*INELEM(i))),[INPELM(i) INELEM(i)]));
+                    elseif LELNR(i)==3 & strcmp(Props.Name,'open boundary')
+                        bnd=reshape(PointIndices(ind+(1:INPELM(i))),[INPELM(i) 1]);
+                        elm{i}=[bnd(1:end-1) bnd(2:end)];
+                    elseif LELNR(i)==4 & strcmp(Props.Name,'transmission boundaries')
+                        bnd=reshape(PointIndices(ind+(1:INPELM(i))),[INPELM(i) 1]);
+                        elm{i}=[bnd(1:end-1) bnd(2:end)];
+                    else
+                        elm{i}=zeros(0,2);
+                    end
+                    ind=ind+INPELM(i)*INELEM(i);
                 end
-                ind=ind+INPELM(i)*INELEM(i);
-            end
-            %
-            Ans.XY=XYZ;
-            Ans.SEG=cat(1,elm{:});
-        otherwise
-            if idx{M_}~=0
-                XYZ = XYZ(idx{M_},:);
-            end
-            XYZ=reshape(XYZ,[1 size(XYZ,1) 1 2]);
-            Ans.XYZ=XYZ;
-            %
-            ind=sum(INPELM(1:end-1).*INELEM(1:end-1));
-            TRI=transpose(reshape(PointIndices(ind+(1:INPELM(end)*INELEM(end))),[INPELM(end) INELEM(end)]));
-            %
-            if idx{M_}~=0
-                Translate=zeros(sz(M_),1);
-                Translate(idx{M_})=1:length(idx{M_});
-                TRI = Translate(TRI);
-                TRI = TRI(all(TRI,2),:);
-            end
-            Ans.TRI=TRI;
+                %
+                Ans.XY=XYZ;
+                Ans.SEG=cat(1,elm{:});
+            otherwise
+                if idx{M_}~=0
+                    XYZ = XYZ(idx{M_},:);
+                end
+                Ans.X = XYZ(:,1);
+                Ans.Y = XYZ(:,2);
+                %
+                ind=sum(INPELM(1:end-1).*INELEM(1:end-1));
+                TRI=transpose(reshape(PointIndices(ind+(1:INPELM(end)*INELEM(end))),[INPELM(end) INELEM(end)]));
+                %
+                if idx{M_}~=0
+                    Translate=zeros(sz(M_),1);
+                    Translate(idx{M_})=1:length(idx{M_});
+                    TRI = Translate(TRI);
+                    TRI = TRI(all(TRI,2),:);
+                end
+                Ans.FaceNodeConnect=TRI;
+                Ans.ValLocation='NODE';
+        end
     end
 end
 
@@ -245,104 +256,117 @@ WL = RPAR(4);
 switch Props.NVal
     case 0
     case 1
-        %H=vs_get(FI,'GRID','H_depth');
-        switch Props.Name
-            case 'relative breaking intensity'
-                Val1=vs_let(FI,Props.Group,{idx{T_}},Props.Val1,{0},'quiet');
-            otherwise
-                Val1=vs_let(FI,Props.Group,{idx{T_}},Props.Val1,{idx{M_}},'quiet');
-        end
-        Val2=[];
-        if ~isempty(Props.Val2)
-            Val2=vs_let(FI,Props.Group,{idx{T_}},Props.Val2,{idx{M_}},'quiet');
-        end
-        switch Props.Name
-            case 'water level'
-                Ans.Val = Val1;
-                Ans.Val(:) = WL;
-            case 'bed level'
-                Ans.Val = WL - Val1;
-            case 'wave height'
-                Amp = sqrt(Val1.^2 + Val2.^2);
-                Ans.Val = 2*Amp;
-            case 'wave image'
-                Amp   = sqrt(Val1.^2 + Val2.^2);
-                Phase = atan2(Val2,Val1);
-                if NRun>1
-                    Info = vs_disp(FI,'SPECTRAL-INFO',[]);
-                    if isstruct(Info) & Info.SizeDim>0
-                        Freqs = vs_let(FI,'SPECTRAL-INFO','SPECTRAL-RPAR',{1},'quiet');
-                        Weights = vs_let(FI,'SPECTRAL-INFO','WEIGHTS','quiet')';
-                        Weights = Weights(:);
-                        if size(Amp,1)~=NRun
-                            Weights = Weights(idx{T_});
-                            Weights(:)=1; % reset weights to one, to generate same wave image from combined file as from individual file.
+        if strcmp(Props.Geom,'PNT')
+            Location = vs_get(FI,'SEICH_loc',idx(ST_),'Point_nr','quiet');
+            %
+            Freqs = vs_let(FI,'SEICH_def','FREQ','quiet');
+            Freqs = Freqs(Freqs>0)'; % TODO: Add Freqs to Ans and plot ...
+            %
+            %Get data for Location+1 because the Location is zero-based
+            %(writing program is a C-program).
+            Ans = qpread(FI,Props.Data,'data',0,Location+1);
+            Ans.X = vs_get(FI,'SEICH_loc',idx(ST_),'Xp','quiet');
+            Ans.Y = vs_get(FI,'SEICH_loc',idx(ST_),'Yp','quiet');
+        else
+            %H=vs_get(FI,'GRID','H_depth');
+            switch Props.Name
+                case 'relative breaking intensity'
+                    Val1=vs_let(FI,Props.Group,{idx{T_}},Props.Val1,{0},'quiet');
+                otherwise
+                    Val1=vs_let(FI,Props.Group,{idx{T_}},Props.Val1,{idx{M_}},'quiet');
+            end
+            Val2=[];
+            if ~isempty(Props.Val2)
+                Val2=vs_let(FI,Props.Group,{idx{T_}},Props.Val2,{idx{M_}},'quiet');
+            end
+            switch Props.Name
+                case 'water level'
+                    Ans.Val = Val1;
+                    Ans.Val(:) = WL;
+                case 'bed level'
+                    Ans.Val = WL - Val1;
+                case 'wave height'
+                    Amp = sqrt(Val1.^2 + Val2.^2);
+                    Ans.Val = 2*Amp;
+                case 'wave image'
+                    Amp   = sqrt(Val1.^2 + Val2.^2);
+                    Phase = atan2(Val2,Val1);
+                    if NRun>1
+                        Info = vs_disp(FI,'SPECTRAL-INFO',[]);
+                        if isstruct(Info) & Info.SizeDim>0
+                            Freqs = vs_let(FI,'SPECTRAL-INFO','SPECTRAL-RPAR',{1},'quiet');
+                            Weights = vs_let(FI,'SPECTRAL-INFO','WEIGHTS','quiet')';
+                            Weights = Weights(:);
+                            if size(Amp,1)~=NRun
+                                Weights = Weights(idx{T_});
+                                Weights(:)=1; % reset weights to one, to generate same wave image from combined file as from individual file.
+                            end
+                            for i=1:size(Amp,1)
+                                Amp(i,:) = Weights(i)*Amp(i,:);
+                            end
+                        else
+                            error('Combination not implemented.');
+                            Freqs = vs_let(FI,'INFO','RPAR',{1},'quiet');
                         end
-                        for i=1:size(Amp,1)
-                            Amp(i,:) = Weights(i)*Amp(i,:);
+                        Per = 1./Freqs;
+                        Per = repmat(Per(:)',NRun/length(Per),1);
+                        Per = Per(:);
+                        if size(Amp,1)~=NRun
+                            Per = Per(idx{T_});
+                        end
+                        SeicheSpecial=0;
+                    else
+                        Per=Props.Period;
+                        SeicheSpecial=size(Amp,1)>1;
+                    end
+                    %
+                    if SeicheSpecial
+                        %
+                        [Ampmax,i] = max(Amp,[],2);
+                        ii = sub2ind(size(Phase),1:size(Phase,1),i');
+                        PhaseRef   = Phase(ii)';
+                        % apply selection
+                        if m~=0
+                            Amp = Amp(:,m);
+                            Phase = Phase(:,m);
+                        end
+                        Ans.Val = zeros(length(ii),size(Amp,2));
+                        for i=1:length(ii)
+                            Ans.Val(i,:) = Amp(i,:).*cos(Phase(i,:)-PhaseRef(i));
                         end
                     else
-                        error('Combination not implemented.');
-                        Freqs = vs_let(FI,'INFO','RPAR',{1},'quiet');
-                    end
-                    Per = 1./Freqs;
-                    Per = repmat(Per(:)',NRun/length(Per),1);
-                    Per = Per(:);
-                    if size(Amp,1)~=NRun
-                        Per = Per(idx{T_});
-                    end
-                    SeicheSpecial=0;
-                else
-                    Per=Props.Period;
-                    SeicheSpecial=size(Amp,1)>1;
-                end
-                %
-                if SeicheSpecial
-                    %
-                    [Ampmax,i] = max(Amp,[],2);
-                    ii = sub2ind(size(Phase),1:size(Phase,1),i');
-                    PhaseRef   = Phase(ii)';
-                    % apply selection
-                    if m~=0
-                        Amp = Amp(:,m);
-                        Phase = Phase(:,m);
-                    end
-                    Ans.Val = zeros(length(ii),size(Amp,2));
-                    for i=1:length(ii)
-                        Ans.Val(i,:) = Amp(i,:).*cos(Phase(i,:)-PhaseRef(i));
-                    end
-                else
-                    SumAmp=sum(Amp,1);
-                    [Ampmax,i] = max(SumAmp);
-                    PhaseRef   = Phase(:,i);
-                    % apply selection
-                    if m~=0
-                        Amp = Amp(:,m);
-                        Phase = Phase(:,m);
-                    end
-                    if ~DimFlag(T_)
-                        t=0;
-                    end
-                    Ans.Val = zeros(length(t),size(Amp,2));
-                    deltaT = Props.Period/Props.NSamples;
-                    for i=1:length(t)
-                        for f=1:size(Amp,1)
-                            Ans.Val(i,:) = Ans.Val(i,:) + Amp(f,:).*cos(Phase(f,:)-PhaseRef(f)-2*pi*t(i)*deltaT/Per(f));
+                        SumAmp=sum(Amp,1);
+                        [Ampmax,i] = max(SumAmp);
+                        PhaseRef   = Phase(:,i);
+                        % apply selection
+                        if m~=0
+                            Amp = Amp(:,m);
+                            Phase = Phase(:,m);
                         end
+                        if ~DimFlag(T_)
+                            t=0;
+                        end
+                        Ans.Val = zeros(length(t),size(Amp,2));
+                        deltaT = Props.Period/Props.NSamples;
+                        for i=1:length(t)
+                            for f=1:size(Amp,1)
+                                Ans.Val(i,:) = Ans.Val(i,:) + Amp(f,:).*cos(Phase(f,:)-PhaseRef(f)-2*pi*t(i)*deltaT/Per(f));
+                            end
+                        end
+                        idx{T_} = t;
                     end
-                    idx{T_} = t;
-                end
-            case 'wave phase'
-                Phase   = atan2(Val2,Val1);
-                Ans.Val = Phase;
-            case 'relative breaking intensity'
-                mVal1 = max(Val1(:));
-                if ~isequal(idx{M_},0)
-                    Val1 = Val1(:,idx{M_});
-                end
-                Ans.Val = Val1/mVal1;
-            otherwise
-                Ans.Val = Val1;
+                case 'wave phase'
+                    Phase   = atan2(Val2,Val1);
+                    Ans.Val = Phase;
+                case 'relative breaking intensity'
+                    mVal1 = max(Val1(:));
+                    if ~isequal(idx{M_},0)
+                        Val1 = Val1(:,idx{M_});
+                    end
+                    Ans.Val = Val1/mVal1;
+                otherwise
+                    Ans.Val = Val1;
+            end
         end
     otherwise
         Val1=vs_let(FI,Props.Group,{idx{T_}},Props.Val1,{idx{M_}},'quiet');
@@ -370,46 +394,46 @@ varargout={Ans FI};
 function Out=infile(FI,domain)
 
 %======================== SPECIFIC CODE =======================================
-PropNames={'Name'             'Units'  'Geom' 'Coords' 'DimFlag' 'DataInCell' 'NVal' 'VecType' 'Loc' 'ReqLoc' 'Group'      'Val1'           'Val2'      'UseGrid' 'SubFld'};
-DataProps={'grid'             ''       'TRI'  'xy'     [0 0 6 0 0]  0          0     ''        ''    ''       'GRID_coor'   'X_coor'         ''           1         ''
-    'open boundary'            ''       'SEG'  'xy'     [0 0 6 0 0]  0          0     ''        ''    ''       'GRID_adm'   'LELNR'          ''           2         ''
-    'transmission boundaries'  ''       'SEG'  'xy'     [0 0 6 0 0]  0          0     ''        ''    ''       'GRID_adm'   'LELNR'          ''           2         ''
-    'closed boundaries'        ''       'SEG'  'xy'     [0 0 6 0 0]  0          0     ''        ''    ''       'GRID_adm'   'LELNR'          ''           2         ''
-    '-------'                  ''       ''     ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''
-    'water level'              'm'      'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'H_depth'        ''           1         ''
-    'bed level'                'm'      'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'H_depth'        ''           1         ''
-    'water depth'              'm'      'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'H_depth'        ''           1         ''
-    'velocity'                 'm/s'    'TRI'  'xy'     [0 0 6 0 0]  0          2     ''        ''    ''       'CURRENT'    'Ux_veloc'       'Uy_veloc'   1         ''
-    %   'relative radiation freqency' '1/s' 'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'CURRENT'    'Omega_rel'      ''           1         ''
-    '-------'                  ''       ''     ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''
-    'relative breaking intensity' ''     'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'BREAKING'   'Gamma_b'        ''           1         'nfreq'
-    'weighted mean wave height dir.' 'm' 'TRI'  'xy'    [0 0 6 0 0]  0          1     ''        ''    ''       'HS_dir'     'HS_directional' ''           1         'md'
-    'wave height'              'm'      'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_r'          'PHI_i'      1         'nrun'
-    'wave height'              'm'      'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_r'         'PHIs_i'     1         'sf'
-    'wave phase'               ''       'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_r'          'PHI_i'      1         'nrun'
-    'wave phase'               ''       'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_r'         'PHIs_i'     1         'sf'
-    'wave image'               'm'      'TRI'  'xy'     [7 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_r'          'PHI_i'      1         'nrun'
-    'wave image'               'm'      'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_r'         'PHIs_i'     1         'sf'
-    'maximum velocity'         'm/s'    'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'UMAX'           ''           1         'sf'
+PropNames={'Name'             'Units'    'Geom'         'Coords' 'DimFlag' 'DataInCell' 'NVal' 'VecType' 'Loc' 'ReqLoc' 'Group'      'Val1'           'Val2'      'UseGrid' 'SubFld'};
+DataProps={'grid'             ''         'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          0     ''        ''    ''       'GRID_coor'   'X_coor'         ''           1         ''
+    'open boundary'            ''        'SEG'          'xy'     [0 0 6 0 0]  0          0     ''        ''    ''       'GRID_adm'   'LELNR'          ''           2         ''
+    'transmission boundaries'  ''        'SEG'          'xy'     [0 0 6 0 0]  0          0     ''        ''    ''       'GRID_adm'   'LELNR'          ''           2         ''
+    'closed boundaries'        ''        'SEG'          'xy'     [0 0 6 0 0]  0          0     ''        ''    ''       'GRID_adm'   'LELNR'          ''           2         ''
+    '-------'                  ''        ''             ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''
+    'water level'              'm'       'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'H_depth'        ''           1         ''
+    'bed level'                'm'       'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'H_depth'        ''           1         ''
+    'water depth'              'm'       'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'H_depth'        ''           1         ''
+    'velocity'                 'm/s'     'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          2     ''        ''    ''       'CURRENT'    'Ux_veloc'       'Uy_veloc'   1         ''
+    %'relative radiation freqency' '1/s' 'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'CURRENT'    'Omega_rel'      ''           1         ''
+    '-------'                  ''        ''             ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''
+    'relative breaking intensity' ''     'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'BREAKING'   'Gamma_b'        ''           1         'nfreq'
+    'weighted mean wave height dir.' 'm' 'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'HS_dir'     'HS_directional' ''           1         'md'
+    'wave height'              'm'       'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_r'          'PHI_i'      1         'nrun'
+    'wave height'              'm'       'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_r'         'PHIs_i'     1         'sf'
+    'wave phase'               ''        'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_r'          'PHI_i'      1         'nrun'
+    'wave phase'               ''        'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_r'         'PHIs_i'     1         'sf'
+    'wave image'               'm'       'UGRID2D-NODE' 'xy'     [7 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_r'          'PHI_i'      1         'nrun'
+    'wave image'               'm'       'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_r'         'PHIs_i'     1         'sf'
+    'maximum velocity'         'm/s'     'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'UMAX'           ''           1         'sf'
     'maximum velocity direction' ...
-    'radians' 'TRI' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'UDIR'           ''           1         'sf'
-    %   'maximum velocity'         'm/s'    'TRI'  'xy'     [0 0 6 0 0]  0          2     ''        ''    ''       'SEICH_res'  'UMAX'           'UDIR'       1         'sf'
-    'minimum velocity'         'm/s'    'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'UMIN'           ''           1         'sf'
-    '-------'                  ''       ''     ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''
-    'wave number'              ''       'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'K_wave'         ''           1         'nfreq'
-    'phase velocity'           'm/s'    'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'C_wave'         ''           1         'nfreq'
-    'group velocity'           'm/s'    'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'Cg_wave'        ''           1         'nfreq'
-    'potential (real part)'    ''       'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_r'          ''           1         'nrun'
-    'potential (imag part)'    ''       'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_i'          ''           1         'nrun'
-    'seiches potential (real part)' ''  'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_r'         ''           1         'sf'
-    'seiches potential (imag part)' ''  'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_i'         ''           1         'sf'
-    '-------'                  ''       ''     ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''
-    'weighted period Tm-1,0'   's'      'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SPECTRAL-PAR' 'TM10'         ''           1         ''
+                               'radians' 'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'UDIR'           ''           1         'sf'
+    %   'maximum velocity'     'm/s'     'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          2     ''        ''    ''       'SEICH_res'  'UMAX'           'UDIR'       1         'sf'
+    'minimum velocity'         'm/s'     'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'UMIN'           ''           1         'sf'
+    '-------'                  ''        ''             ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''
+    'wave number'              ''        'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'K_wave'         ''           1         'nfreq'
+    'phase velocity'           'm/s'     'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'C_wave'         ''           1         'nfreq'
+    'group velocity'           'm/s'     'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'GRID'       'Cg_wave'        ''           1         'nfreq'
+    'potential (real part)'    ''        'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_r'          ''           1         'nrun'
+    'potential (imag part)'    ''        'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'POTENTIALS' 'PHI_i'          ''           1         'nrun'
+    'seiches potential (real part)' ''   'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_r'         ''           1         'sf'
+    'seiches potential (imag part)' ''   'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SEICH_res'  'PHIs_i'         ''           1         'sf'
+    '-------'                  ''        ''             ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''
+    'weighted period Tm-1,0'   's'       'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SPECTRAL-PAR' 'TM10'         ''           1         ''
     'wave number based on Tm-1,0' ...
-    ''       'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SPECTRAL-PAR' 'KTM10'        ''           1         ''
+                               ''        'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SPECTRAL-PAR' 'KTM10'        ''           1         ''
     'radial frequency based on Tm-1,0' ...
-    ''       'TRI'  'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SPECTRAL-PAR' 'OMEGATM10'    ''           1         ''
-    '-------'                  ''       ''     ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''};
+                               ''        'UGRID2D-NODE' 'xy'     [0 0 6 0 0]  0          1     ''        ''    ''       'SPECTRAL-PAR' 'OMEGATM10'    ''           1         ''
+    '-------'                  ''        ''             ''       [0 0 0 0 0]  0          0     ''        ''    ''       ''           ''               ''           1         ''};
 %======================== SPECIFIC CODE DIMENSIONS ============================
 SkipGroup={};
 SkipElem={'RKN_roughness'};
@@ -448,7 +472,7 @@ for i=1:length(Grps)
                 end
                 eunit='';
                 if ~isempty(Info.ElmUnits)
-                    eunit=deblank2(Info.ElmUnits);
+                    eunit=strtrim(Info.ElmUnits);
                     if isequal(eunit([1 end]),'[]')
                         eunit=eunit(2:end-1);
                     end
@@ -458,7 +482,7 @@ for i=1:length(Grps)
                     subf='agd';
                 end
                 fld=fld+1;
-                DataProps(fld,:)={edescr            eunit  'TRI' 'xy' [0 0 6 0 0]  0          1     ''        ''    ''       Grps{i}      Elms{j}          ''           1         subf};
+                DataProps(fld,:)={edescr            eunit  'UGRID2D-NODE' 'xy' [0 0 6 0 0]  0          1     ''        ''    ''       Grps{i}      Elms{j}          ''           1         subf};
             end
         end
     end

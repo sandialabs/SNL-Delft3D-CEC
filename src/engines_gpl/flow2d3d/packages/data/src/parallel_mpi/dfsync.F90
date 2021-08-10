@@ -4,7 +4,7 @@
 subroutine dfsync ( gdp )
 !----- GPL ---------------------------------------------------------------------
 !
-!  Copyright (C)  Stichting Deltares, 2011-2015.
+!  Copyright (C)  Stichting Deltares, 2011-2020.
 !
 !  This program is free software: you can redistribute it and/or modify
 !  it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ subroutine dfsync ( gdp )
 !  Stichting Deltares. All rights reserved.
 !
 !-------------------------------------------------------------------------------
-!  $Id: dfsync.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/parallel_mpi/dfsync.F90 $
+!  $Id: dfsync.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/parallel_mpi/dfsync.F90 $
 !!--description-----------------------------------------------------------------
 !
 !   Synchronize nodes
@@ -67,7 +67,7 @@ subroutine dfsync ( gdp )
     ! blocks until all nodes have called this routine
     !
 #ifdef HAVE_MPI
-    call mpi_barrier ( MPI_COMM_WORLD, ierr )
+    call mpi_barrier ( engine_comm_world, ierr )
     if ( ierr /= MPI_SUCCESS ) then
        write (msgstr,'(a,i5,a,i3.3)') 'MPI produces some internal error - return code is ',ierr,' and node number is ',inode
        call prterr(lundia, 'U021', trim(msgstr))

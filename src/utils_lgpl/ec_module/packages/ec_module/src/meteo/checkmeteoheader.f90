@@ -1,7 +1,7 @@
 function checkmeteoheader(meteoitem) result(success)
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -25,14 +25,14 @@ function checkmeteoheader(meteoitem) result(success)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: checkmeteoheader.f90 4656 2015-02-05 17:03:40Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/ec_module/packages/ec_module/src/meteo/checkmeteoheader.f90 $
+!  $Id: checkmeteoheader.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/ec_module/packages/ec_module/src/meteo/checkmeteoheader.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
-    use meteo
+    use meteo_data
     use precision
     implicit none
 !
@@ -46,7 +46,6 @@ function checkmeteoheader(meteoitem) result(success)
 !
 ! Local variables
 !
-    integer       :: ierr
     real(fp)      :: pi
 !
 !! executable statements -------------------------------------------------------
@@ -227,12 +226,13 @@ function checkmeteoheader(meteoitem) result(success)
           & meteoitem%quantities(1) == 'air_temperature'   .or. &
           & meteoitem%quantities(1) == 'precipitation'     .or. &
           & meteoitem%quantities(1) == 'sw_radiation_flux' .or. &
-          & meteoitem%quantities(1) == 'cloudiness'         )   then 
+          & meteoitem%quantities(1) == 'cloudiness'        .or. &
+          & meteoitem%quantities(1) == 'Secchi_depth'      )   then 
           !
           ! Correct quantity specified
           !
        else   
-          write(meteomessage, '(2a)') 'Meteo input: Incorrect quantity given, expecting x_wind, y_wind, air_pressure, relative_humidity, air_temperature, cloudiness, precipitation, or sw_radiation_flux, but getting ', &
+          write(meteomessage, '(2a)') 'Meteo input: Incorrect quantity given, expecting x_wind, y_wind, air_pressure, relative_humidity, air_temperature, cloudiness, precipitation, secchi_depth, or sw_radiation_flux, but getting ', &
               & trim(meteoitem%quantities(1))
           success = .false.
           return
@@ -277,6 +277,11 @@ function checkmeteoheader(meteoitem) result(success)
           return
        elseif (meteoitem%quantities(1) == 'precipitation' .and. meteoitem%units(1) /= 'mm/h') then
           write(meteomessage, '(2a)') 'Meteo input: Incorrect unit given for precipitation, expecting mm/h, but getting ', &
+                 & trim(meteoitem%units(1))
+          success = .false.
+          return
+       elseif (meteoitem%quantities(1) == 'Secchi_depth' .and. meteoitem%units(1) /= 'm') then
+          write(meteomessage, '(2a)') 'Meteo input: Incorrect unit given for Secchi depth, expecting m, but getting ', &
                  & trim(meteoitem%units(1))
           success = .false.
           return
@@ -526,6 +531,8 @@ function checkmeteoheader(meteoitem) result(success)
        meteoitem%quantities(1) = 'airtemp'
     elseif (   meteoitem%quantities(1) == 'precipitaion'      ) then
        meteoitem%quantities(1) = 'precip'
+    elseif (   meteoitem%quantities(1) == 'secchi_depth'      ) then
+       meteoitem%quantities(1) = 'Secchi_depth'
     elseif (   meteoitem%quantities(1) == 'sw_radiation_flux'      ) then
        meteoitem%quantities(1) = 'swrf'
     elseif (   meteoitem%quantities(1) == 'bedrock_surface_elevation'    ) then

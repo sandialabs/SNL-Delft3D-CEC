@@ -1,7 +1,7 @@
 module meteo
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -25,8 +25,8 @@ module meteo
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: meteo.f90 5280 2015-07-16 07:28:56Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/ec_module/packages/ec_module/src/meteo/meteo.f90 $
+!  $Id: meteo.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/ec_module/packages/ec_module/src/meteo/meteo.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Read time series in five possible formats:
@@ -178,7 +178,6 @@ function addmeteoitem(runid, inputfile, gridsferic, mmax, nmax) result(success)
     integer                      :: nxr
     integer                      :: minp
     logical                      :: meteogridsferic    ! type of meteo grid sferic (.true.) or cartesian (.false.)?
-    logical, external            :: openexistingfile_meteo
     logical, external            :: readmeteoheader
     logical, external            :: checkmeteoheader
     type(tmeteo)    , pointer    :: meteo
@@ -199,7 +198,8 @@ function addmeteoitem(runid, inputfile, gridsferic, mmax, nmax) result(success)
     !
     ! Open meteofile
     !
-    success = openexistingfile_meteo(minp, inputfile)
+    meteoitem%filetype = 0
+    success = openexistingfile_meteo(minp, inputfile, meteoitem%filetype)
     if (.not. success) return
     !
     meteoitem%filename = inputfile
@@ -494,7 +494,7 @@ function meteoupdateitem(meteoitem, flow_itdate, flow_tzone, tim) result(success
                !
                ! Conversion of pressure to Pa (N/m2). If already Pa, p_conv = 1.0_hp 
                !
-               if (meteoitem%quantities(k) == 'air_pressure') then
+               if (meteoitem%quantities(k) == 'air_pressure' .or. meteoitem%quantities(k) == 'patm'.or. meteoitem%quantities(k) == 'p_drop') then
                   do m = 1, size(wz,2)
                      do n = 1, size(wz,1)
                         wz(n,m,k) = wz(n,m,k) * meteoitem%p_conv
@@ -544,7 +544,7 @@ function meteoupdateitem(meteoitem, flow_itdate, flow_tzone, tim) result(success
    !
    if ( comparereal(real(meteoitem%field(meteoitem%it0)%time,fp), tim) == 1 ) then
       write(meteomessage,'(3a,2(g16.8,a))') 'In file ',trim(meteoitem%filename), &
-           & ': Start time of data (',meteoitem%field(meteoitem%it0)%time,') is behind start time of simulation (',tim,')'
+           & ': Start time of forcing data (',meteoitem%field(meteoitem%it0)%time,') should precede start time of simulation (',tim,')'
       success = .false.
    else
       !meteomessage = ' '
@@ -629,7 +629,6 @@ function getmeteotypes(runid, meteotypes, mtdim) result(success)
    logical                             :: newtype
    character(256)                      :: curtype
    type(tmeteo)              , pointer :: meteo     ! all meteo for one subdomain
-   type(tmeteoitem)          , pointer :: meteoitem
 !
 !! executable statements -------------------------------------------------------
 !
@@ -728,8 +727,6 @@ function getmeteoval(runid, quantity, time, mfg, nfg, &
    integer                               :: j1
    integer                               :: mv
    integer                               :: nv
-   integer                               :: iyx
-   integer                               :: iyy
    logical                               :: nodata0
    logical                               :: nodata1
    real(fp)                              :: alpha
@@ -777,7 +774,6 @@ function getmeteoval(runid, quantity, time, mfg, nfg, &
    real(hp), dimension(4)                :: u_hp
    real(hp), dimension(4)                :: v_hp
    real(hp), dimension(4)                :: w         ! weighing factors
-   real(fp), dimension(:,:)  , pointer   :: qdest
    real(hp), dimension(:,:,:), pointer   :: v1
    real(hp), dimension(:,:,:), pointer   :: v0        ! 3-dim array
    real(hp), dimension(:)    , pointer   :: u1

@@ -3,7 +3,7 @@ function fig=qp_preferences_interface
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function fig=qp_preferences_interface
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_preferences_interface.m $
-%   $Id: qp_preferences_interface.m 5634 2015-12-09 12:42:35Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_preferences_interface.m $
+%   $Id: qp_preferences_interface.m 65778 2020-01-14 14:07:42Z mourits $
 
 ListWidth=100;
 Margin=10;
@@ -144,6 +144,13 @@ switch lower(TZ)
             set(handles(end),'enable','on','value',itz)
         end
 end
+VOffset = VOffset-25;
+handles(end+1)=uicontrol('style','checkbox', ...
+    'position',[HOffset+20 VOffset-2 TabWidth-Margin-20 18], ...
+    'string','Show version number in title bar', ...
+    'value',strcmp(qp_settings('showversion'),'on'), ...
+    'callback','d3d_qp update_showversion', ...
+    'parent',mfig);
 %--------------------------------------------------------------------------
 Panes(end+1,1:2)={'General' handles};
 %=============
@@ -436,6 +443,24 @@ handles(end+1)=uicontrol('style','popupmenu', ...
     'parent',mfig);
 %--------------------------------------------------------------------------
 Panes(end+1,1:2)={'NetCDF' handles};
+set(handles,'visible','off')
+%=============
+handles=[]; VOffset = dims(2)-Margin-20;
+%--------------------------------------------------------------------------
+handles(end+1)=uicontrol('style','text', ...
+    'position',[HOffset VOffset-2 200 18], ...
+    'string','Max Time Steps per Export', ...
+    'horizontalalignment','left', ...
+    'parent',mfig);
+handles(end+1)=uicontrol('style','edit', ...
+    'position',[HOffset+202 VOffset dims(1)-Margin-HOffset-202 20], ...
+    'string',num2str(qp_settings('export_max_ntimes')), ...
+    'backgroundcolor',Active, ...
+    'horizontalalignment','right', ...
+    'callback','d3d_qp export_max_ntimes', ...
+    'parent',mfig);
+%--------------------------------------------------------------------------
+Panes(end+1,1:2)={'Export' handles};
 set(handles,'visible','off')
 %=============
 %handles=[]; VOffset = dims(2)-Margin-20;

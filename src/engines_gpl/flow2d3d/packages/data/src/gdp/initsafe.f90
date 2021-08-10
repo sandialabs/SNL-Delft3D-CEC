@@ -1,7 +1,7 @@
 subroutine initsafe(gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine initsafe(gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: initsafe.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/gdp/initsafe.f90 $
+!  $Id: initsafe.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/gdp/initsafe.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! NONE
@@ -38,7 +38,6 @@ subroutine initsafe(gdp)
     use sp_buffer
     use message_module
     use bedcomposition_module
-    use turbine_module, only: init_turbines
     use morphology_data_module
     !
     use globaldata
@@ -103,7 +102,6 @@ subroutine initsafe(gdp)
     call initwrline    (gdp)
     call initz_initcg  (gdp)
     call initzmodel    (gdp)
-    call init_turbines (gdp%turbines)
     call initsdu       (gdp)
     !
     call sbuff_init
@@ -111,10 +109,10 @@ subroutine initsafe(gdp)
     call initdfparall  (gdp%gdparall) 
     call initdfparall  (gdp%iopartit) 
     ! 
-    ! Since GDP allocation has not yet succeeded, I can't call prterr(...,gdp) and d3stop(...)
+    ! Since GDP allocation has not yet succeeded, calling prterr(...,gdp) and d3stop(...) does not work
     !
     if (istat /= 0) then
        write(*,*) 'ERROR during initialization of GDP structure'
-       stop 1
+       call throwexception()
     endif
 end subroutine initsafe

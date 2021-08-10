@@ -5,7 +5,7 @@
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="lib/$(ConfigurationName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../data/include;../data/lib/$(ConfigurationName);../data/lib/$(ConfigurationName);../../../../utils_lgpl/delftio/lib/$(ConfigurationName)/static;../../../../utils_lgpl/esmfsm/include;../../../../utils_lgpl/ec_module/lib/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common/packages/deltares_common/include;../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static;..\..\..\..\utils_gpl\morphology\lib\$(ConfigurationName)\static" PreprocessorDefinitions="HAVE_FC_FORM_BINARY" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../data/include;../data/lib/$(ConfigurationName);../data/lib/$(ConfigurationName);../../../../utils_lgpl/delftio/lib/$(ConfigurationName)/static;../../../../utils_lgpl/esmfsm/include;../../../../utils_lgpl/ec_module/lib/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common/packages/deltares_common/include;../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static;..\..\..\..\utils_gpl\morphology\lib\$(ConfigurationName)\static" PreprocessorDefinitions="HAVE_FC_FORM_BINARY" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
@@ -25,7 +25,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="lib/$(PlatformName)/$(ConfigurationName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" BuildLogFile="$(IntDir)\BuildLog.txt" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../data/include;../data/lib/$(PlatformName)/$(ConfigurationName);../../../../utils_lgpl/meteo/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/delftio/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/delftio_sync/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/esmfsm/include;../../../../utils_lgpl/inifiles/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/ec_module/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common\packages\deltares_common\include\" PreprocessorDefinitions="HAVE_FC_FORM_BINARY" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../data/include;../data/lib/$(PlatformName)/$(ConfigurationName);../../../../utils_lgpl/meteo/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/delftio/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/delftio_sync/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/esmfsm/include;../../../../utils_lgpl/inifiles/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/ec_module/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common/lib/$(PlatformName)/$(ConfigurationName)/static;../../../../utils_lgpl/deltares_common\packages\deltares_common\include\" PreprocessorDefinitions="HAVE_FC_FORM_BINARY" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" DisableDefaultLibSearch="true"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
@@ -71,20 +71,17 @@
 		<File RelativePath="src\input\edyfil.f90"/>
 		<File RelativePath="src\input\expblk.f90"/>
 		<File RelativePath="src\input\fbcorr.f90"/>
-		<File RelativePath="src\input\flow_nefis_restart.f90">
-			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration>
-			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration></File>
 		<File RelativePath="src\input\flsfil.f90"/>
 		<File RelativePath="src\input\grdfil.f90"/>
 		<File RelativePath="src\input\hybfil.f90"/>
 		<File RelativePath="src\input\icfil.f90"/>
 		<File RelativePath="src\input\inicut.f90"/>
 		<File RelativePath="src\input\inimet.f90"/>
+		<File RelativePath="src\input\inimorlyr.f90"/>
 		<File RelativePath="src\input\morbndfill.f90"/>
 		<File RelativePath="src\input\numcmp.f90"/>
 		<File RelativePath="src\input\polygon_module.f90"/>
+		<File RelativePath="src\input\rdarray.f90"/>
 		<File RelativePath="src\input\rdbcg.f90"/>
 		<File RelativePath="src\input\rdbedformpar.f90"/>
 		<File RelativePath="src\input\rdbndd.f90"/>
@@ -113,7 +110,7 @@
 		<File RelativePath="src\input\rdroll.f90"/>
 		<File RelativePath="src\input\rdrund.f90"/>
 		<File RelativePath="src\input\rdscour.f90"/>
-		<File RelativePath=".\src\input\rdsedmortra.f90"/>
+		<File RelativePath="src\input\rdsedmortra.f90"/>
 		<File RelativePath="src\input\rdsite.f90"/>
 		<File RelativePath="src\input\rdspec.f90"/>
 		<File RelativePath="src\input\rdstru.f90"/>
@@ -136,12 +133,18 @@
 			<FileConfiguration Name="Debug|x64">
 				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration></File>
 		<File RelativePath="src\input\reafou.f90"/>
-		<File RelativePath="src\input\restart_bdf_from_trim.f90"/>
-		<File RelativePath="src\input\restart_bodsed.f90"/>
-		<File RelativePath="src\input\restart_lyrs.f90"/>
-		<File RelativePath="src\input\roller_nefis_restart.f90"/>
+		<File RelativePath=".\src\input\restart_trim_bdf.f90"/>
+		<File RelativePath=".\src\input\restart_trim_flow.f90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration></File>
+		<File RelativePath=".\src\input\restart_trim_fluff.f90"/>
+		<File RelativePath=".\src\input\restart_trim_lyrs.f90"/>
+		<File RelativePath=".\src\input\restart_trim_roller.f90"/>
 		<File RelativePath="src\input\rstfil.f90"/>
 		<File RelativePath="src\input\search2.f90"/>
+		<File RelativePath="src\input\split_stations.f90"/>
 		<File RelativePath="src\input\srcfil.f90"/>
 		<File RelativePath="src\input\stafil.f90"/>
 		<File RelativePath="src\input\strfil.f90"/>
@@ -184,7 +187,6 @@
 		<File RelativePath="src\output\rdtimc.f90"/>
 		<File RelativePath="src\output\rdtimw.f90"/>
 		<File RelativePath="src\output\realfileversion.f90"/>
-		<File RelativePath="src\output\rstcom.f90"/>
 		<File RelativePath="src\output\rwbotc.f90"/>
 		<File RelativePath="src\output\rwbotc_double.f90"/>
 		<File RelativePath="src\output\setwav.f90"/>
@@ -200,7 +202,7 @@
 		<File RelativePath="src\output\wrcomt.f90"/>
 		<File RelativePath="src\output\wrcomwind.f90"/>
 		<File RelativePath="src\output\wrcurt.f90"/>
-		<File RelativePath=".\src\output\wrd_main.f90">
+		<File RelativePath="src\output\wrd_main.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
@@ -210,7 +212,7 @@
 		<File RelativePath="src\output\wrfous.f90"/>
 		<File RelativePath="src\output\wrfouv.f90"/>
 		<File RelativePath="src\output\wrgrid.f90"/>
-		<File RelativePath=".\src\output\wrh_main.f90">
+		<File RelativePath="src\output\wrh_main.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
@@ -219,7 +221,7 @@
 				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration></File>
-		<File RelativePath=".\src\output\wrhfluff.f90"/>
+		<File RelativePath="src\output\wrhfluff.f90"/>
 		<File RelativePath="src\output\wribot.f90"/>
 		<File RelativePath="src\output\wridoc.f90"/>
 		<File RelativePath="src\output\wridro.f90"/>
@@ -228,10 +230,11 @@
 		<File RelativePath="src\output\wrihisdad.f90"/>
 		<File RelativePath="src\output\wrihisdis.f90"/>
 		<File RelativePath="src\output\wrimap.f90"/>
+		<File RelativePath="src\output\wrimapdad.f90"/>
 		<File RelativePath="src\output\wrirst.f90"/>
 		<File RelativePath="src\output\wrkenc.f90"/>
 		<File RelativePath="src\output\wrkent.f90"/>
-		<File RelativePath=".\src\output\wrm_main.f90">
+		<File RelativePath="src\output\wrm_main.f90">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
@@ -242,8 +245,7 @@
 				<Tool Name="VFFortranCompilerTool" BoundsCheck="false"/></FileConfiguration></File>
 		<File RelativePath="src\output\wrmfluff.f90"/>
 		<File RelativePath="src\output\wrmorm.f90"/>
-		<File RelativePath="src\output\wrmorm1.f90"/>
-		<File RelativePath="src\output\wrmorm2.f90"/>
+		<File RelativePath="src\output\wrmorst.f90"/>
 		<File RelativePath="src\output\wrparm.f90"/>
 		<File RelativePath="src\output\wrplot.f90"/>
 		<File RelativePath="src\output\wrrolm.f90"/>
@@ -266,7 +268,6 @@
 		<File RelativePath="src\output\wrthisdad.f90"/>
 		<File RelativePath="src\output\wrthisdis.f90"/>
 		<File RelativePath="src\output\wrtmap.f90"/>
-		<File RelativePath=".\src\output\wrturbine.f90"/>
 		<File RelativePath="src\output\wrwaqapnt.f90"/>
 		<File RelativePath="src\output\wrwaqbal.f90"/>
 		<File RelativePath="src\output\wrwaqcco.F90">
@@ -315,7 +316,6 @@
 				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes"/></FileConfiguration></File>
 		<File RelativePath="src\output\wrwaqvol.f90"/>
 		<File RelativePath="src\output\wrwavh.f90"/>
-		<File RelativePath="src\output\wrxbm.f90"/>
 		<File RelativePath="src\output\zrtc.f90"/></Filter>
 		<Filter Name="preprocessor">
 		<File RelativePath="src\preprocessor\asc.f90"/>

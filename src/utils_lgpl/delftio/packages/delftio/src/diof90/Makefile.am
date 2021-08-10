@@ -15,7 +15,8 @@ noinst_LTLIBRARIES = libDIOF90.la
 #-------------------------------------------------------------------------------
 #Includes
 FINCLUDES += \
-	-I$(top_srcdir)/utils_lgpl/delftio/include
+	-I$(top_srcdir)/utils_lgpl/delftio/include \
+	-I$(top_srcdir)/utils_lgpl/deltares_common/packages/deltares_common/src
 
 #-------------------------------------------------------------------------------
 #Sources

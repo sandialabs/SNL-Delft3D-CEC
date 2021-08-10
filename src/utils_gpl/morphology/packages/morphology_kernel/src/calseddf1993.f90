@@ -4,7 +4,7 @@ subroutine calseddf1993(ustarc    ,ws        ,h1        ,kmax      ,sig       , 
                       & epsmax    ,epsmxc    ,seddif    )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +28,8 @@ subroutine calseddf1993(ustarc    ,ws        ,h1        ,kmax      ,sig       , 
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: calseddf1993.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/calseddf1993.f90 $
+!  $Id: calseddf1993.f90 65875 2020-01-28 09:57:58Z j.reyns $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/calseddf1993.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Compute sediment diffusion coefficient

@@ -18,7 +18,7 @@ function varargout=waquafil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,8 +43,8 @@ function varargout=waquafil(FI,domain,field,cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/waquafil.m $
-%   $Id: waquafil.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/waquafil.m $
+%   $Id: waquafil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 
@@ -241,11 +241,19 @@ if DataRead
             ThinDam=1;
             DimFlag(T_)=1;
             idx{T_}=1;
-        case 'weirs'
+        case {'weir crest level', 'weir sill level (low M/N)', 'weir sill level (high M/N)', 'weir crest length', 'weir slope (low M/N)', 'weir slope (high M/N)', 'weir vegetation height', 'weir vegetation density', 'weir vegetation drag'}
             Props.NVal=4;
             ThinDamVal_in_same_call=1;
             ThinDam=1;
             idx{T_}=1;
+        case 'weir flow condition' 
+            Props.NVal=6;
+            ThinDamVal_in_same_call=1;
+            ThinDam=1;
+        case {'weir unit discharge', 'weir overflow depth', 'weir velocity', 'weir head loss'}
+            Props.NVal=4;
+            ThinDamVal_in_same_call=1;
+            ThinDam=1;
         case 'temporarily inactive velocity points'
             Props.NVal=2;
             ThinDam=1;
@@ -273,7 +281,7 @@ if DataRead
             else
                 [val{1:3+readT}]=waquaio(FI,Props.Exper,Props.WaqIO,idx{DimFlag~=0});
             end
-        case 4
+        case {4,6}
             if ThinDamVal_in_same_call
                 [val{1:4+readT}]=waquaio(FI,Props.Exper,Props.WaqIO,idx{DimFlag~=0});
             else
@@ -283,7 +291,7 @@ if DataRead
                 [val{3:4+readT}]=waquaio(FI,Props.Exper,Props.WaqIO,idx{DimFlag~=0});
             end
     end
-    switch Props.Name,
+    switch Props.Name
         case {'water level stations','velocity stations'}
             x=val{1};
             y=val{2};
@@ -412,9 +420,18 @@ switch Props.NVal
         Ans.XComp=val{1};
         Ans.YComp=val{2};
         Ans.ZComp=val{3};
-    case 4
+    case {4,6}
         Ans.XDam=val{1};
         Ans.YDam=val{2};
+        if Props.NVal==6
+            switch Props.Name
+                case 'weir flow condition'
+                    transform = [1 2 0 0 3 0 0 4 5];
+                    val{3} = transform(val{3}+5);
+                    val{4} = transform(val{4}+5);
+                    Ans.Classes = {'subcritical flow in negative direction', 'critical flow in negative direction', 'no flow across weir', 'critical flow in positive direction', 'subcritical flow in positive direction'};
+            end
+        end
         Ans.XDamVal=val{3};
         Ans.YDamVal=val{4};
 end
@@ -452,12 +469,24 @@ DataProps={'depth grid'               ''       [0 0 1 1 0]  0        0      0   
     'thin dams'                       ''       [0 0 1 1 0]  0        0      0     'd'   'd'       ''     ''      'drywet'    ''         'SOLUTION_DRYWET'
     'temporarily inactive velocity points' ...
     ''       [1 0 1 1 0]  0        0      0     'd'   'd'       ''     ''      'drywet'    ''         'SOLUTION_DRYWET'
-    'weirs'                           ''       [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs'     ''         'MESH_WEIPOS'
+    'weir crest level'                'm'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs-cresth'   ''    'MESH_WEIPOS'
+    'weir sill level (low M/N)'       'm'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs-sill1'    ''    'MESH_WEIPOS'
+    'weir sill level (high M/N)'      'm'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs-sill2'    ''    'MESH_WEIPOS'
+    'weir crest level'                'm'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-cresth ' ''    'MESH_WEIRS'
+    'weir sill level (low M/N)'       'm'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-sill1'   ''    'MESH_WEIRS'
+    'weir sill level (high M/N)'      'm'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-sill2'   ''    'MESH_WEIRS'
+    'weir crest length'               ''       [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-crestl'  ''    'MESH_WEIRS'
+    'weir slope (low M/N)'            '-'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-talud1'  ''    'MESH_WEIRS'
+    'weir slope (high M/N)'           '-'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-talud2'  ''    'MESH_WEIRS'
+    'weir vegetation height'          'm'      [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-vegh'    ''    'MESH_WEIRS'
+    'weir vegetation density'         ''       [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-vegdens' ''    'MESH_WEIRS'
+    'weir vegetation drag'            ''       [0 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-vegdrag' ''    'MESH_WEIRS'
     '-------'                         ''       [0 0 0 0 0]  0        0      0     ''    ''        ''     ''      ''          ''         ''
     'wind'                            'm/s'    [1 0 1 1 0]  1        0      2     'z'   'z'       ''     ''      'wind'      ''         'SOLUTION_WIND'
     'wind'                            'm/s'    [1 0 1 1 0]  1        0      2     'z'   'z'       ''     ''      'wind'      ''         'FORCINGS_SVWP_WINDU'
     'pressure'                        'Pa'     [1 0 1 1 0]  1        0      1     'z'   'z'       ''     ''      'press'     ''         'SOLUTION_PRESS'
     'pressure'                        'Pa'     [1 0 1 1 0]  1        0      1     'z'   'z'       ''     ''      'press'     ''         'FORCINGS_SVWP_PRESSURE'
+    'Charnock parameter'              '-'      [1 0 1 1 0]  1        0      1     'z'   'z'       ''     ''      'charnock'  ''         'SOLUTION_CHARNOCK'
     '-------'                         ''       [0 0 0 0 0]  0        0      0     ''    ''        ''     ''      ''          ''         ''
     'wave height'                     'm'      [1 0 1 1 0]  1        0      1     'z'   'z'       ''     ''      'hrms'      ''         'COEFF_FLOW_WAVES'
     'wave vector'                     'm'      [1 0 1 1 0]  1        0      2     'z'   'z'       ''     ''      'wvec'      ''         'COEFF_FLOW_WAVES'
@@ -475,6 +504,11 @@ DataProps={'depth grid'               ''       [0 0 1 1 0]  0        0      0   
     'roughness Chezy C'            'm^{1/2}/s' [1 0 1 1 0]  0        0     0.9    'd'   'd'       ''     ''      'chezy'     ''         'SOLUTION_FLOW_CZ'
     'head'                            'm'      [1 0 1 1 0]  1        0      1     'z'   'z'       ''     ''      'head'      ''         'SOLUTION_FLOW_SEP'
     'horizontal viscosity'            'm^2/s'  [1 0 1 1 0]  1        0      1     'z'   'z'       ''     ''      'hvisco'    ''         'SOLUTION_FLOW_TOTALHORVISC'
+    %'weir flow condition'             ''       [1 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-fc' ''         'SOLUTION_FLOW_KCONDW'
+    'weir unit discharge'             'm^3/m'  [1 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-q'  ''         'SOLUTION_FLOW_WEIRQ'
+    'weir overflow depth'             'm'      [1 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-h'  ''         'SOLUTION_FLOW_WEIRH'
+    'weir velocity'                   'm/s'    [1 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-u'  ''         'SOLUTION_FLOW_WEIRVL'
+    'weir head loss'                  'm'      [1 0 1 1 0]  0        0     0.6    'd'   'd'       ''     ''      'weirs2-de' ''         'SOLUTION_FLOW_WEIRDE'
     '-------'                         ''       [0 0 0 0 0]  0        0      0     ''    ''        ''     ''      ''          ''         ''
     'non-hydrostatic pressure'        'Pa'     [1 0 1 1 1]  1        0      1     'z'   'z'       'c'    ''      'pressure'  ''         'SOLUTION_HYDRODYNAMIC_PRESSURE'
     '--substances'                    ''       [1 0 1 1 1]  1        0      1     'z'   'z'       'c'    ''      ''          ''         'SOLUTION_TRANS'
@@ -557,6 +591,27 @@ else
     error('Unknown SDS type: cannot locate grid dimension characteristics.')
 end
 %
+stagwflag = 11;
+if waqua('exists',FI,eName,'MESH01_GENERAL_DIMENSIONS')
+    mgd = waqua('read',FI,eName,'MESH01_GENERAL_DIMENSIONS');
+    stagwflag = mgd(8);
+end
+if stagwflag~=11 && stagwflag~=13
+    ui_message('warning','Unexpected value (%i) for MESH01_GENERAL_DIMENSIONS(8): 11 and 13 supported',stagwflag)
+    stagwflag = 11;
+end
+%
+% 0 = wind speed in the svwp file
+% 1 = wind stress in the svwp file
+% 2 = cumulative wind stress in the svwp file
+% 3 = cumulative wind stress in the svwp file, conversion to times in between.
+% 4 = external forces in the svwp file --> SOLUTION_EXTFORCE instead of SOLUTION_WIND
+istress = 0;
+if waqua('exists',FI,eName,'CONTROL_SVWP_ICWINA')
+    csi = waqua('read',FI,eName,'CONTROL_SVWP_ICWINA');
+    istress = csi(2);
+end
+%
 maxmin_quant = {'time','water level','velocity in m direction','velocity in n direction','velocity magnitude','salinity','temperature','constituent concentration','velocity in x direction','velocity in y direction'};
 maxmin_var = {'','SEP','UP','VP','MGN','SAL','TEMP','RP'};
 maxmin_qcons = 8;
@@ -589,6 +644,30 @@ for j=1:length(Out1)
         OutIn=[];
     else
         switch OutIn.Name
+            case {'weir crest level', 'weir sill level (low M/N)', 'weir sill level (high M/N)'}
+                % remove old style weirs if new style is present
+                if ~strcmp(OutIn.Char,'MESH_WEIRS')  && any(strcmp('MESH_WEIRS',chars))
+                    OutIn=[];
+                end
+            case {'weir flow condition', 'weir unit discharge', 'weir overflow depth', 'weir velocity', 'weir head loss'}
+                % remove time varying weir quantities if the weir location information is missing
+                if ~any(strcmp('MESH_WEIRS',chars))
+                    OutIn=[];
+                end
+            case {'wind','pressure'}
+                switch stagwflag
+                    case 11
+                        OutIn.Loc = 'd';
+                        OutIn.ReqLoc = 'd';
+                    case 13
+                        % WIND at u/v, PRESSURE at z - u/v to z averaging done in waquaio.m
+                    otherwise
+                        % caught above
+                end
+                if strcmp(OutIn.Name,'wind') && istress==1
+                    OutIn.Name = 'wind stress';
+                    OutIn.Units = 'N/m2';
+                end
             case 'horizontal velocity (station)'
                 if kflag
                     OutIn.DimFlag(K_)=0;
@@ -693,13 +772,13 @@ for j=1:length(Out1)
                     end
                     for s=1:length(Subs)-1
                         OutIn.WaqIO=[nm Subs{s}];
-                        OutIn.Name=[deblank2(lower(Subs{s})) ct];
+                        OutIn.Name=[strtrim(lower(Subs{s})) ct];
                         OutIn.Exper=eName;
                         i=i+1;
                         Out(i)=OutIn;
                     end
                     OutIn.WaqIO=[nm Subs{end}];
-                    OutIn.Name=[deblank2(lower(Subs{end})) ct];
+                    OutIn.Name=[strtrim(lower(Subs{end})) ct];
                 end
             case {'velocity (barrier)','flow-through height (barrier)','energy loss (barrier)'}
                 dimen=waqua('readsds',FI,eName,'MESH_IDIMEN');

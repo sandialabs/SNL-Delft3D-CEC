@@ -22,11 +22,13 @@ FINCLUDES += \
 	-I$(top_builddir)/engines_gpl/flow2d3d/packages/data/include
 
 FMODULES += \
-        -I$(NETCDFROOT)/include \
+	-I$(top_builddir)/utils_gpl/morphology/packages/morphology_data/src \
 	-I$(top_builddir)/utils_gpl/morphology/packages/morphology_kernel/src \
 	-I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src \
 	-I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common_mpi/src \
 	-I$(top_builddir)/utils_lgpl/ec_module/packages/ec_module/src \
+	-I$(top_builddir)/utils_lgpl/io_netcdf/packages/io_netcdf/src \
+    -I$(top_builddir)/utils_lgpl/io_hyd/packages/io_hyd/src \
 	-I$(top_builddir)/utils_lgpl/delftio/packages/delftio/src/diof90 \
 	-I$(top_builddir)/utils_lgpl/delftio/packages/delftio/src/delftio_sync \
 	-I$(top_builddir)/engines_gpl/flow2d3d/packages/data/src/basics \
@@ -38,7 +40,6 @@ FMODULES += \
 #Sources
 libIOOutput_la_SOURCES = \
          wrtarray.f90 \
-         wrturbine.f90 \
          calbed.f90 \
          dirint.f90 \
          dp999.f90 \
@@ -63,7 +64,6 @@ libIOOutput_la_SOURCES = \
          rdtimc.f90 \
          rdtimw.f90 \
          realfileversion.f90 \
-         rstcom.f90 \
          rwbotc.f90 \
          rwbotc_double.f90 \
          setwav.f90 \
@@ -95,14 +95,14 @@ libIOOutput_la_SOURCES = \
          wrihisbal.f90 \
          wrihisdad.f90 \
          wrihisdis.f90 \
+         wrimapdad.f90 \
          wrimap.f90 \
          wrirst.f90 \
          wrkenc.f90 \
          wrkent.f90 \
          wrmfluff.f90 \
          wrmorm.f90 \
-         wrmorm1.f90 \
-         wrmorm2.f90 \
+         wrmorst.f90 \
          wrparm.f90 \
          wrplot.f90 \
          wrrolm.f90 \
@@ -136,7 +136,6 @@ libIOOutput_la_SOURCES = \
          wrwaqsrf.F90 \
          wrwaqvol.f90 \
          wrwavh.f90 \
-         wrxbm.f90 \
          zrtc.f90
 
 #-------------------------------------------------------------------------------

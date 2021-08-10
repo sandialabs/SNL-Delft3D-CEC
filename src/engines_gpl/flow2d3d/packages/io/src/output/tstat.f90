@@ -17,12 +17,12 @@ subroutine tstat(prshis    ,selhis    ,rhow      ,zmodel    ,nostat    , &
                & zssv      ,sbuu      ,sbvv      , &
                & zhs       ,ztp       ,zdir      ,zrlabd    ,zuorb     , &
                & hrms      ,tp        ,teta      ,rlabda    ,uorb      , &
-               & wave      ,zrca      ,windu     ,windv     , &
+               & wave      ,zrca      ,windu     ,windv     ,windcd    , &
                & zwndsp    ,zwnddr    ,patm      ,zairp     ,wind      , &
-               & precip    ,evap      ,zprecp    ,zevap     ,gdp       )
+               & precip    ,evap      ,zprecp    ,zevap     ,zwndcd    , gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -46,8 +46,8 @@ subroutine tstat(prshis    ,selhis    ,rhow      ,zmodel    ,nostat    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: tstat.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/tstat.f90 $
+!  $Id: tstat.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/tstat.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Updates the monitoring station informations at
@@ -134,6 +134,7 @@ subroutine tstat(prshis    ,selhis    ,rhow      ,zmodel    ,nostat    , &
     real(fp)  , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub, kmax, lstsci), intent(in)  :: r1     !  Description and declaration in esm_alloc_real.f90
     real(fp)  , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub, lsedtot)     , intent(in)  :: sbuu   !  Description and declaration in esm_alloc_real.f90
     real(fp)  , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub, lsedtot)     , intent(in)  :: sbvv   !  Description and declaration in esm_alloc_real.f90
+    real(fp)  , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub)              , intent(in)  :: windcd !  Description and declaration in esm_alloc_real.f90
     real(fp)  , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub)              , intent(in)  :: windu  !  Description and declaration in esm_alloc_real.f90
     real(fp)  , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub)              , intent(in)  :: windv  !  Description and declaration in esm_alloc_real.f90
     real(fp)  , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub)              , intent(in)  :: patm   !  Description and declaration in esm_alloc_real.f90
@@ -150,6 +151,7 @@ subroutine tstat(prshis    ,selhis    ,rhow      ,zmodel    ,nostat    , &
     real(fp)  , dimension(nostat)                                                , intent(out) :: ztp
     real(fp)  , dimension(nostat)                                                , intent(out) :: zuorb
     real(fp)  , dimension(nostat)                                                , intent(out) :: zwndsp
+    real(fp)  , dimension(nostat)                                                , intent(out) :: zwndcd
     real(fp)  , dimension(nostat)                                                , intent(out) :: zwnddr
     real(fp)  , dimension(nostat)                                                , intent(out) :: zairp
     real(fp)  , dimension(nostat)                                                , intent(out) :: zprecp !  Description and declaration in esm_alloc_real.f90
@@ -195,7 +197,6 @@ subroutine tstat(prshis    ,selhis    ,rhow      ,zmodel    ,nostat    , &
     integer :: ndm
     integer :: nm
     integer :: nmd
-    real(fp):: sqrt2
 !
 !! executable statements -------------------------------------------------------
 !
@@ -655,6 +656,7 @@ subroutine tstat(prshis    ,selhis    ,rhow      ,zmodel    ,nostat    , &
        zwndsp = -999.0_fp
        zwnddr = -999.0_fp
        zairp  = -999.0_fp
+       zwndcd = -999.0_fp
        do ii = 1, nostat
           m = mnstat(1, ii)
           if (m<0) cycle
@@ -670,6 +672,7 @@ subroutine tstat(prshis    ,selhis    ,rhow      ,zmodel    ,nostat    , &
           if (zwnddr(ii)>=360.0_fp) zwnddr(ii) = zwnddr(ii) - 360.0_fp
           !
           zairp(ii) = patm(n, m)
+          zwndcd(ii)= windcd(n,m)
           !
        enddo
     endif
@@ -696,7 +699,6 @@ subroutine tstat(prshis    ,selhis    ,rhow      ,zmodel    ,nostat    , &
     ! Store quantities specific for waves in defined stations
     !
     if (wave) then
-       sqrt2 = sqrt(2.0_fp)
        zhs    = -999.0_fp
        ztp    = -999.0_fp
        zdir   = -999.0_fp

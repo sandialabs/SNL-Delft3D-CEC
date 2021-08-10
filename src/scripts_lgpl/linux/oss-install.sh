@@ -2,6 +2,7 @@
 
 globalErrorLevel=0
 
+
 # This script uses the command ldd to collect all dynamic libraries used:
 gatherScript=scripts_lgpl/linux/gatherlibraries.rb
 # The following libraries must be removed from the list created by gatherScript:
@@ -9,6 +10,7 @@ gatherScript=scripts_lgpl/linux/gatherlibraries.rb
 # - libraries generated in the oss tree itself
 gatherExcludeFilter="-e '^/lib/' -e '^/lib64/' -e 'flow2d3d' -e 'DelftOnline'"
 gatherIncludeFilter="-e 'expat' -e 'libssl' -e 'libcrypto'"
+
 
 # ===============================
 # === copyFile: handles error ===
@@ -38,6 +40,7 @@ function install_all () {
     echo "installing all open source projects . . ."
 
     d_hydro
+    dimr
     flow2d3d
     # flow2d3d_openda is currently not added to the Linux installation
     #flow2d3d_openda
@@ -53,6 +56,7 @@ function install_all () {
     vs
     nesthd1
     nesthd2
+    shared
 
     return
 }
@@ -66,6 +70,7 @@ function delft3d_flow () {
     echo "installing delft3d-flow . . ."
 
     d_hydro
+    dimr
     flow2d3d
     # flow2d3d_openda is currently not added to the Linux installation
     #flow2d3d_openda
@@ -85,14 +90,19 @@ function delft3d_flow () {
 function d_hydro () {
     echo "installing d_hydro . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
     dest_menu="$dest_main/lnx64/menu/bin"
+    dest_scripts="$dest_main/lnx64/scripts"
 
     mkdir -p $dest_bin
     mkdir -p $dest_menu
+    mkdir -p $dest_scripts
 
     copyFile "$prefix/bin/d_hydro.exe" 					    $dest_bin
     copyFile "$srcdir/engines_gpl/d_hydro/scripts/create_config_xml.tcl"    $dest_menu
+    copyFile "$srcdir/engines_gpl/flow2d3d/scripts/run_*.sh"                $dest_scripts
+    copyFile "$srcdir/engines_gpl/flow2d3d/scripts/submit_dflow2d3d.sh"     $dest_scripts
+    copyFile "$srcdir/engines_gpl/flow2d3d/scripts/rd2d3d.sh"               $dest_scripts
 
     echo "Gathering libraries for d_hydro..."
     cp -u `$gatherScript $prefix/bin/d_hydro.exe | eval grep -v $gatherExcludeFilter` $dest_bin
@@ -105,15 +115,51 @@ function d_hydro () {
 
 
 
+# =======================
+# === INSTALL_DIMR ======
+# =======================
+function dimr () {
+    echo "installing dimr . . ."
+
+    dest_bin="$dest_main/lnx64/dimr/bin"
+    dest_menu="$dest_main/lnx64/menu/bin"
+    dest_scripts="$dest_main/lnx64/scripts"
+
+    mkdir -p $dest_bin
+    mkdir -p $dest_menu
+    mkdir -p $dest_scripts
+
+    copyFile "$srcdir/engines_gpl/dimr/packages/dimr/src/.libs/dimr.exe"    $dest_bin
+    # copy libdimr.so does not work: ldd will show dependency on $srcdir/lib/libdimr.so
+    # => When build on TeamCity it may not work, when removing $srcdir/lib it may not work anymore
+    # Therefore "copy libdimr.so" is replaced by "libtool install" and "libtool finish"
+    # It might be enough to just copy libdimr.la (and libdimr.a) too?
+    libtool --mode=install install -c $srcdir/engines_gpl/dimr/packages/dimr_lib/src/libdimr.la $dest_bin/libdimr.la
+    libtool --finish $dest_bin/libdimr.la
+    copyFile "$srcdir/engines_gpl/dimr/packages/dimr_lib/src/.libs/libdimr.lai"    $dest_bin
+    copyFile "$srcdir/engines_gpl/d_hydro/scripts/create_config_xml.tcl"           $dest_menu
+    copyFile "$srcdir/engines_gpl/dimr/scripts/generic/lnx64/*"                    $dest_scripts
+
+    echo "Gathering libraries for dimr..."
+    cp -u `$gatherScript $srcdir/engines_gpl/dimr/packages/dimr/src/.libs/dimr.exe $prefix/lib/libdimr.so | eval grep -v $gatherExcludeFilter` $dest_bin
+    cp -u `$gatherScript $srcdir/engines_gpl/dimr/packages/dimr/src/.libs/dimr.exe $prefix/lib/libdimr.so | eval grep $gatherIncludeFilter` $dest_bin
+
+    # chrpath -r \$ORIGIN $dest_bin/d_hydro.exe
+
+    return
+}
+
+
+
 # ========================
 # === INSTALL FLOW2D3D ===
 # ========================
 function flow2d3d () {
-    echo "installing flow2d3d . . ."
+    echo "installing dflow2d3d . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
-    dest_default="$dest_main/lnx64/flow2d3d/default"
-    dest_scripts="$dest_main/lnx64/flow2d3d/scripts"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
+    dest_default="$dest_main/lnx64/dflow2d3d/default"
+    dest_scripts="$dest_main/lnx64/dflow2d3d/scripts"
     dest_plugins="$dest_main/lnx64/plugins/bin"
 
     mkdir -p $dest_bin
@@ -138,7 +184,7 @@ function flow2d3d () {
     copyFile "$prefix/bin/esm_info"                                 $dest_bin
     copyFile "$srcdir/engines_gpl/flow2d3d/default/*"               $dest_default
 
-    echo "Gathering libraries for flow2d3d..."
+    echo "Gathering libraries for dflow2d3d..."
     cp -u `$gatherScript $prefix/lib/libflow2d3d*.so $prefix/lib/libDelftOnline.so $prefix/bin/esm_* | eval grep -v $gatherExcludeFilter` $dest_bin
     cp -u `$gatherScript $prefix/lib/libDelftOnline.so | eval grep -v $gatherExcludeFilter` $dest_plugins
 
@@ -151,11 +197,11 @@ function flow2d3d () {
 # === INSTALL FLOW2D3D_OPENDA ===
 # ===============================
 function flow2d3d_openda () {
-    echo "installing flow2d3d_openda . . ."
+    echo "installing dflow2d3d_openda . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
-    dest_default="$dest_main/lnx64/flow2d3d/default"
-    dest_scripts="$dest_main/lnx64/flow2d3d/scripts"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
+    dest_default="$dest_main/lnx64/dflow2d3d/default"
+    dest_scripts="$dest_main/lnx64/dflow2d3d/scripts"
     dest_plugins="$dest_main/lnx64/plugins/bin"
 
     mkdir -p $dest_bin
@@ -195,16 +241,22 @@ function flow2d3d_openda () {
 function waq () {
     echo "installing delwaq . . ."
 
-    dest_bin="$dest_main/lnx64/waq/bin"
-    dest_default="$dest_main/lnx64/waq/default"
+    dest_bin="$dest_main/lnx64/dwaq/bin"
+    dest_default="$dest_main/lnx64/dwaq/default"
+    dest_scripts="$dest_main/lnx64/scripts"
 
     mkdir -p $dest_bin
     mkdir -p $dest_default
+    mkdir -p $dest_scripts
 
-    copyFile "$prefix/bin/delwaq1"                    $dest_bin
-    copyFile "$prefix/bin/delwaq2"                    $dest_bin
-    copyFile "$prefix/lib/libwaq_plugin_wasteload.so" $dest_bin
-    copyFile "$srcdir/engines_gpl/waq/default/*"          $dest_default
+    copyFile "$prefix/bin/delwaq1"                           $dest_bin
+    copyFile "$prefix/bin/delwaq2"                           $dest_bin
+    copyFile "$prefix/lib/libwaq_plugin_wasteload.so"        $dest_bin
+    copyFile "$srcdir/engines_gpl/waq/default/bloom.spe"     $dest_default
+    copyFile "$srcdir/engines_gpl/waq/default/bloominp.d09"  $dest_default
+    copyFile "$srcdir/engines_gpl/waq/default/proc_def.dat"  $dest_default
+    copyFile "$srcdir/engines_gpl/waq/default/proc_def.def"  $dest_default
+    copyFile "$srcdir/engines_gpl/waq/scripts/run*.sh"       $dest_scripts
 
     echo "Gathering libraries for delwaq..."
     cp -u `$gatherScript $prefix/bin/delwaq1 $prefix/bin/delwaq2 | eval grep -v $gatherExcludeFilter` $dest_bin
@@ -224,12 +276,15 @@ function waq () {
 function part () {
     echo "installing delpar . . ."
 
-    dest_bin="$dest_main/lnx64/part/bin"
+    dest_bin="$dest_main/lnx64/dpart/bin"
+    dest_scripts="$dest_main/lnx64/scripts"
 
     mkdir -p $dest_bin
+    mkdir -p $dest_scripts
 
-    copyFile "$prefix/bin/delpar"                    $dest_bin
-    copyFile "$prefix/bin/delpar"                    $dest_bin
+    copyFile "$prefix/bin/delpar"                          $dest_bin
+    copyFile "$prefix/bin/delpar"                          $dest_bin
+    copyFile "$srcdir/engines_gpl/part/scripts/run_*.sh"   $dest_scripts
 
     echo "Gathering libraries for delpar..."
     cp -u `$gatherScript $prefix/bin/delpar | eval grep -v $gatherExcludeFilter` $dest_bin
@@ -244,27 +299,40 @@ function part () {
 # === INSTALL WAVE ===
 # ====================
 function wave () {
-    echo "installing wave . . ."
+    echo "installing dwaves . . ."
 
-    dest_bin="$dest_main/lnx64/wave/bin"
-    dest_default="$dest_main/lnx64/wave/default"
+    dest_bin="$dest_main/lnx64/dwaves/bin"
+    dest_default="$dest_main/lnx64/dwaves/default"
     dest_swan_bin="$dest_main/lnx64/swan/bin"
     dest_swan_scripts="$dest_main/lnx64/swan/scripts"
+    dest_esmf_bin="$dest_main/lnx64/esmf/bin"
+    dest_esmf_scripts="$dest_main/lnx64/esmf/scripts"
+    dest_scripts="$dest_main/lnx64/scripts"
 
     mkdir -p $dest_bin
     mkdir -p $dest_default
     mkdir -p $dest_swan_bin
     mkdir -p $dest_swan_scripts
+    mkdir -p $dest_esmf_bin
+    mkdir -p $dest_esmf_scripts
+    mkdir -p $dest_scripts
 
+    copyFile "$prefix/lib/libwave.so"                                $dest_bin
     copyFile "$prefix/bin/wave.exe"                                  $dest_bin
     copyFile "$srcdir/engines_gpl/flow2d3d/default/dioconfig.ini"    $dest_default
     copyFile "$srcdir/third_party_open/swan/bin/linux/*.*"           $dest_swan_bin
-    copyFile "$srcdir/third_party_open/swan/scripts/swan_install.sh" $dest_swan_scripts/swan.sh
+    copyFile "$srcdir/third_party_open/swan/scripts/swan.sh"         $dest_swan_scripts
+    copyFile "$srcdir/third_party_open/esmf/lnx64/bin/*"             $dest_esmf_bin
+    copyFile "$srcdir/third_party_open/esmf/lnx64/scripts/*.*"       $dest_esmf_scripts
+    copyFile "$srcdir/engines_gpl/wave/scripts/run_*.sh"             $dest_scripts
 
-    echo "Gathering libraries for wave..."
+    echo "Gathering libraries for dwaves..."
     cp -u `$gatherScript $prefix/bin/wave.exe | eval grep -v $gatherExcludeFilter` $dest_bin
+    cp -u `$gatherScript $prefix/lib/libwave.so | eval grep -v $gatherFilter` $dest_bin
     echo "Gathering libraries for swan..."
     cp -u `$gatherScript $srcdir/third_party_open/swan/bin/linux/*.exe | eval grep -v $gatherExcludeFilter` $dest_swan_bin
+    echo "Gathering libraries for esmf..."
+    cp -u `$gatherScript $srcdir/third_party_open/esmf/bin/linux/ESMF_RegridWeightGen | eval grep -v $gatherFilter` $dest_esmf_bin
 
     # chrpath -r \$ORIGIN $dest_bin/wave.exe
 
@@ -279,7 +347,7 @@ function wave () {
 function plugin_culvert () {
     echo "installing plugin_culvert . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
 
     mkdir -p $dest_bin
 
@@ -301,7 +369,7 @@ function plugin_culvert () {
 function plugin_delftflow_traform () {
     echo "installing plugin_delftflow_traform . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
 
     mkdir -p $dest_bin
 
@@ -323,7 +391,7 @@ function plugin_delftflow_traform () {
 function datsel () {
     echo "installing datsel . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
 
     mkdir -p $dest_bin
 
@@ -345,7 +413,7 @@ function datsel () {
 function kubint () {
     echo "installing kubint . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
 
     mkdir -p $dest_bin
 
@@ -367,7 +435,7 @@ function kubint () {
 function lint () {
     echo "installing lint . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
 
     mkdir -p $dest_bin
 
@@ -389,8 +457,8 @@ function lint () {
 function mormerge () {
     echo "installing mormerge . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
-    dest_scripts="$dest_main/lnx64/flow2d3d/scripts"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
+    dest_scripts="$dest_main/lnx64/dflow2d3d/scripts"
 
     mkdir -p $dest_bin
     mkdir -p $dest_scripts
@@ -436,7 +504,7 @@ function vs () {
 function nesthd1 () {
     echo "installing nesthd1 . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
 
     mkdir -p $dest_bin
 
@@ -458,7 +526,7 @@ function nesthd1 () {
 function nesthd2 () {
     echo "installing nesthd2 . . ."
 
-    dest_bin="$dest_main/lnx64/flow2d3d/bin"
+    dest_bin="$dest_main/lnx64/dflow2d3d/bin"
 
     mkdir -p $dest_bin
 
@@ -472,6 +540,61 @@ function nesthd2 () {
     return
 }
 
+
+
+
+
+# =======================
+# === INSTALL_SHARED ====
+# =======================
+function shared () {
+    echo "installing shared . . ."
+
+    dest_bin="$dest_main/lnx64/shared"
+
+    mkdir -p $dest_bin
+
+    # This seems to be the most complete set of shared libraries
+    copyFile "$dest_main/lnx64/dflow2d3d/bin/lib*"    $dest_bin
+    # Remove the flow2d3d specific libraries
+    rm -f $dest_bin/libDelftOnline.*
+    rm -f $dest_bin/libflow2d3d.*
+    copyFile "$srcdir/third_party_open/lnxredist/*"    $dest_bin
+    echo This directory is automatically created by script https://svn.oss.deltares.nl/repos/delft3d/trunk/src/scripts_lgpl/linux/oss-install.sh >$dest_bin/readme.txt
+    echo This script is executed via "make ds-install" , install.sh  >>$dest_bin/readme.txt
+    echo Further modifications can be done via a Python script executed via "DIMR_collector" projects in TeamCity >>$dest_bin/readme.txt
+
+    return
+}
+
+
+
+# =======================
+# === INSTALL_ESMF ======
+# =======================
+function gatherESMF () {
+    cp $srcroot/third_party_open/esmf/lnx64/bin/libesmf.so $prefix/lib
+}
+
+
+
+# =======================
+# === INSTALL_SHARED ====
+# =======================
+function gatherDependencies () {
+    echo "Gathering dependent libraries . . ."
+
+    echo "Gathering libraries for lib/* ..."
+    cp -u `$gatherScript $prefix/lib/* | eval grep -v $gatherExcludeFilter` $prefix/lib
+    cp -u `$gatherScript $prefix/lib/* | eval grep $gatherIncludeFilter` $prefix/lib
+
+
+    echo "Gathering libraries for bin/* ..."
+    cp -u `$gatherScript $prefix/bin/* | eval grep -v $gatherExcludeFilter` $prefix/lib
+    cp -u `$gatherScript $prefix/bin/* | eval grep $gatherIncludeFilter` $prefix/lib
+
+    return
+}
 
 
 # ============
@@ -488,7 +611,12 @@ echo oss-install...
 prefix=$1
 dest_main=$2
 project=$3
-srcdir=
+curdir=`pwd`
+
+scriptdirname=`readlink \-f \$0`
+scriptdir=`dirname $scriptdirname`
+srcroot=$scriptdir/../..
+
 
 if [ "$prefix" == '' ]; then
     echo "ERROR: No prefix directory specified as argument of oss-install.sh"
@@ -500,23 +628,25 @@ if [ "$dest_main" == '' ]; then
     exit 1
 fi
 
-if [ "$project" == '' ]; then
-    # Install all engines
-    project=install_all
-fi
+# if [ "$project" == '' ]; then
+#     # Install all engines
+#     project=install_all
+# fi
 
-echo Prefix          : $prefix
-echo Target directory: $dest_main
-echo Project         : $project
+echo Prefix            : $prefix
+echo Target directory  : $dest_main
+echo Project           : $project
+echo Current directory : $curdir
+echo Source root dir   : $srcroot
 
 
-# Change to directory tree where this batch file resides (necessary when oss-install.sh is called from outside of oss/trunk/src)
-scriptdirname=`readlink \-f \$0`
-scriptdir=`dirname $scriptdirname`
-cd $scriptdir/../..
-srcdir=`pwd`
+gatherESMF
 
-$project
+gatherDependencies
+
+# Set executable bit
+cd $prefix/bin
+chmod a+x `find . -type f -exec file {} \; | grep executable | grep -v "\.svn" | cut -d ":" -f 1 | xargs`
 
 cd $srcdir
 

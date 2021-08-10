@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -46,6 +46,8 @@
       use partmem        ! for the interface with Delpar (Tau and VertDisp)
       use timers         ! performance timers
       implicit none
+
+      include 'omp_lib.h'
 
 !     declaration of arguments
 
@@ -134,7 +136,8 @@
          write ( lunut , 2150 ) icopt1
 !                call with record length 0 => ICOPT1 of -4 not allowed
          call opt1 ( icopt1  , lun     , idum    , lchar   , filtype ,
-     &               ldummy  , dtflg3  , 0       , ierr2   , iwar    )
+     &               ldummy  , dtflg3  , 0       , ierr2   , iwar    ,
+     &               .false. )
          if ( ierr2 .gt. 0 ) goto 80
          itype = 2
          call rdtok1 ( lunut  , ilun   , lch    , lstack , cchar  ,
@@ -212,6 +215,8 @@
             nothrd = nint(dlwqdata%values(inothr,1,1))
             write(lunut,2310)
             write(lunut,2320) nothrd
+            if ( nothrd .gt. 0 ) call omp_set_num_threads( nothrd )
+            nothrd = omp_get_max_threads()
          else
             nothrd = 1
          endif
@@ -254,7 +259,8 @@
       write ( lunut , 2020 ) ipopt1
 !                call with record length 0 => IPOPT1 of -4 not allowed
       call opt1 ( ipopt1  , lun     , 33      , lchar   , filtype ,
-     &            ldummy  , dtflg3  , 0       , ierr2   , iwar    )
+     &            ldummy  , dtflg3  , 0       , ierr2   , iwar    ,
+     &            .false. )
       if ( ierr2 .gt. 0 ) goto 80
 
       if ( nopa  .lt. 0 ) then
@@ -376,7 +382,8 @@
       write ( lunut , 2060 ) ifopt1
 !                call with record length NOFUN => IFOPT1 of -4 allowed
       call opt1 ( ifopt1  , lun     , 17      , lchar   , filtype ,
-     &            dtflg2  , dtflg3  , nofun   , ierr2   , iwar    )
+     &            dtflg2  , dtflg3  , nofun   , ierr2   , iwar    ,
+     &            .false. )
       if ( ierr2 .gt. 0 ) goto 80
       if ( nofun .lt. 0 ) then           ! now we read then number of
          itype = 2                       ! functions from the other file
@@ -530,7 +537,8 @@
          do isfun = 1 , nosfun
 !                call with record length NOSEG => IFOP of -4 allowed
             call opt1 ( ifop   , lun    , 17     , lchar  , filtype,
-     &                  dtflg2 , dtflg3 , noseg  , ierr2  , iwar   )
+     &                  dtflg2 , dtflg3 , noseg  , ierr2  , iwar   ,
+     &                  .false.)
             if ( ierr2 .gt. 0 ) goto 80
 
             ! add to the collection
@@ -547,7 +555,8 @@
          ! call with record length 0 => ISOPT1 of -4 not allowed
 
          call opt1 ( isopt1  , lun     , 17      , lchar   , filtype ,
-     &               dtflg2  , dtflg3  , 0       , ierr2   , iwar    )
+     &               dtflg2  , dtflg3  , 0       , ierr2   , iwar    ,
+     &                  .false.)
          if ( ierr2 .gt. 0 ) goto 80
       endif
 

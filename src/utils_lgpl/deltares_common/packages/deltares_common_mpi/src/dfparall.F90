@@ -1,7 +1,7 @@
 module dfparall
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -25,8 +25,8 @@ module dfparall
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dfparall.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common_mpi/src/dfparall.F90 $
+!  $Id: dfparall.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common_mpi/src/dfparall.F90 $
 !!--description-----------------------------------------------------------------
 !
 !   Contains data with respect to parallel process within
@@ -53,13 +53,15 @@ integer, parameter :: ihalon = 3   ! width of halo area in y-direction
 !
 ! Module variables
 !
-integer, save  :: inode  = 0       ! rank of present node
+logical, save  :: mpi_initialized_by_engine
+integer, target, save  :: engine_comm_world
+integer, save  :: inode  = 1       ! rank of present node
 integer, save  :: idir   = 0       ! direction of domain cutting  
                                    ! 1(row n) or 2(column m)
 integer, save  :: nproc  = 0       ! number of nodes
 integer, save  :: dfint  = 0       ! MPI datatype for integers
 integer, save  :: dfloat = 0       ! datatype for real indicating single or double precision
-integer, save  :: dfreal = 0       ! MPI datatype for reals
+integer, save  :: dfreal = 0       ! MPI datatype for (single precision) reals
 integer, save  :: dfdble = 0       ! MPI datatype for double precision
 integer, save  :: dfchar = 0       ! MPI datatype for characters
 integer, save  :: dfmax  = 0       ! MPI collective maximum operation

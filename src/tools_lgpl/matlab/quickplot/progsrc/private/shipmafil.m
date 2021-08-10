@@ -18,7 +18,7 @@ function varargout=shipmafil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -43,8 +43,8 @@ function varargout=shipmafil(FI,domain,field,cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/shipmafil.m $
-%   $Id: shipmafil.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/shipmafil.m $
+%   $Id: shipmafil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 
@@ -205,8 +205,8 @@ if Props.NVal==0
             x0(3,:) = NaN;
             y0 = y0';
             y0(3,:) = NaN;
-            Ans.X = x0;
-            Ans.Y = y0;
+            Ans.X = x0(:);
+            Ans.Y = y0(:);
         case 'realized ship track'
             Ans.X = squeeze(val1(1,1,:));
             Ans.Y = squeeze(val1(2,1,:));

@@ -5,7 +5,7 @@ function qck_anim(cmd,afig,ANISteps)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -30,8 +30,8 @@ function qck_anim(cmd,afig,ANISteps)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/qck_anim.m $
-%   $Id: qck_anim.m 5590 2015-11-16 10:05:03Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/qck_anim.m $
+%   $Id: qck_anim.m 65778 2020-01-14 14:07:42Z mourits $
 
 persistent savedir
 if ~ischar(savedir)

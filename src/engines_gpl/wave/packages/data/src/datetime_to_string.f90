@@ -1,7 +1,7 @@
 function datetime_to_string(date, time) result (dtstring)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ function datetime_to_string(date, time) result (dtstring)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: datetime_to_string.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/data/src/datetime_to_string.f90 $
+!  $Id: datetime_to_string.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/data/src/datetime_to_string.f90 $
 !!--description-----------------------------------------------------------------
 !
 !
@@ -34,6 +34,7 @@ function datetime_to_string(date, time) result (dtstring)
 ! NONE
 !!--declarations----------------------------------------------------------------
 !
+use time_module, only : ymd2jul
 implicit none
 !
 ! Global variables
@@ -56,7 +57,7 @@ integer       :: julday
 !
 !! executable statements -------------------------------------------------------
 !
-   call juldat(date, julday)
+   julday = ymd2jul(date)
    call timdat(julday, time, idate, itime)
    iyear = idate/10000
    imon  = (idate - iyear*10000)/100

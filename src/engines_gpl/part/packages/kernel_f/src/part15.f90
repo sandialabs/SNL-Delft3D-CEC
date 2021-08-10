@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -89,7 +89,7 @@
          if ( .not. yes1 .or. .not. yes2 ) then
             write ( lunpr, * ) " Error in meteomodule at time:", itime
             write (   *  , * ) " Error in meteomodule at time:", itime
-            call srstop(1)
+            call stop_exit(1)
          endif
          do id = 1, noseg
             avelo = wvelo(id)*wvelo(id) + wdir(id)*wdir(id)

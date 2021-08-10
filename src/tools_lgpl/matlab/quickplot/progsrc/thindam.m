@@ -137,7 +137,7 @@ function varargout=thindam(varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -162,8 +162,8 @@ function varargout=thindam(varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/thindam.m $
-%   $Id: thindam.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/thindam.m $
+%   $Id: thindam.m 65778 2020-01-14 14:07:42Z mourits $
 
 %
 % ------- do some initialization
@@ -578,8 +578,8 @@ else
    yw=(ycor([1 1:end-1],[1 1:end-1])+ycor(:,[1 1:end-1])+ycor([1 1:end-1],:)+ycor)/4;
    xcor=xcor(ind);
    ycor=ycor(ind);
-   xwi=xw(ind_S1);
-   ywi=yw(ind_S1);
+   xwi=reshape(xw(ind_S1),size(ind_S1));
+   ywi=reshape(yw(ind_S1),size(ind_S1));
    if ~isempty(xwi)
       I=isnan(xwi(:,1));
       xwi(I,1)=mean(xcor(I,:),2);

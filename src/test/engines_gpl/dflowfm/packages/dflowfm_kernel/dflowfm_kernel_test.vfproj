@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{F5BCA10C-7CBA-4136-A94C-784EC9F09657}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\..\..\..\src\utils_lgpl\ftnunit\packages\ftnunit\$(ConfigurationName)" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="include;$(SolutionDir)third_party\interacter\bin\win32;$(SolutionDir)third_party_open\mpich2\$(PlatformName)\include;$(SolutionDir)third_party_open\Tecplot\include" PreprocessorDefinitions="HAVE_DISPLAY=0;WIN32;HAVE_METIS;HAVE_MPI=$(HAVE_MPI);HAVE_TECPLOT;HAVE_PROJ" WarnInterfaces="true" InitLocalVarToNAN="true" FloatingPointExceptionHandling="fpe0" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" DescriptorDataTypeCheck="true" DescriptorDataSizeCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="&quot;$(SolutionDir)third_party_open\netcdf\netCDF 4.6.1\lib&quot;;$(SolutionDir)third_party_open\metis\lib\$(PlatformName)\$(ConfigurationName);$(SolutionDir)third_party_open\pthreads\bin\$(PlatformName);$(SolutionDir)third_party_open\mpich2\$(PlatformName)\lib;$(SolutionDir)third_party_open\Tecplot\lib\$(PlatformName);$(OSS_UCRTLIBDIR)" IgnoreDefaultLibraryNames="LIBC.lib;LIBCMT.lib;libmmt.lib;libifcoremt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="netcdf.lib wsock32.lib netapi32.lib comctl32.lib kernel32.lib   user32.lib Shlwapi.lib Gdi32.lib Winspool.lib metis.lib pthreadVC2.lib fmpich2.lib tecio.lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="$(SolutionDir)third_party_open\metis\lib\win32\$(PlatformName)\$(ConfigurationName);$(SolutionDir)third_party_open\mpich2\$(PlatformName)\include;$(SolutionDir)third_party_open\Tecplot\include;$(SolutionDir)third_party_open\petsc\petsc-3.10.2\include" PreprocessorDefinitions="HAVE_DISPLAY=0;HAVE_PETSC;WIN32;HAVE_METIS;HAVE_MPI=$(HAVE_MPI);HAVE_TECPLOT;HAVE_PROJ" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="&quot;$(SolutionDir)third_party_open\netcdf\netCDF 4.6.1\lib&quot;;$(SolutionDir)third_party_open\metis\lib\$(PlatformName)\$(ConfigurationName);$(SolutionDir)third_party_open\pthreads\bin\$(PlatformName);$(SolutionDir)third_party_open\mpich2\$(PlatformName)\lib;$(SolutionDir)third_party_open\Tecplot\lib\$(PlatformName);$(SolutionDir)third_party_open\petsc\petsc-3.10.2\lib\x64\Release;$(OSS_UCRTLIBDIR)" IgnoreDefaultLibraryNames="LIBCMT.lib;libifcoremd.lib" SubSystem="subSystemConsole" AdditionalDependencies="netcdf.lib wsock32.lib netapi32.lib comctl32.lib kernel32.lib   user32.lib Shlwapi.lib Gdi32.lib Winspool.lib metis.lib pthreadVC2.lib fmpich2.lib tecio.lib libpetsc.lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd;h;inc"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath=".\src\test_cross_section.f90"/>
+		<File RelativePath=".\src\test_dflowfm_kernel_f.f90"/>
+		<File RelativePath=".\src\test_observations.f90"/>
+		<File RelativePath=".\src\test_observ_Cross_Sections.f90"/>
+		<File RelativePath=".\src\test_iniField_1dField.f90"/>
+		<File RelativePath=".\src\test_MDU_File_Version.f90"/>
+      <File RelativePath=".\src\test_storage_nodes.f90"/>
+		<File RelativePath=".\src\test_roughness.f90"/></Filter></Files>
+	<Globals/></VisualStudioProject>

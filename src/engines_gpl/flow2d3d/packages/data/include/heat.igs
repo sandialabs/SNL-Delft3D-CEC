@@ -1,6 +1,6 @@
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: heat.igs 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/include/heat.igs $$
+!  $Id: heat.igs 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/include/heat.igs $$
 !-------------------------------------------------------------------------------
 type gd_heat
 !
@@ -114,6 +114,12 @@ type gd_heat
                           !  keva>=1: maseva=1
                           !  keva=0 and ktemp=3: maseva=0 (warning generated)
                           !  keva=0 and ktemp=1,2,4 or 5: maseva is set by keyword evamas/maseva
+    integer :: wslake     !  Flag for wind stress curve
+                          !  1=on can only be set when KTEMP = 5
+                          !  0=off Default 
+    integer :: sdlake     !  Flag for stanton and dalton equal to cd
+                          !  1=on can only be set when KTEMP = 5
+                          !  0=off Default
 !
 ! pointers
 !
@@ -134,11 +140,12 @@ type gd_heat
 !
 ! logicals
 !
-    logical :: rhum_file   = .false. !  True when relative humidity is read from input file
-    logical :: tair_file   = .false. !  True when air temperature   is read from input file
-    logical :: clou_file   = .false. !  True when cloudiness        is read from input file
-    logical :: prcp_file   = .false. !  True when precipitation     is read from input file
-    logical :: swrf_file   = .false. !  True when solar radiation   is read from input file
+    logical :: rhum_file   = .false. !  True when relative humidity is read from METEO input file
+    logical :: tair_file   = .false. !  True when air temperature   is read from METEO input file
+    logical :: clou_file   = .false. !  True when cloudiness        is read from METEO input file
+    logical :: prcp_file   = .false. !  True when precipitation     is read from METEO input file
+    logical :: swrf_file   = .false. !  True when solar radiation   is read from METEO input file
+    logical :: scc_file    = .false. !  True when Secchi depth      is read from METEO input file (only ktemp = 5)
     logical :: free_convec = .false. !  True when free convection   is read from input file (only ktemp = 5)
     logical :: solrad_read = .false. !  True when solar radiation   is read from extra column in .tem file (only ktemp = 5)
 !

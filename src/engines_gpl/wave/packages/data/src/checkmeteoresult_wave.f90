@@ -1,7 +1,7 @@
 subroutine checkmeteoresult_wave(success)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine checkmeteoresult_wave(success)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: checkmeteoresult_wave.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/data/src/checkmeteoresult_wave.f90 $
+!  $Id: checkmeteoresult_wave.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/data/src/checkmeteoresult_wave.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Handle the occurence of an error generated in the meteo module
@@ -55,9 +55,7 @@ subroutine checkmeteoresult_wave(success)
        !
        ! Error occurred: write error and stop
        !
-       write(*, '(2a)') 'Error in meteo module: ', trim(message)
-       write(*, '(a)' ) 'Stopping WAVE computation'
-       stop
+       call wavestop(1, 'Error in meteo module: ' // trim(message))
     elseif (message /= '') then
        !
        ! Message or warning issued by meteo module: write message

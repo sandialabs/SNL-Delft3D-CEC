@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include "d_hydro_lib_version.h"
 
-static char d_hydro_lib_version_id [] = {"@(#)Deltares, "d_hydro_lib_program" Version "d_hydro_lib_major"."d_hydro_lib_minor"."d_hydro_lib_revision"."d_hydro_lib_build", "__DATE__", "__TIME__""};
+static char d_hydro_lib_version_id [] = {"@(#)Deltares, " d_hydro_lib_program " Version " d_hydro_lib_major "." d_hydro_lib_minor "." d_hydro_lib_revision "." d_hydro_lib_build ", " __DATE__ ", " __TIME__ ""};
 
 char * getfullversionstring_d_hydro_lib(void)
 {

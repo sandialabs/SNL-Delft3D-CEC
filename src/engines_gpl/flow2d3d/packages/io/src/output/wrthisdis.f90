@@ -5,7 +5,7 @@ subroutine wrthisdis(lundia    ,error     ,filename  ,ithisc    ,zmodel    , &
                    & fds       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine wrthisdis(lundia    ,error     ,filename  ,ithisc    ,zmodel    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrthisdis.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrthisdis.f90 $
+!  $Id: wrthisdis.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrthisdis.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Writes the time varying Discharge group to the NEFIS HIS-DAT file
@@ -55,6 +55,7 @@ subroutine wrthisdis(lundia    ,error     ,filename  ,ithisc    ,zmodel    , &
     character(24)                  , pointer :: date_time
     integer                        , pointer :: celidt
     type (datagroup)               , pointer :: group
+    integer                        , pointer :: io_prec
 !
 ! Global variables
 !
@@ -118,6 +119,7 @@ subroutine wrthisdis(lundia    ,error     ,filename  ,ithisc    ,zmodel    , &
     !
     poscul           => gdp%gdculver%poscul
     date_time        => gdp%gdinttim%date_time
+    io_prec          => gdp%gdpostpr%io_prec
     !
     ierror = 0
     select case (irequest)
@@ -144,21 +146,21 @@ subroutine wrthisdis(lundia    ,error     ,filename  ,ithisc    ,zmodel    , &
           call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ITHISC', ' ', IO_INT4 , 0, longname='timestep number (ITHISC*DT*TUNIT := time in sec from ITDATE)  ')
           call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DATE_TIME', ' ', 24   , 0, longname='Current simulation date and time [YYYY-MM-DD HH:MM:SS.FFFF]') !CHARACTER
        endif
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'RINT', ' ', IO_REAL4  , 2, dimids=(/iddim_nsrc, iddim_lstsc/), longname='Concentrations of the discharge')
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ZQ', ' ', IO_REAL4    , 1, dimids=(/iddim_nsrc/), longname='Momentary discharge', unit='m3/s')
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ZQ_SUM', ' ', IO_REAL4, 1, dimids=(/iddim_nsrc/), longname='Cummulative volume of the discharge', unit='m3')
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'RINT', ' ', io_prec   , 2, dimids=(/iddim_nsrc, iddim_lstsc/), longname='Concentrations of the discharge')
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ZQ', ' ', io_prec     , 1, dimids=(/iddim_nsrc/), longname='Momentary discharge', unit='m3/s')
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ZQ_SUM', ' ', io_prec , 1, dimids=(/iddim_nsrc/), longname='Cumulative volume of the discharge', unit='m3')
        call addelm(gdp, lundia, FILOUT_HIS, grnam, 'MCOR1', ' ', IO_INT4  , 1, dimids=(/iddim_nsrc/), longname='first M coordinate of discharge')
        call addelm(gdp, lundia, FILOUT_HIS, grnam, 'NCOR1', ' ', IO_INT4  , 1, dimids=(/iddim_nsrc/), longname='first N coordinate of discharge')
        call addelm(gdp, lundia, FILOUT_HIS, grnam, 'KCOR1', ' ', IO_INT4  , 1, dimids=(/iddim_nsrc/), longname='first K coordinate of discharge')
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'XCOR1', ' ', IO_REAL4 , 1, dimids=(/iddim_nsrc/), longname='first X coordinate of discharge', unit=xcoordunit)
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'YCOR1', ' ', IO_REAL4 , 1, dimids=(/iddim_nsrc/), longname='first Y coordinate of discharge', unit=ycoordunit)
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ZCOR1', ' ', IO_REAL4 , 1, dimids=(/iddim_nsrc/), longname='first Z coordinate of discharge', unit='m')
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'XCOR1', ' ', io_prec  , 1, dimids=(/iddim_nsrc/), longname='first X coordinate of discharge', unit=xcoordunit)
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'YCOR1', ' ', io_prec  , 1, dimids=(/iddim_nsrc/), longname='first Y coordinate of discharge', unit=ycoordunit)
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ZCOR1', ' ', io_prec  , 1, dimids=(/iddim_nsrc/), longname='first Z coordinate of discharge', unit='m')
        call addelm(gdp, lundia, FILOUT_HIS, grnam, 'MCOR2', ' ', IO_INT4  , 1, dimids=(/iddim_nsrc/), longname='second M coordinate of discharge')
        call addelm(gdp, lundia, FILOUT_HIS, grnam, 'NCOR2', ' ', IO_INT4  , 1, dimids=(/iddim_nsrc/), longname='second N coordinate of discharge')
        call addelm(gdp, lundia, FILOUT_HIS, grnam, 'KCOR2', ' ', IO_INT4  , 1, dimids=(/iddim_nsrc/), longname='second K coordinate of discharge')
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'XCOR2', ' ', IO_REAL4 , 1, dimids=(/iddim_nsrc/), longname='second X coordinate of discharge', unit=xcoordunit)
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'YCOR2', ' ', IO_REAL4 , 1, dimids=(/iddim_nsrc/), longname='second Y coordinate of discharge', unit=ycoordunit)
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ZCOR2', ' ', IO_REAL4 , 1, dimids=(/iddim_nsrc/), longname='second Z coordinate of discharge', unit='m')
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'XCOR2', ' ', io_prec  , 1, dimids=(/iddim_nsrc/), longname='second X coordinate of discharge', unit=xcoordunit)
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'YCOR2', ' ', io_prec  , 1, dimids=(/iddim_nsrc/), longname='second Y coordinate of discharge', unit=ycoordunit)
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ZCOR2', ' ', io_prec  , 1, dimids=(/iddim_nsrc/), longname='second Z coordinate of discharge', unit='m')
        !
        group%grp_dim = iddim_time
        celidt = 0

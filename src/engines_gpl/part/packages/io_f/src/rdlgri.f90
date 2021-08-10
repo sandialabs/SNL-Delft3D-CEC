@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -48,7 +48,7 @@
 !                             lunit( 4), total grid table
 !                             lunit(19), from-to pointer table
 
-!     subroutines called    : srstop   - ends the simulation with return code
+!     subroutines called    : stop_exit   - ends the simulation with return code
 
 !     functions   called    : none.
 
@@ -311,10 +311,10 @@
 !     stop with error
 
   100 write (lunit(2), *) ' Error 4502. reading the file of active grid cells: ', fname(3)
-      call srstop(1)
+      call stop_exit(1)
 
   200 write (lunit(2), *) ' Error 4502. reading the file of total grid cells: ', fname(4)
-      call srstop(1)
+      call stop_exit(1)
 
  1000 format ('     No. of gridpoints in x direction      :',i13/  &
      &        '     No. of gridpoints in y direction      :',i13/  &

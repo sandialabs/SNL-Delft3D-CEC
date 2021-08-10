@@ -16,7 +16,7 @@
 #   Irv.Elshoff@Deltares.NL
 #   2 jul 12
 #
-#   Copyright (C)  Stichting Deltares, 2011-2013.
+#   Copyright (C)  Stichting Deltares, 2011-2019.
 #-------------------------------------------------------------------------------
 
 # This script must be executed in the directory where it resides
@@ -44,7 +44,8 @@ function usage {
     echo "    -intel11.1"
     echo "    -intel12"
     echo "    -intel14 (-intel14.0.3)"
-    echo "WARNING: On h5 currently for Intel only -64bit and -intel14 (intel14.0.3) are supported"
+    echo "    -intel16 (-intel16.0.3)"
+    echo "WARNING: On h5 currently for Intel only -64bit is supported"
     }
 
 
@@ -114,6 +115,9 @@ while [ $# -gt 0 ]; do
         -intel14|-intel14.0.3)
             compiler='intel14'
             ;;
+        -intel16|-intel16.0.3)
+            compiler='intel16'
+            ;;
         -m|-make)
             noMake=1
             ;;
@@ -176,6 +180,13 @@ case $compiler in
         ifortInit="module load $fortranModule"
         iccInit=""
         echo "Using GNU compilers in `witch gfortran`"
+        ;;
+
+    intel16)
+        fortranModule="intel/16.0.3"
+        ifortInit="module load $fortranModule"
+        iccInit=""
+        echo "Using Intel 16.0.3 Fortran ($platform) compiler"
         ;;
 
     intel14)
@@ -289,10 +300,16 @@ fi
 mpichModule=""
 
 if [ "$compiler" = 'gnu' ]; then
-    mpichModule="mpich2/1.4.1_gcc4.9.1"
+    mpichModule="mpich2/3.1.4_gcc_4.9.1"
 else
     # Intel compilers
-    mpichModule="mpich2/1.4.1_intel14.0.3"
+    if [ "$compiler" = 'intel14' ]; then
+        mpichModule="mpich2/3.1.4_intel_14.0.3"
+    else
+        if [ "$compiler" = 'intel16' ]; then
+            mpichModule="mpich2/3.1.4_intel_16.0.3"
+        fi
+    fi
 fi
 initMpich2="module load $mpichModule"
 eval $initMpich2
@@ -304,12 +321,62 @@ fi
 
 
 #---------------------
+# PETSc
+petscModule=""
+
+if [ "$compiler" = 'gnu' ]; then
+    petscModule="petsc/3.4.0_gcc4.9.1_mpich_3.1.4"
+else
+    # Intel compilers
+    if [ "$compiler" = 'intel14' ]; then
+        petscModule="petsc/3.4.0_intel14.0.3_mpich_3.1.4"
+    else
+        if [ "$compiler" = 'intel16' ]; then
+            petscModule="petsc/3.4.0_intel16.0.3_mpich_3.1.4"
+        fi
+    fi
+fi
+initPetsc="module load $petscModule"
+eval $initPetsc
+if [ $? -ne 0 ]; then
+    echo 'ERROR: PETSc initialization fails!'
+    cd $orgdir
+    exit 1
+fi
+
+
+#---------------------
+# METIS
+metisModule=""
+
+if [ "$compiler" = 'gnu' ]; then
+    metisModule="metis/5.1.0_gcc4.9.1"
+else
+    # Intel compilers
+    if [ "$compiler" = 'intel14' ]; then
+        metisModule="metis/5.1.0_intel14.0.3"
+    else
+        if [ "$compiler" = 'intel16' ]; then
+            metisModule="metis/5.1.0_intel16.0.3"
+        fi
+    fi
+fi
+initMetis="module load $metisModule"
+eval $initMetis
+if [ $? -ne 0 ]; then
+    echo 'ERROR: METIS initialization fails!'
+    cd $orgdir
+    exit 1
+fi
+
+
+#---------------------
 # Additional compile flags
 if [ "$compiler" = 'gnu' ]; then
     fflags=''
 else
     # Intel compilers
-    fflags='-threads'
+    fflags=''
 fi
 
 
@@ -330,7 +397,13 @@ if [ "$compiler" = 'gnu' ]; then
     netcdfModule="netcdf/v4.3.2_v4.4.0_gcc_4.9.1"
 else
     # Intel compilers
-    netcdfModule="netcdf/v4.3.2_v4.4.0_intel_14.0.3"
+    if [ "$compiler" = 'intel14' ]; then
+        netcdfModule="netcdf/v4.3.2_v4.4.0_intel_14.0.3"
+    else
+        if [ "$compiler" = 'intel16' ]; then
+            netcdfModule="netcdf/v4.6.1_v4.4.0_intel_16.0.3"
+        fi
+    fi
 fi
 initNetcdf="module load $netcdfModule"
 eval $initNetcdf
@@ -344,14 +417,16 @@ fi
 echo
 echo ===========================================================================
 echo "Loaded modules:"
-echo "$initModule1"
-echo "$initModule2"
-echo "$fortranModule"
-echo "$automakeModule"
-echo "$autoconfModule"
-echo "$libtoolModule"
-echo "$mpichModule"
-echo "$netcdfModule"
+echo "module load $initModule1"
+echo "module load $initModule2"
+echo "module load $fortranModule"
+echo "module load $automakeModule"
+echo "module load $autoconfModule"
+echo "module load $libtoolModule"
+echo "module load $mpichModule"
+echo "module load $petscModule"
+echo "module load $metisModule"
+echo "module load $netcdfModule"
 echo
 echo "Module display of loaded modules:"
 module display $fortranModule
@@ -359,6 +434,8 @@ module display $automakeModule
 module display $autoconfModule
 module display $libtoolModule
 module display $mpichModule
+module display $petscModule
+module display $metisModule
 module display $netcdfModule
 # echo "export ACLOCAL=\"$ACLOCAL\""
 # echo "export AUTOMAKE=\"$AUTOMAKE\""
@@ -399,18 +476,20 @@ fi
 #===============================================================================
 # autogen: sanity checks, libtoolize and autoreconf
 
-log='logs/autogen.log'
+log="`pwd`/logs/autogen.log"
 command="./autogen.sh --verbose &> $log"
-
-log "Running $command"
+log "Running $command in `pwd`"
 eval $command
+cd third_party_open/kdtree2
+log "Running $command in `pwd`"
+eval $command
+cd ../..
 
 if [ $? -ne 0 ]; then
     log "ERROR: Autogen fails!"
     cd $orgdir
     exit 1
 fi
-
 
 #===============================================================================
 # configure: Create makefiles
@@ -437,7 +516,7 @@ command=" \
     AM_FCFLAGS='$LDFLAGSMT_ADDITIONAL $AM_FCFLAGS' \
     FCFLAGS='$flags $fflags $FCFLAGS' \
     AM_LDFLAGS='$LDFLAGSMT_ADDITIONAL $AM_LDFLAGS' \
-        ./configure --prefix=`pwd` $configureArgs &> $log \
+        ./configure --prefix=`pwd` --with-mpi --with-petsc --with-metis=$METIS_DIR $configureArgs &> $log \
     "
 
 log "Running `echo $command | sed 's/ +/ /g'`"
@@ -461,7 +540,7 @@ if [ $noMake -eq 1 ]; then
 fi
 
 log='logs/make.log'
-command="make ds-install &> $log"
+command="FC=mpif90 make ds-install &> $log"
 
 log "Running $command"
 eval $command
@@ -472,6 +551,38 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Build D-Flow FM, only when not in singlePrecision mode
+if [ $useSp -eq 0 ]; then
+    log='logs/make_dflowfm.log'
+    command="FC=mpif90 make ds-install -C engines_gpl/dflowfm &> $log"
+
+    log "Running $command"
+    eval $command
+fi
+
+if [ $? -ne 0 ]; then
+    log "ERROR: Make D-Flow FM fails!"
+    cd $orgdir
+    exit 1
+fi
+
+
+#===============================================================================
+# Post-install cleaning
+log "Executing python script 'dimr_artifacts.py' to clean up installation directory"
+log='logs/post-install.log'
+command="python $maindir/engines_gpl/dimr/scripts/dimr_artifacts.py $maindir &> $log"
+
+log "Running $command"
+eval $command
+
+if [ $? -ne 0 ]; then
+    log "ERROR: post-install fails!"
+    cd $orgdir
+    exit 1
+fi
+
 log "Build finished"
 cd $orgdir
 exit 0
+

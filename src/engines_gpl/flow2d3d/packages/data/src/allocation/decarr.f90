@@ -2,7 +2,7 @@ subroutine decarr(lunmd     ,lundia    ,error     ,runid     , &
                 & prgnm     ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine decarr(lunmd     ,lundia    ,error     ,runid     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: decarr.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/allocation/decarr.f90 $
+!  $Id: decarr.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/allocation/decarr.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Initialises parameters/variables
@@ -69,7 +69,7 @@ subroutine decarr(lunmd     ,lundia    ,error     ,runid     , &
     logical          , pointer :: dredge
     logical          , pointer :: drogue
     logical          , pointer :: wave
-    logical          , pointer :: waveol
+    integer          , pointer :: waveol
     logical          , pointer :: threed
     logical          , pointer :: secflo
     logical          , pointer :: iweflg
@@ -181,7 +181,7 @@ subroutine decarr(lunmd     ,lundia    ,error     ,runid     , &
     wind      = .false.
     snelli    = .false.
     cnstwv    = .false.
-    waveol    = .false.
+    waveol    = 0
     sbkol     = .false.
     bubble    = .false.
     nfl       = .false.

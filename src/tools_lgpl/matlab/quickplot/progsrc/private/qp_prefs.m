@@ -3,7 +3,7 @@ function qp_prefs(UD,mfig,cmd,cmdargs)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function qp_prefs(UD,mfig,cmd,cmdargs)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_prefs.m $
-%   $Id: qp_prefs.m 5634 2015-12-09 12:42:35Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_prefs.m $
+%   $Id: qp_prefs.m 65778 2020-01-14 14:07:42Z mourits $
 
 switch cmd
     case 'preferences'
@@ -37,7 +37,7 @@ switch cmd
         
     case 'organizationname'
         orgn=findobj(gcbf,'tag','organizationname');
-        name=deblank2(get(orgn,'string'));
+        name=strtrim(get(orgn,'string'));
         qp_settings('organizationname',name);
         
     case 'timezonehandling'
@@ -64,6 +64,16 @@ switch cmd
         tzestr=get(tze,'string');
         qp_settings('timezone',tzestr{itze})
         d3d_qp updatetimezone
+        
+    case 'update_showversion'
+        sv=get(gcbo,'value');
+        if sv
+            qp_settings('showversion','on')
+            d3d_qp showversion
+        else
+            qp_settings('showversion','off')
+            d3d_qp hideversion
+        end
         
     case 'prefpane'
         currentpane = get(gcbf,'userdata');
@@ -190,7 +200,7 @@ switch cmd
             end
         end
 
-    case 'colorbar_ratio'
+    case {'colorbar_ratio','export_max_ntimes'}
         newval = round(str2double(get(gcbo,'string')));
         qp_settings(cmd,newval);
         set(gcbo,'string',num2str(newval))

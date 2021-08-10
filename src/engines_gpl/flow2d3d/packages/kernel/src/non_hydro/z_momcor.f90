@@ -12,7 +12,7 @@ subroutine z_momcor(nmmax     ,kmax      ,icx       ,icy       ,s1        , &
                   & gdp )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -36,8 +36,8 @@ subroutine z_momcor(nmmax     ,kmax      ,icx       ,icy       ,s1        , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: z_momcor.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/non_hydro/z_momcor.f90 $
+!  $Id: z_momcor.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/non_hydro/z_momcor.f90 $
 !!--description-----------------------------------------------------------------
 !
 !
@@ -220,7 +220,7 @@ subroutine z_momcor(nmmax     ,kmax      ,icx       ,icy       ,s1        , &
        if (kenm/=0 .or. disch(i)>=0.0_fp) then
           if (k/=0) then
              !
-             ! The order is inportant at dry points (kfsmax=-1)
+             ! The order is important at dry points (kfsmax=-1)
              !
              if (k>kfsmax(nm)) then
                 k = kfsmax(nm)
@@ -255,7 +255,7 @@ subroutine z_momcor(nmmax     ,kmax      ,icx       ,icy       ,s1        , &
           if (kenm/=0 .or. -disch(i)>=0.0_fp) then
              if (k /= 0) then
                 !
-                ! The order is inportant at dry points (kfsmax=-1)
+                ! The order is important at dry points (kfsmax=-1)
                 !
                 if (k>kfsmax(nm)) then
                    k = kfsmax(nm)

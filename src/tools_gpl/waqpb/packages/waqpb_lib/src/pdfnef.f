@@ -1,3 +1,32 @@
+!----- GPL ---------------------------------------------------------------------
+!
+!  Copyright (C)  Stichting Deltares, 2011-2020.
+!
+!  This program is free software: you can redistribute it and/or modify
+!  it under the terms of the GNU General Public License as published by
+!  the Free Software Foundation version 3.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+!  GNU General Public License for more details.
+!
+!  You should have received a copy of the GNU General Public License
+!  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+!
+!  contact: delft3d.support@deltares.nl
+!  Stichting Deltares
+!  P.O. Box 177
+!  2600 MH Delft, The Netherlands
+!
+!  All indications and logos of, and references to, "Delft3D" and "Deltares"
+!  are registered trademarks of Stichting Deltares, and remain the property of
+!  Stichting Deltares. All rights reserved.
+!
+!-------------------------------------------------------------------------------
+!  $Id: pdfnef.f 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/waqpb/packages/waqpb_lib/src/pdfnef.f $
+
       SUBROUTINE PDFNEF ( LUNREP, SERIAL, VERSIO, IERROR)
 C
 C     Deltares
@@ -329,7 +358,7 @@ C
       open(88, file='filid.pptex')
       write(88,'(a30,'' colsep '', a20, '' \\'')')
      *         'Creation date', rundat
-      write(88,'(a30,'' colsep '', i, '' \\'')')
+      write(88,'(a30,'' colsep '', i10, '' \\'')')
      *         'File serial number', serial
       write(88,'(a30,'' colsep '', f12.3, '' \\'')')
      *         'Version processes library', versio

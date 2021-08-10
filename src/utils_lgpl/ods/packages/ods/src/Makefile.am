@@ -6,7 +6,7 @@ lib_LTLIBRARIES = libODS.la
 #-------------------------------------------------------------------------------
 #Sources
 
-libODS_la_LIBADD = ../srcf/libODSf.la ../../../../nefis/packages/nefis/src_so/libNefisSO.la
+libODS_la_LIBADD = ../srcf/libODSf.la ../../../../nefis/packages/nefis/src_so/libnefis.la
 
 # Language: C language
 libODS_la_SOURCES =           \

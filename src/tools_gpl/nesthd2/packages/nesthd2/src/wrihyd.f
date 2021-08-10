@@ -1,8 +1,9 @@
       subroutine wrihyd(lundia,lun   ,bndval,typbnd,nobnd ,notims,
      *                  kmax  ,nolay ,tstart,dtmin )
+      implicit none
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +27,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrihyd.f 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/nesthd2/packages/nesthd2/src/wrihyd.f $
+!  $Id: wrihyd.f 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/nesthd2/packages/nesthd2/src/wrihyd.f $
 !***********************************************************************
 ! Deltares                         marine and coastal management
 !
@@ -42,7 +43,13 @@
 ! subroutines called :
 !***********************************************************************
 
-      real         bndval (nobnd ,notims,kmax  ,1     ,2)
+      double precision tstart
+      integer lundia, itdate, nolay, nobnd, notims, kmax
+      
+      double precision dtmin
+      integer ifmt, ibnd, itim, lun, k, isize
+
+      double precision bndval (nobnd ,notims,kmax  ,1     ,2)
 
       character*15 format
       character* 1 typbnd (nobnd )

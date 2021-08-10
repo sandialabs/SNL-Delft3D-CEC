@@ -1,6 +1,7 @@
 include $(top_srcdir)/common.am
 
 SUBDIRS = \
+    third_party \
     third_party_open \
     utils_lgpl \
     utils_gpl \

@@ -1,7 +1,7 @@
 subroutine del_temp_files(n_swan_grids)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine del_temp_files(n_swan_grids)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: del_temp_files.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/kernel/src/del_temp_files.f90 $
+!  $Id: del_temp_files.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/kernel/src/del_temp_files.f90 $
 !!--description-----------------------------------------------------------------
 !
 !
@@ -51,9 +51,9 @@ subroutine del_temp_files(n_swan_grids)
     integer           :: i
     integer           :: igrid
     integer           :: inest
+    integer           :: istat
     integer           :: itide
     integer           :: fillun
-    integer, external :: new_lun
     integer           :: numtempgrid
     logical           :: ex
     character(256)    :: filnam
@@ -70,10 +70,9 @@ subroutine del_temp_files(n_swan_grids)
        ! Remove temporary swan grid files
        !
        filnam = swan_grids(igrid)%tmp_name
-       inquire (file = trim(filnam), exist = ex)
-       if (ex) then
-          fillun = new_lun()
-          open (fillun, file=trim(filnam), status='unknown')
+       inquire (file = trim(filnam), exist = ex, iostat = istat)
+       if (istat==0 .and. ex) then
+          open (newunit=fillun, file=trim(filnam), status='unknown')
           close(fillun, status='delete')
        endif
        !
@@ -83,10 +82,9 @@ subroutine del_temp_files(n_swan_grids)
        ! 
        do i=1,numtempgrid
           write (filnam,'(a,i3.3)') trim(tmpfiles(i)), igrid
-          inquire (file = trim(filnam), exist = ex)
-          if (ex) then
-             fillun = new_lun()
-             open (fillun, file=trim(filnam), status='unknown')
+          inquire (file = trim(filnam), exist = ex, iostat = istat)
+          if (istat==0 .and. ex) then
+             open (newunit=fillun, file=trim(filnam), status='unknown')
              close(fillun, status='delete')
           endif
        enddo
@@ -101,10 +99,9 @@ subroutine del_temp_files(n_swan_grids)
     else
        do igrid = 1, n_swan_grids
           write (filnam,'(a,i0,2a)') 'hot_', igrid, '_', trim(swan_run%writehottime)
-          inquire (file = trim(filnam), exist = ex)
-          if (ex) then
-             fillun = new_lun()
-             open (fillun, file = trim(filnam))
+          inquire (file = trim(filnam), exist = ex, iostat = istat)
+          if (istat==0 .and. ex) then
+             open (newunit=fillun, file = trim(filnam))
              close (fillun, status = 'delete')
           endif
        enddo
@@ -121,10 +118,9 @@ subroutine del_temp_files(n_swan_grids)
     tmpfiles(7) = 'MUDNOW'
     do i=1,numtemp
        filnam = tmpfiles(i)
-       inquire (file = trim(filnam), exist = ex)
-       if (ex) then
-         fillun = new_lun()
-         open (fillun, file=trim(filnam), status='unknown')
+       inquire (file = trim(filnam), exist = ex, iostat = istat)
+       if (istat==0 .and. ex) then
+         open (newunit=fillun, file=trim(filnam), status='unknown')
          close(fillun, status='delete')
        endif
     enddo

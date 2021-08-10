@@ -18,7 +18,8 @@ FINCLUDES += \
 	-I$(top_srcdir)/utils_lgpl/delftio/include
 
 FMODULES += \
-	-I$(top_builddir)/utils_lgpl/delftio/packages/delftio/src/diof90
+	-I$(top_builddir)/utils_lgpl/delftio/packages/delftio/src/diof90 \
+	-I$(top_srcdir)/utils_lgpl/deltares_common/packages/deltares_common/src
 
 #-------------------------------------------------------------------------------
 #Sources

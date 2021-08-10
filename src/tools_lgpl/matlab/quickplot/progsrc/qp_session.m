@@ -4,7 +4,7 @@ function S = qp_session(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -29,8 +29,8 @@ function S = qp_session(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/qp_session.m $
-%   $Id: qp_session.m 5622 2015-11-29 20:01:26Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/qp_session.m $
+%   $Id: qp_session.m 65778 2020-01-14 14:07:42Z mourits $
 
 switch cmd
     case 'expandables'
@@ -107,9 +107,9 @@ fid = fopen(filename,'r');
 Str = getline(fid);
 Expand = 0;
 while ~isempty(Str)
-    if strcmpi(deblank2(Str),'Expand')
+    if strcmpi(strtrim(Str),'Expand')
         Expand = 1;
-    elseif strcmpi(deblank2(Str),'EndExpand')
+    elseif strcmpi(strtrim(Str),'EndExpand')
         Expand = 0;
     elseif Expand
         args = parseargs(Str);
@@ -658,7 +658,7 @@ for fgi = length(S):-1:1
                             d3d_qp('usemarkerfillcolour',0)
                         else
                             d3d_qp('usemarkerfillcolour',1)
-                            d3d_qp('makerfillcolour',Ops.markerfillcolour)
+                            d3d_qp('markerfillcolour',Ops.markerfillcolour)
                         end
                     end
                     if isfield(Ops,'presentationtype') && strcmp(Ops.presentationtype,'patches')

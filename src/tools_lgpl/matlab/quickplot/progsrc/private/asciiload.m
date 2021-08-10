@@ -6,7 +6,7 @@ function z=asciiload(filename,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -31,8 +31,8 @@ function z=asciiload(filename,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/asciiload.m $
-%   $Id: asciiload.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/asciiload.m $
+%   $Id: asciiload.m 65778 2020-01-14 14:07:42Z mourits $
 
 fid=fopen(filename,'r');
 comment='%';
@@ -55,8 +55,10 @@ if nargin>2
                 j = j+2;
             case 'skiplines'
                 nlines = varargin{j+1};
-                for i = 1:nlines
-                    fgetl(fid);
+                if nlines>0 % if nlines=0, then i would become [] and during line counting it remains []
+                    for i = 1:nlines
+                        fgetl(fid);
+                    end
                 end
                 j = j+2;
             case 'comment'
@@ -70,6 +72,11 @@ end
 ll=0; % line length
 nl=0; % number of data lines processed
 z = zeros(1000,1);
+%
+ncval = 0;
+ijcval = zeros(1000,2);
+cval = cell(1000,1);
+%
 nlalloc = 1000; % number of data lines allocated
 prevcomma=0;
 tryquick=1;
@@ -192,6 +199,13 @@ while ~feof(fid)
                             kyw=next-1;
                             kywval = [];
                         end
+                    case ''''
+                        [A,cnt,err,next] = sscanf(str,' ''%[^'']'' ',1);
+                        ncval = ncval+1;
+                        ijcval(ncval,:) = [nl+1 length(values)+1];
+                        cval{ncval} = A;
+                        kyw=next-1;
+                        kywval=NaN;
                 end
             end
             if kyw>0
@@ -249,3 +263,15 @@ while ~feof(fid)
 end
 fclose(fid);
 z(nl+1:end,:)=[];
+%
+if ncval>0
+    ijcval = ijcval(1:ncval,:);
+    cval = cval(1:ncval);
+    %
+    cols = unique(ijcval(:,2));
+    if length(cols)>1 || cols<size(z,2) || ~isequal(ijcval(:,1)',1:size(z,1))
+        error('String column should be last data column.')
+    else
+        z = {z(:,1:cols-1) cval};
+    end
+end

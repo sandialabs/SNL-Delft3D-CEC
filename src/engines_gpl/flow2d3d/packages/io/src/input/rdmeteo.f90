@@ -1,7 +1,7 @@
 subroutine rdmeteo(gdp, ecwind)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine rdmeteo(gdp, ecwind)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdmeteo.f90 5608 2015-11-25 15:50:42Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdmeteo.f90 $
+!  $Id: rdmeteo.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdmeteo.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Read meteo related items
@@ -77,6 +77,7 @@ subroutine rdmeteo(gdp, ecwind)
    logical                  , pointer :: clou_file
    logical                  , pointer :: prcp_file
    logical                  , pointer :: swrf_file
+   logical                  , pointer :: scc_file
    logical                  , pointer :: solrad_read
    type (gd_heat)           , pointer :: gdheat
    integer                  , pointer :: lundia
@@ -142,6 +143,7 @@ subroutine rdmeteo(gdp, ecwind)
    clou_file     => gdp%gdheat%clou_file
    prcp_file     => gdp%gdheat%prcp_file
    swrf_file     => gdp%gdheat%swrf_file
+   scc_file      => gdp%gdheat%scc_file
    solrad_read   => gdp%gdheat%solrad_read
    gdheat        => gdp%gdheat
    lfsdu         => gdp%gdprocs%lfsdu 
@@ -372,6 +374,7 @@ subroutine rdmeteo(gdp, ecwind)
    clou_file = .false.
    rhum_file = .false.
    tair_file = .false. 
+   scc_file  = .false. 
    !
    filename = ' '
    call prop_get_string(gdp%mdfile_ptr,'*','Fwndgr',filename)
@@ -496,6 +499,26 @@ subroutine rdmeteo(gdp, ecwind)
       swrf_file = .false.
    endif
    !
+   !   Time and space varying Secchi depth
+   !
+   filename = ' '
+   call prop_get_string(gdp%mdfile_ptr,'*','Filscc',filename)
+   if (filename /= ' ') then
+      scc_file  = .true.
+      if (.not.associated(gdp%gdheat%secchi)) then 
+          allocate (gdp%gdheat%secchi(gdp%d%nmlb:gdp%d%nmub), stat = istat)
+          if (istat /= 0) then
+             call prterr(lundia, 'P004', 'memory alloc error for Secchi depth')
+             call d3stop(1, gdp)
+          endif    
+      endif          
+      call prterr(lundia, 'G051', 'Secchi depth specified on a separate equidistant grid')
+      success = addmeteoitem(gdp%runid, filename, sferic, mmaxgl, nmaxgl)
+      call checkmeteoresult(success, gdp)
+   else
+      scc_file = .false.
+   endif
+   !
    !  Subsidence/Uplift 
    !
    filename = ' '
@@ -572,6 +595,16 @@ subroutine rdmeteo(gdp, ecwind)
       endif
    endif
    !
+   ! Time and space varying Secchi depth is only used for ktemp is 4 or 5
+   !
+   if (scc_file) then
+      if (ktemp /= 5) then
+         write(message,'(a,i2)') 'Time and space varying Secchi depth is not used in heat model (ktemp) = ',ktemp
+         call prterr(lundia, 'U021', trim(message))
+         call d3stop(1, gdp)
+      endif
+   endif
+   !
    ! If rhum, clou or tair specified on file, then all two (ktemp=4)/three(ktemp=5)
    ! must be specified on file
    !
@@ -602,80 +635,82 @@ subroutine rdmeteo(gdp, ecwind)
    ! For "Murakami" and "Ocean" model
    !
    if (ktemp==4 .or. ktemp==5) then
-      allocate (gdp%gdheat%secchi(gdp%d%nmlb:gdp%d%nmub), stat = istat)
-      if (istat/=0) then
-         call prterr(lundia, 'U021', 'Rdproc: memory alloc error')
-         call d3stop(1, gdp)
-      endif
-      !
-      secchi      => gdp%gdheat%secchi
-      !
-      secchi      = -1.0
-      extinc      = -1.0
-      !
-      ! NEW INPUT:
-      ! Locate and read 'Secchi' Secchidepth; default value allowed
-      !
-      filename = ' '
-      call prop_get_string(gdp%mdfile_ptr, '*', 'Secchi', filename)
-      if (filename == ' ') filename = 'dummyname'
-      inquire (file = trim(filename), exist = ex)
-      if (ex) then
-         fmttmp = 'formatted'
+      if (.not. scc_file) then
+         allocate (gdp%gdheat%secchi(gdp%d%nmlb:gdp%d%nmub), stat = istat)
+         if (istat/=0) then
+            call prterr(lundia, 'U021', 'Rdproc: memory alloc error')
+            call d3stop(1, gdp)
+         endif
+         !
+         secchi      => gdp%gdheat%secchi
+         !
+         secchi      = -1.0
+         extinc      = -1.0
+         !
+         ! NEW INPUT:
+         ! Locate and read 'Secchi' Secchidepth; default value allowed
+         !
+         filename = ' '
+         call prop_get_string(gdp%mdfile_ptr, '*', 'Secchi', filename)
+         if (filename == ' ') filename = 'dummyname'
+         inquire (file = trim(filename), exist = ex)
+         if (ex) then
+            fmttmp = 'formatted'
          call depfil(lundia    ,error     ,filename  ,fmttmp    , &
                    & secchi    ,1         ,1         ,gdp%griddim)
          if (error) call d3stop(1, gdp)
-      else
-         filename = ' '
-         rdef = secchi(1)
-         call prop_get(gdp%mdfile_ptr, '*', 'Secchi', rdef)
-         secchi = rdef
-      endif
-      !
-      ! ORIGINAL INPUT:
-      ! Locate and read 'Extinc' extiction coefficient for the solar
-      ! insolation; default value allowed
-      !
-      call prop_get(gdp%mdfile_ptr, '*', 'Extinc', extinc)
-      !
-      if (secchi(1) == - 1.0_fp) then
-         if (extinc == - 1.0_fp) then
-            !
-            ! both secchi and extinc not defined by user;
-            ! secchi = default
-            !
-            ! old parametrisation: secchi = 1.7/0.127
-            secchi = 2.0_fp
-            write(message, '(a,f12.7,a)') 'Heat model: Default value used for Secchi depth: ', secchi(1), ' m'
+         else
+            filename = ' '
+            rdef = secchi(1)
+            call prop_get(gdp%mdfile_ptr, '*', 'Secchi', rdef)
+            secchi = rdef
+         endif
+         !
+         ! ORIGINAL INPUT:
+         ! Locate and read 'Extinc' extiction coefficient for the solar
+         ! insolation; default value allowed
+         !
+         call prop_get(gdp%mdfile_ptr, '*', 'Extinc', extinc)
+         !
+         if (secchi(1) == - 1.0_fp) then
+            if (extinc == - 1.0_fp) then
+               !
+               ! both secchi and extinc not defined by user;
+               ! secchi = default
+               !
+               ! old parametrisation: secchi = 1.7/0.127
+               secchi = 2.0_fp
+               write(message, '(a,f12.7,a)') 'Heat model: Default value used for Secchi depth: ', secchi(1), ' m'
+               call prterr(lundia, 'G051', trim(message))
+            else
+               !
+               ! secchi not defined by user;
+               ! secchi = f(extinc)
+               !
+               secchi = 1.7_fp/extinc
+               write(message, '(a,f12.7)') 'Heat model: Extinc specified to be ', extinc
+               call prterr(lundia, 'G051', trim(message))
+            endif
+         !
+         ! secchi is defined by user;
+         ! warning when extinc is defined too
+         !
+         elseif (extinc /= - 1.0_fp) then
+            if (filename == ' ') then
+               write(message, '(a,f12.7,a)') 'Heat model: Secchi depth used instead of Extinc, with value ', secchi(1), ' m'
+            else
+               write(message, '(a,a)') 'Heat model: Extinc value skipped; Secchi depth read from ', trim(filename)
+            endif
             call prterr(lundia, 'G051', trim(message))
+            extinc = -1.0_fp
          else
-            !
-            ! secchi not defined by user;
-            ! secchi = f(extinc)
-            !
-            secchi = 1.7_fp/extinc
-            write(message, '(a,f12.7)') 'Heat model: Extinc specified to be ', extinc
+            if (filename == ' ') then
+               write(message, '(a,f12.7,a)') 'Heat model: Secchi depth specified to be ', secchi(1), ' m'
+            else
+               write(message, '(a,a)') 'Heat model: Secchi depth read from ', trim(filename)
+            endif
             call prterr(lundia, 'G051', trim(message))
          endif
-      !
-      ! secchi is defined by user;
-      ! warning when extinc is defined too
-      !
-      elseif (extinc /= - 1.0_fp) then
-         if (filename == ' ') then
-            write(message, '(a,f12.7,a)') 'Heat model: Secchi depth used instead of Extinc, with value ', secchi(1), ' m'
-         else
-            write(message, '(a,a)') 'Heat model: Extinc value skipped; Secchi depth read from ', trim(filename)
-         endif
-         call prterr(lundia, 'G051', trim(message))
-         extinc = -1.0_fp
-      else
-         if (filename == ' ') then
-            write(message, '(a,f12.7,a)') 'Heat model: Secchi depth specified to be ', secchi(1), ' m'
-         else
-            write(message, '(a,a)') 'Heat model: Secchi depth read from ', trim(filename)
-         endif
-         call prterr(lundia, 'G051', trim(message))
-      endif
+      endif 
    endif
 end subroutine rdmeteo

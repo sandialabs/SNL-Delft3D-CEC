@@ -1,7 +1,7 @@
 subroutine tricom_finish(olv_handle, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine tricom_finish(olv_handle, gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: tricom_finish.F90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/manager/src/tricom_finish.F90 $
+!  $Id: tricom_finish.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/manager/src/tricom_finish.F90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Finalize Delft3D-FLOW computation
@@ -139,32 +139,12 @@ subroutine tricom_finish(olv_handle, gdp)
     integer                             , pointer :: itdiag
     integer                             , pointer :: julday
     integer                             , pointer :: ntstep
-    real(fp)                            , pointer :: tmor
-    real(fp)                            , pointer :: rdc
-    integer                             , pointer :: itmor
-    type (bedbndtype) , dimension(:)    , pointer :: morbnd
-    logical                             , pointer :: densin
     logical                             , pointer :: multi
     character(256)                      , pointer :: mmsyncfilnam
-    real(fp)                            , pointer :: hdt
-    character(6)                        , pointer :: momsol
     real(fp)                            , pointer :: rhow
-    real(fp)                            , pointer :: ag
     integer                             , pointer :: iro
     logical                             , pointer :: wind
-    logical                             , pointer :: temp
-    logical                             , pointer :: const
-    logical                             , pointer :: culvert
-    logical                             , pointer :: dredge
-    logical                             , pointer :: drogue
-    logical                             , pointer :: wave
-    logical                             , pointer :: waveol
-    logical                             , pointer :: threed
-    logical                             , pointer :: secflo
-    logical                             , pointer :: struct
-    logical                             , pointer :: sedim
-    logical                             , pointer :: htur2d
-    logical                             , pointer :: flmd2l
+    integer                             , pointer :: waveol
     logical                             , pointer :: mudlay
     logical                             , pointer :: mudwave
     logical                             , pointer :: coupleact
@@ -175,7 +155,6 @@ subroutine tricom_finish(olv_handle, gdp)
     logical                             , pointer :: wavcmp
     logical                             , pointer :: cnstwv
     logical                             , pointer :: lftrto
-    logical                             , pointer :: snelli
     logical                             , pointer :: sbkol
     integer                             , pointer :: numdomains
     integer                             , pointer :: nummappers
@@ -300,7 +279,7 @@ subroutine tricom_finish(olv_handle, gdp)
     integer(pntrsize)                   , pointer :: namsrc
     character(256)                      , pointer :: restid
     integer                             , pointer :: rtcmod
-    logical                             , pointer :: rtcact
+    integer                             , pointer :: rtcact
     integer                             , pointer :: rtc_domainnr
     character(256)                      , pointer :: sbkConfigFile
     logical                             , pointer :: tstprt
@@ -352,7 +331,6 @@ subroutine tricom_finish(olv_handle, gdp)
     integer                             , pointer :: itrstc        ! Current time counter for the restart file. Start writing after first interval is passed. Last time will always be written to file for ITRSTI > 0 
     integer                             , pointer :: itwav         ! Current time counter for executation of a wave computation (online coupling with wave)
     integer                             , pointer :: itrw          ! Time to read the wave information in case of online wave coupling
-    integer                             , pointer :: initi         ! Control parameter 
     integer                             , pointer :: iphisc        ! Current time counter for printing history data 
     integer                             , pointer :: maxmn         ! Maximum of MMAX and NMAX 
     integer                             , pointer :: npmap         ! Current array counter for printing map data 
@@ -382,7 +360,6 @@ subroutine tricom_finish(olv_handle, gdp)
 !
 !! executable statements -------------------------------------------------------
 !
-    initi               => gdp%gdtricom%initi
     iphisc              => gdp%gdtricom%iphisc
     itima               => gdp%gdtricom%itima
     itlen               => gdp%gdtricom%itlen
@@ -487,32 +464,12 @@ subroutine tricom_finish(olv_handle, gdp)
     itdiag              => gdp%gdinttim%itdiag
     julday              => gdp%gdinttim%julday
     ntstep              => gdp%gdinttim%ntstep
-    tmor                => gdp%gdmorpar%tmor
-    rdc                 => gdp%gdmorpar%rdc
-    itmor               => gdp%gdmorpar%itmor
-    morbnd              => gdp%gdmorpar%morbnd
-    densin              => gdp%gdmorpar%densin
     multi               => gdp%gdmorpar%multi
     mmsyncfilnam        => gdp%gdmorpar%mmsyncfilnam
-    hdt                 => gdp%gdnumeco%hdt
-    momsol              => gdp%gdnumeco%momsol
     rhow                => gdp%gdphysco%rhow
-    ag                  => gdp%gdphysco%ag
     iro                 => gdp%gdphysco%iro
     wind                => gdp%gdprocs%wind
-    temp                => gdp%gdprocs%temp
-    const               => gdp%gdprocs%const
-    culvert             => gdp%gdprocs%culvert
-    dredge              => gdp%gdprocs%dredge
-    drogue              => gdp%gdprocs%drogue
-    wave                => gdp%gdprocs%wave
     waveol              => gdp%gdprocs%waveol
-    threed              => gdp%gdprocs%threed
-    secflo              => gdp%gdprocs%secflo
-    struct              => gdp%gdprocs%struct
-    sedim               => gdp%gdprocs%sedim
-    htur2d              => gdp%gdprocs%htur2d
-    flmd2l              => gdp%gdprocs%flmd2l
     mudlay              => gdp%gdprocs%mudlay
     mudwave             => gdp%gdprocs%mudwave
     coupleact           => gdp%gdprocs%coupleact
@@ -523,7 +480,6 @@ subroutine tricom_finish(olv_handle, gdp)
     wavcmp              => gdp%gdprocs%wavcmp
     cnstwv              => gdp%gdprocs%cnstwv
     lftrto              => gdp%gdprocs%lftrto
-    snelli              => gdp%gdprocs%snelli
     sbkol               => gdp%gdprocs%sbkol
     numdomains          => gdp%gdprognm%numdomains
     nummappers          => gdp%gdprognm%nummappers
@@ -700,8 +656,6 @@ subroutine tricom_finish(olv_handle, gdp)
     ! End of synchronisation point 3
     ! ==============================
     !
-    write (*, *)
-    !
     ! Test routine print at last time step:
     !
     if (tstprt) then
@@ -718,17 +672,9 @@ subroutine tricom_finish(olv_handle, gdp)
     itimc  = modlen(itfinish*itp, itlen)
     !
     ! Write (conditionaly) updated bathymetry to com-file
-    ! The local parameter initi is improperly used. Fortunately it is
-    ! not needed in the rest of this subroutine.
     !
     if (lsed > 0) then
-       if (initi == 3) then
-          initi = 5
-       else
-          initi = 4
-       endif
-       !
-       call rwbotc(comfil    ,lundia    ,error     ,initi     ,itima     , &
+       call rwbotc(comfil    ,lundia    ,error     ,itima     , &
                  & itcomi    ,mmax      ,nmax      ,nmaxus    ,r(dp)     , &
                  & r(rbuff)  ,gdp       )
        if (error) goto 9999
@@ -738,22 +684,22 @@ subroutine tricom_finish(olv_handle, gdp)
     !
     call postpr(lundia    ,lunprt    ,error     ,versio    ,comfil    , &
               & trifil    ,runid     ,prsmap    ,prshis    ,selmap    , &
-              & selhis    ,rhow      ,grdang    ,initi     ,dtsec     , &
+              & selhis    ,rhow      ,grdang    ,dtsec     , &
               & nst       ,iphisc    ,npmap     ,itcomc    ,itimc     , &
               & itcur     ,ntcur     ,ithisc    ,itmapc    ,itdroc    , &
               & itrstc    ,ktemp     ,.false.   ,gdp       )
-    if (waveol) then
+    if (waveol==2) then
        !
        ! Perform (last) wave computation (if required) and close communication with
        ! wave module
        !
        if (nst == itwav) then
           if (prec == hp) then
-             call rwbotc_double(comfil    ,lundia    ,error     ,initi     ,itima     , &
+             call rwbotc_double(comfil    ,lundia    ,error     ,itima     , &
                               & itcomi    ,mmax      ,nmax      ,nmaxus    ,d(dps)    , &
                               & r(rbuff)  ,gdp       )
           else
-             call rwbotc(comfil    ,lundia    ,error     ,initi     ,itima     , &
+             call rwbotc(comfil    ,lundia    ,error     ,itima     , &
                        & itcomi    ,mmax      ,nmax      ,nmaxus    ,d(dps)    , &
                        & r(rbuff)  ,gdp       )
           endif
@@ -828,13 +774,13 @@ subroutine tricom_finish(olv_handle, gdp)
     !
     ! Close Communication with RTC if active after normal end
     !
-    if (rtcact .and. rtcmod == dataFromRTCToFLOW .and. rtc_domainnr == 1) then
+    if (rtcact==RTCmodule .and. rtcmod==dataFromRTCToFLOW .and. rtc_domainnr==1) then
        write(*,*) 'Sending close signal to  RTC ...'
        call timer_start(timer_wait, gdp)
        call syncflowrtc_close
        call timer_stop(timer_wait, gdp)
        write(*,*) '... continue'
-       rtcact = .false.
+       rtcact = noRTC
     endif
     !
     ! Close Communication with Couple if active after normal end    

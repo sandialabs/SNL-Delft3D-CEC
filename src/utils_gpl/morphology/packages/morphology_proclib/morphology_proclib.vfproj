@@ -6,7 +6,7 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="include;../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static;../../../../utils_gpl/morphology/lib/$(ConfigurationName)/static" WarnInterfaces="true" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" Interfaces="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\d3dwaq_openpb.dll" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\..\third_party_open\pthreads\bin\win32" IgnoreDefaultLibraryNames="LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="pthreadVCE2.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\d3dwaq_openpb.dll" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\..\third_party_open\pthreads\bin\win32;$(UniversalCRTSdkDir)Lib\10.0.15063.0\ucrt\x86" IgnoreDefaultLibraryNames="LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="pthreadVCE2.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -16,7 +16,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="include;../../../../utils_lgpl/deltares_common/lib/$(ConfigurationName)/static;../../../../utils_gpl/morphology/lib/$(ConfigurationName)/static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OUTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\d3dwaq_openpb.dll" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\..\third_party_open\pthreads\bin\win32" IgnoreDefaultLibraryNames="LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)" GenerateManifest="false" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="pthreadVCE2.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\d3dwaq_openpb.dll" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\..\third_party_open\pthreads\bin\win32;$(UniversalCRTSdkDir)Lib\10.0.15063.0\ucrt\x86" IgnoreDefaultLibraryNames="LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)" GenerateManifest="false" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="pthreadVCE2.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -25,8 +25,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="..\..\lib\$(PlatformName)\$(ConfigurationName)\dynamic" ConfigurationType="typeDynamicLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="utils_lgpl\precision\lib\Debug\static\;include;utils_lgpl\constants\lib\Debug\static\;utils_lgpl\utils_flow\lib\Debug\static\" WarnInterfaces="true" LocalVariableStorage="localStorageAutomatic" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" Interfaces="true"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\d3dwaq_openpb.dll" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\..\third_party_open\pthreads\bin\x64" IgnoreDefaultLibraryNames="LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="pthreadVC2.lib"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="utils_lgpl\precision\lib\Debug\static\;include;utils_lgpl\constants\lib\Debug\static\;utils_lgpl\utils_flow\lib\Debug\static\" WarnInterfaces="true" LocalVariableStorage="localStorageAutomatic" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL" Interfaces="true"/>
+				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\d3dwaq_openpb.dll" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\..\third_party_open\pthreads\bin\x64;$(UniversalCRTSdkDir)Lib\10.0.15063.0\ucrt\x64" IgnoreDefaultLibraryNames="LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="pthreadVC2.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -36,7 +36,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="..\..\lib\$(PlatformName)\$(ConfigurationName)\dynamic" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\d3dwaq_openpb.dll" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\..\third_party_open\pthreads\bin\x64" IgnoreDefaultLibraryNames="LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="pthreadVC2.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\d3dwaq_openpb.dll" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\..\..\third_party_open\pthreads\bin\x64;$(UniversalCRTSdkDir)Lib\10.0.15063.0\ucrt\x64" IgnoreDefaultLibraryNames="LIBCMT.lib;%(IgnoreSpecificDefaultLibraries)" GenerateManifest="false" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="pthreadVC2.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>

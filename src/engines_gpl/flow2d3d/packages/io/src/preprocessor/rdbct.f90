@@ -5,7 +5,7 @@ subroutine rdbct(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                & nbcttm    ,tampab    ,bubble    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine rdbct(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdbct.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/preprocessor/rdbct.f90 $
+!  $Id: rdbct.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/preprocessor/rdbct.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads the boundary condition records from the
@@ -56,7 +56,6 @@ subroutine rdbct(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     !
     integer                    , pointer :: itis
     integer                    , pointer :: itdate
-    real(fp)                   , pointer :: tstop
     real(fp)                   , pointer :: dt
     character*20, dimension(:) , pointer :: keywrd
     character*37, dimension(:) , pointer :: fmtbct
@@ -145,7 +144,6 @@ subroutine rdbct(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     fmtbct      => gdp%gdfmtbct%fmtbct
     keywrd      => gdp%gdkeywtd%keywrd
     itdate      => gdp%gdexttim%itdate
-    tstop       => gdp%gdexttim%tstop
     dt          => gdp%gdexttim%dt
     itis        => gdp%gdrdpara%itis
     julday      => gdp%gdinttim%julday

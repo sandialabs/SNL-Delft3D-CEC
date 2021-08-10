@@ -5,7 +5,7 @@ function ui_inspectstruct(cmd,Title)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -30,8 +30,8 @@ function ui_inspectstruct(cmd,Title)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/ui_inspectstruct.m $
-%   $Id: ui_inspectstruct.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/ui_inspectstruct.m $
+%   $Id: ui_inspectstruct.m 65778 2020-01-14 14:07:42Z mourits $
 
 % valid input argument?
 if nargin==0
@@ -165,7 +165,8 @@ if ~ischar(cmd)
     UD.StructName=StructName;
     UD.Index=[];
     UD.H=H;
-    set(fig,'visible','on','userdata',UD);
+    set(fig,'userdata',UD)
+    set(fig,'visible','on')
     if isempty(UD.Struct)
         Str='  ';
     else
@@ -489,11 +490,11 @@ end
 
 
 function browse_tree(h,event)
-if isempty(event)
+if isstruct(event) && isfield(event,'Key')
+    key = event.Key;
+else
     % mouse
     key = get(get(h,'Parent'),'selectiontype');
-else
-    key = event.Key;
 end
 UD=get(get(h,'parent'),'userdata');
 H=UD.H;

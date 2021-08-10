@@ -3,10 +3,10 @@ subroutine rdtimo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                 & nprttm    ,itfinish  ,iphisf    ,iphisi    ,iphisl    , &
                 & itmapf    ,itmapi    ,itmapl    ,ithisf    ,ithisi    , &
                 & ithisl    ,itcomf    ,itcomi    ,itcoml    ,itrsti    , &
-                & itnflf    ,itnfli    ,itnfll    ,gdp       )
+                & itnflf    ,itnfli    ,itnfll    ,lstsci    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -30,8 +30,8 @@ subroutine rdtimo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdtimo.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdtimo.f90 $
+!  $Id: rdtimo.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdtimo.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads records from the MD-file related to the
@@ -82,6 +82,7 @@ subroutine rdtimo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     integer                          , intent(in)    :: itfinish !  Description and declaration in inttim.igs
     integer                                          :: lundia   !  Description and declaration in inout.igs
     integer                                          :: lunmd    !  Description and declaration in inout.igs
+    integer                                          :: lstsci   !  Description and declaration in esm_alloc_int.f90
     integer                          , intent(in)    :: maxprt
     integer                                          :: nprttm   !!  Number of print times steps
     integer                                          :: nrrec    !!  Pointer to the record number in the MD-file
@@ -441,15 +442,18 @@ subroutine rdtimo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     !
     ! Additional output options
     !
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'AdvFlx', flwoutput%difuflux)
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'CumAFl', flwoutput%cumdifuflux)
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'MomTrm', flwoutput%momentum)
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'Chezy' , flwoutput%chezy)
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'Rough' , flwoutput%roughness)
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'Vortic' , flwoutput%vortic)
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'Z0Cur' , flwoutput%z0cur)
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'Z0Rou' , flwoutput%z0rou)
-    call prop_get_logical(gdp%mdfile_ptr, '*', 'KfMnMx', flwoutput%kf_minmax)
+    if (lstsci>0) then
+       call prop_get_logical(gdp%mdfile_ptr, '*', 'AdvFlx', flwoutput%difuflux)
+       call prop_get_logical(gdp%mdfile_ptr, '*', 'CumAFl', flwoutput%cumdifuflux)
+    endif
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'MomTrm'   , flwoutput%momentum)
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'Chezy'    , flwoutput%chezy)
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'DredgeMap', flwoutput%dredge_map)
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'Rough'    , flwoutput%roughness)
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'Vortic'   , flwoutput%vortic)
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'Z0Cur'    , flwoutput%z0cur)
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'Z0Rou'    , flwoutput%z0rou)
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'KfMnMx'   , flwoutput%kf_minmax)
     if (flwoutput%cumdifuflux) flwoutput%difuflux = .true.
     !
     ! Old flag: WindUV
@@ -470,6 +474,16 @@ subroutine rdtimo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     !
     call prop_get_logical(gdp%mdfile_ptr, '*', 'HdtOut' , flwoutput%halfdt)
     !
+    ! Flag for writing barrier height to history file
+    !
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'HisBar' , flwoutput%hisbar)
+    !
+    ! Flag for writing flow rates and in-/outflow locations of discharges to history file
+    ! For historical reasons this flag is set to true for simulations with culverts.
+    !
+    if (gdp%gdprocs%culvert) flwoutput%hisdis = .true.
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'HisDis' , flwoutput%hisdis)
+    !
     ! Flag for additional timers (print extra timers in tri-diag file)
     !
     call prop_get_logical(gdp%mdfile_ptr, '*', 'AddTim', flwoutput%addtim)
@@ -489,6 +503,10 @@ subroutine rdtimo(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     ! during the whole simulation period instead of with a maximum of 100 warnings
     !
     call prop_get_logical(gdp%mdfile_ptr, '*', 'CflMsg' , flwoutput%cflmsg)
+    !
+    ! Flag for writing wave quantities to the trim-file
+    !
+    call prop_get_logical(gdp%mdfile_ptr, '*', 'MapWav' , flwoutput%waveqnt)
     !
     ! smax
     !

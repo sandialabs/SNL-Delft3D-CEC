@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2013.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -23,8 +23,8 @@
 !  are registered trademarks of Stichting Deltares, and remain the property of  
 !  Stichting Deltares. All rights reserved.                                     
 
-!  $Id: ec_quantity.f90 5609 2015-11-25 17:21:04Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/ec_module/packages/ec_module/src/ec_quantity.f90 $
+!  $Id: ec_quantity.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/ec_module/packages/ec_module/src/ec_quantity.f90 $
 
 !> This module contains all the methods for the datatype tEcQuantity.
 !! @author arjen.markus@deltares.nl
@@ -44,9 +44,9 @@ module m_ec_quantity
    public :: ecQuantityCreate
    public :: ecQuantityFree1dArray
    public :: ecQuantitySet
+   public :: ecQuantitySetUnitsFillScaleOffsetFromNcidVarid
    public :: ecQuantitySetName
-   public :: ecQuantitySetUnits
-   public :: ecQuantitySetVectorMax
+   public :: ecQuantitySetTimeint
    
    contains
       
@@ -79,7 +79,7 @@ module m_ec_quantity
       function ecQuantityFree1dArray(quantityPtr, nQuantities) result (success)
          logical                                     :: success     !< function status
          type(tEcQuantityPtr), dimension(:), pointer :: quantityPtr !< intent(inout)
-         integer                                     :: nQuantities !< number of Quantities
+         integer, intent(inout)                      :: nQuantities !< number of Quantities
          !
          integer :: i     !< loop counter
          integer :: istat !< deallocate() status
@@ -100,50 +100,130 @@ module m_ec_quantity
                if (istat /= 0) success = .false.
             end if
          end if
+         nQuantities = 0
       end function ecQuantityFree1dArray
       
       ! =======================================================================
       
-      !> Change the properties of the Quantity corresponding to quantityId.
-      function ecQuantitySet(instancePtr, quantityId, newName, newUnits, newVectorMax) result(success)
-         logical                               :: success      !< function status
-         type(tEcInstance), pointer            :: instancePtr  !< intent(in)
-         integer,                   intent(in) :: quantityId   !< unique Quantity id
-         character(*),              intent(in) :: newName      !< new name of the Quantity
-         character(*),              intent(in) :: newUnits     !< new units of the Quantity
-         integer,                   intent(in) :: newVectorMax !< new vectormax of the Quantity
+       function ecQuantitySet(instancePtr, quantityId, name,                     &
+                                                       units,                    &
+                                                       vectormax,                &
+                                                       periodic, constant,       &
+                                                       factor,                   &
+                                                       offset,                   &
+                                                       fillvalue,                &
+                                                       timeint,                  &
+                                                       ncid                      &
+                                                     ) result(success)
+
+         logical                               :: success     !< function status
+         type(tEcInstance), pointer            :: instancePtr !< intent(in)
+         integer,                   intent(in) :: quantityId  !< unique Quantity id
+
+         character(len=*),optional :: name
+         character(len=*),optional :: units
+         integer         ,optional :: vectormax
+         logical         ,optional :: periodic, constant
+         real(hp)        ,optional :: factor
+         real(hp)        ,optional :: offset
+         real(hp)        ,optional :: fillvalue
+         integer         ,optional :: timeint
+         integer         ,optional :: ncid
          !
          type(tEcQuantity), pointer :: quantityPtr !< Quantity corresponding to quantityId
-         character(len=maxNameLen)  :: name        !< new name of the Quantity, converted to the correct length
-         character(len=maxNameLen)  :: units       !< new units of the Quantity, converted to the correct length
          !
          success = .false.
          quantityPtr => null()
          !
-         if (len_trim(newName) > maxNameLen) then
-            call setECMessage("ERROR: ec_quantity::ecQuantitySet: The new name string is too long, unable to change name.")
-         else
-            name = newName
-         end if
-         !
-         if (len_trim(newUnits) > maxNameLen) then
-            call setECMessage("ERROR: ec_quantity::ecQuantitySet: The new units string is too long, unable to change units.")
-            return
-         else
-            units = newUnits
-         end if
-         !
          quantityPtr => ecSupportFindQuantity(instancePtr, quantityId)
-         if (associated(quantityPtr)) then
-            quantityPtr%name = name
-            quantityPtr%units = units
-            quantityPtr%vectorMax = newVectorMax
-            success = .true.
-         else
+         if (.not.associated(quantityPtr)) then
             call setECMessage("ERROR: ec_quantity::ecQuantitySet: Cannot find a Quantity with the supplied id.")
          end if
+         if (present(name)) then 
+            if (len_trim(name) > maxNameLen) then
+               call setECMessage("ERROR: ec_quantity::ecQuantitySetName: The new name string is too long, unable to change name.")
+            else
+               quantityPtr%name = name  
+            end if
+         end if
+
+         if (present(units)) quantityPtr%units = units  
+         if (present(vectormax)) quantityPtr%vectormax = vectormax  
+         if (present(periodic)) quantityPtr%periodic = periodic  
+         if (present(constant)) quantityPtr%constant = constant  
+         if (present(factor)) quantityPtr%factor = factor  
+         if (present(offset)) quantityPtr%offset = offset  
+         if (present(fillvalue)) quantityPtr%fillvalue = fillvalue  
+         if (present(timeint)) quantityPtr%timeint = timeint  
+         if (present(ncid)) quantityPtr%ncid = ncid  
+         success = .true.
+         
       end function ecQuantitySet
       
+      !> Change the Units, Fillvalue, Scalefactor and Offset shift of the Quantity corresponding to quantityId
+      !> obtained from the variable varid in the netcdf file ncid 
+      !> all in try-catch fashion: if not available, leave empty or use default
+      function ecQuantitySetUnitsFillScaleOffsetFromNcidVarid(instancePtr, quantityId, ncid, varid) result(success)
+      use netcdf
+      use string_module
+         implicit none
+         logical                               :: success     !< function status
+         type(tEcInstance), pointer            :: instancePtr !< intent(in)
+         integer,                   intent(in) :: quantityId  !< unique Quantity id
+         integer,                   intent(in) :: ncid        !< id of the nc-file 
+         integer,                   intent(in) :: varid       !< id of the variable
+                                                              !< order: new = (old*scale) + offset
+         character(len=:), allocatable  :: units
+         character(len=5)               :: quantidstr
+         integer  :: ierr
+         integer  :: attriblen
+         real(hp) :: add_offset, scalefactor, fillvalue
+
+         success = .false.
+         add_offset = 0.d0
+         scalefactor = 1.d0
+         fillvalue = ec_undef_hp
+         attriblen=0
+         if (nf90_inquire_attribute(ncid, varid, 'units', len=attriblen)==NF90_NOERR) then
+            if (attriblen>0) then
+               allocate(character(len=attriblen) :: units) 
+               units(1:len(units)) = ''
+               if (nf90_get_att(ncid, varid, 'units', units)==NF90_NOERR) then 
+                  call str_upper(units) ! make units attribute case-insensitive 
+                  if (.not.(ecQuantitySet(instancePtr, quantityId, units=units))) return
+               end if
+            end if
+         end if
+
+         write(quantidstr,'(i5.5)') quantityId
+         ierr = nf90_get_att(ncid, varid, '_FillValue', fillvalue)
+         if (ierr==NF90_NOERR) then
+            if (.not.(ecQuantitySet(instancePtr, quantityId, fillvalue=fillvalue))) then
+               call setECMessage("Unable to set fillValue for quantity "//quantidstr)
+               return
+            end if
+         end if
+
+         ierr = nf90_get_att(ncid, varid, 'scale_factor', scalefactor)
+         if (ierr==NF90_NOERR) then
+            if (.not.(ecQuantitySet(instancePtr, quantityId, factor=scalefactor))) then
+               call setECMessage("Unable to set scale factor for quantity "//quantidstr)
+               return
+            end if
+         end if
+
+         ierr = nf90_get_att(ncid, varid, 'add_offset', add_offset)
+         if (ierr==NF90_NOERR) then
+            if (.not.(ecQuantitySet(instancePtr, quantityId, offset=add_offset))) then
+               call setECMessage("Unable to set offset for quantity "//quantidstr)
+               return
+            end if
+         end if
+
+         success = .true.
+         
+      end function ecQuantitySetUnitsFillScaleOffsetFromNcidVarid
+     
       ! =======================================================================
       
       !> Change the name of the Quantity corresponding to quantityId.
@@ -175,12 +255,14 @@ module m_ec_quantity
 
       ! =======================================================================
       
-      !> Change the vectormax of the Quantity corresponding to quantityId.
-      function ecQuantitySetVectorMax(instancePtr, quantityId, newVectorMax) result(success)
+      !> Change the timeinterpolation type of the Quantity corresponding to quantityId.
+      function ecQuantitySetTimeint(instancePtr, quantityId, timeint, periodic, constant) result(success)
          logical                               :: success     !< function status
          type(tEcInstance), pointer            :: instancePtr !< intent(in)
          integer,                   intent(in) :: quantityId  !< unique Quantity id
-         integer,                   intent(in) :: newVectorMax!< new vectormax of the Quantity
+         integer,                   intent(in) :: timeint     !< new vectormax of the Quantity
+         logical, optional,         intent(in) :: periodic    !< periodic time function?
+         logical, optional,         intent(in) :: constant    !< constant value?
          !
          type(tEcQuantity), pointer :: quantityPtr !< Quantity corresponding to quantityId
          !
@@ -189,40 +271,17 @@ module m_ec_quantity
          !
          quantityPtr => ecSupportFindQuantity(instancePtr, quantityId)
          if (associated(quantityPtr)) then
-            quantityPtr%vectorMax = newVectorMax
-            success = .true.
+            quantityPtr%timeint = timeint
+            if (present(periodic)) then
+                   quantityPtr%periodic = periodic
+            endif
+            if (present(constant)) then
+                   quantityPtr%constant = constant
+            endif
+            success = .True.
          else
-            call setECMessage("ERROR: ec_quantity::ecQuantitySetVectorMax: Cannot find a Quantity with the supplied id.")
+            call setECMessage("ERROR: ec_quantity::ecQuantitySetTimeint: Cannot find a Quantity with the supplied id.")
          end if
-      end function ecQuantitySetVectorMax
+      end function ecQuantitySetTimeint
       
-      ! =======================================================================
-      
-      !> Change the units of the Quantity corresponding to quantityId.
-      function ecQuantitySetUnits(instancePtr, quantityId, newUnits) result(success)
-         logical                               :: success     !< function status
-         type(tEcInstance), pointer            :: instancePtr !< intent(in)
-         integer,                   intent(in) :: quantityId  !< unique Quantity id
-         character(*),              intent(in) :: newUnits    !< new units of the Quantity
-         !
-         type(tEcQuantity), pointer :: quantityPtr !< Quantity corresponding to quantityId
-         character(len=maxNameLen)  :: units       !< new units of the Quantity, converted to the correct length
-         !
-         success = .false.
-         quantityPtr => null()
-         !
-         if (len_trim(newUnits) > maxNameLen) then
-            call setECMessage("ERROR: ec_quantity::ecQuantitySetUnits: The new units string is too long, unable to change units.")
-            return
-         else
-            units = newUnits
-         end if
-         quantityPtr => ecSupportFindQuantity(instancePtr, quantityId)
-         if (associated(quantityPtr)) then
-            quantityPtr%units = units
-            success = .true.
-         else
-            call setECMessage("ERROR: ec_quantity::ecQuantitySetUnits: Cannot find a Quantity with the supplied id.")
-         end if
-      end function ecQuantitySetUnits
 end module m_ec_quantity

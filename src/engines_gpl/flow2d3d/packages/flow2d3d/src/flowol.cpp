@@ -1,6 +1,6 @@
 //---- GPL ---------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@
 
 #include "flow2d3d.h"
 #include "flowol.h"
-
+#include <mpi.h>
 
 //-------------------------------------------------------------------------------
 
@@ -55,6 +55,7 @@ FlowOL::FlowOL (
 #if defined (WITH_DELFTONLINE)
     this->dh = dh;
     this->numSubdomains = 0;
+	this->mpiInitialized = false;
 
     // Get DOL options from the configuration tree
 
@@ -118,6 +119,12 @@ FlowOL::FlowOL (
 		// This call is definetely before the mpi_init call in the Fortran part (dfinitmpi.F90)
 		// In Fortran, check whether MPI_Init is already called (with DOL) or not (without DOL)
 		MPI_Init(NULL, NULL);
+		this->mpiInitialized = true;
+		// Pass MPI_COMM_WORLD to "engine_comm_world" of Delft3D-FLOW using BMI interface
+        MPI_Fint *fComm;
+        get_var("engine_comm_world", &fComm);
+        *fComm = MPI_Comm_c2f(MPI_COMM_WORLD);
+		//
 		int MPIsize;
 		MPI_Comm_size (MPI_COMM_WORLD, &MPIsize);
 		if (MPIsize > 1) {
@@ -145,6 +152,8 @@ FlowOL::~FlowOL (
     ) {
 
 #if defined (WITH_DELFTONLINE)
+    if (this->mpiInitialized)
+		MPI_Finalize();
     this->dh->log->Write (Log::MINOR, "Shutting down DOL");
     delete this->dol;
 #endif
@@ -498,7 +507,7 @@ FLOWOL_Timestep (
 
     if (flowol->dol->waitOnStart()) {
         echoContinue = true;
-        printf("\tWaiting for Online Visualisation ...");
+        printf("\tWaiting for Online Visualisation ...\n");
         fflush (stdout);
     }
 

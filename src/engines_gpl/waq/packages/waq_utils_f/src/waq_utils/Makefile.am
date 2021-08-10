@@ -12,12 +12,12 @@ noinst_LTLIBRARIES = libwaq_utils.la
 #Includes
 FMODULES += \
         -I$(top_builddir)/engines_gpl/waq/include \
+	    -I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src/rd_token \
 	    -I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src
 
 #-------------------------------------------------------------------------------
 #Sources
 libwaq_utils_la_SOURCES =  \
-       gregor.f \
        julian.f \
        waqmem.f90 \
        progress.f90 \
@@ -25,13 +25,13 @@ libwaq_utils_la_SOURCES =  \
        dlwq1_grid_mod.f \
        dlwq_data.f \
        dwq_proces_set.f \
+       rd_stt.f90 \
+       rd_sub.f90 \
+       dlwq0t.f \
        dhcommand.f90 \
        DHGARG.F \
-       DHHASP.F \
-       DHSTOP.F \
-       DHTIME.F \
        SRSTOP.F \
-       UNLOCK.F \
+       unlock.f90 \
        avundf_linux.f \
        cnvper.f \
        cnvtim.f \
@@ -61,10 +61,6 @@ libwaq_utils_la_SOURCES =  \
        dhkmrk.f \
        dhkmst.f \
        partition_arrays.f90 \
-       dhmmar.f \
-       dhmmca.f \
-       dhmmja.f \
-       dhmmra.f \
        dhltim.f \
        dhnlun.f \
        dhnolay.f \
@@ -84,7 +80,6 @@ libwaq_utils_la_SOURCES =  \
        fffind.f \
        filldm.f \
        getcom.f \
-       getper.f \
        gkwini.f \
        makpnt.f \
        monsys.f \
@@ -95,14 +90,12 @@ libwaq_utils_la_SOURCES =  \
        output_mod.f \
        putget.f \
        putgtc.f \
-       putper.f \
        rapdef.f \
        rbpdef.f \
        rdvers.f \
        rdwrk3.f \
        rdwrk4.f \
        reptim.f \
-       space.f \
        stasub.f \
        strip.f \
        usedcp.f \
@@ -114,3 +107,5 @@ libwaq_utils_la_SOURCES =  \
 
 #-------------------------------------------------------------------------------
 # Libraries
+libwaq_utils_la_LIBADD=\
+	$(top_builddir)/utils_lgpl/nefis/packages/nefis/src_so/libnefis.la

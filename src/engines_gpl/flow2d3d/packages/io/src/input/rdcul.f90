@@ -1,7 +1,7 @@
 subroutine rdcul(nsrc, namsrc ,mnksrc, voldis, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine rdcul(nsrc, namsrc ,mnksrc, voldis, gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdcul.f90 5022 2015-04-29 08:43:24Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdcul.f90 $
+!  $Id: rdcul.f90 65813 2020-01-17 16:46:56Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdcul.f90 $
 !!--description-----------------------------------------------------------------
 ! Reads dimensions, allocates space for data and reads data from INI file for
 ! culverts.
@@ -36,6 +36,7 @@ subroutine rdcul(nsrc, namsrc ,mnksrc, voldis, gdp)
 !!--declarations----------------------------------------------------------------
     use precision
     use properties
+    use system_utils, only:SHARED_LIB_PREFIX, SHARED_LIB_EXTENSION
     !
     use globaldata
     !
@@ -343,11 +344,7 @@ subroutine rdcul(nsrc, namsrc ,mnksrc, voldis, gdp)
                             call prop_get(link_ptr, '*', 'CulvertLib', rec)
                             dll_name(isrc) = rec
                             if (rec /= ' ') then
-                               if (gdp%arch == 'win32' .or. gdp%arch == 'win64') then
-                                  rec(len_trim(rec)+1:) = '.dll'
-                               else
-                                  rec(len_trim(rec)+1:) = '.so'
-                               endif
+                               write(rec,'(3a)') SHARED_LIB_PREFIX, trim(dll_name(isrc)), SHARED_LIB_EXTENSION
                                dll_name(isrc) = rec
                                istat_ptr = 0
                                istat_ptr = open_shared_library(dll_handle(isrc), dll_name(isrc))

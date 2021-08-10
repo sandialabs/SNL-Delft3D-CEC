@@ -2,7 +2,7 @@ subroutine wrihisbal(filename  ,lundia    ,error     ,irequest  ,fds       , &
                    & gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine wrihisbal(filename  ,lundia    ,error     ,irequest  ,fds       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrihisbal.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrihisbal.f90 $
+!  $Id: wrihisbal.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrihisbal.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Writes the time varying mass balance data to the FLOW HIS file
@@ -38,8 +38,8 @@ subroutine wrihisbal(filename  ,lundia    ,error     ,irequest  ,fds       , &
     use precision
     use datagroups
     use globaldata
-    use dfparall, only: inode, master
     use wrtarray, only: wrtvar
+    use dfparall, only: dfloat, dfsum
     !
     implicit none
     !
@@ -53,6 +53,7 @@ subroutine wrihisbal(filename  ,lundia    ,error     ,irequest  ,fds       , &
     integer      , dimension(:,:)  , pointer :: neighb
     character(80), dimension(:)    , pointer :: volnames
     real(fp)     , dimension(:)    , pointer :: horareas
+    integer                        , pointer :: io_prec
 !
 ! Global variables
 !
@@ -75,7 +76,9 @@ subroutine wrihisbal(filename  ,lundia    ,error     ,irequest  ,fds       , &
     integer                                           :: i
     integer         , dimension(1)                    :: idummy       ! Help array to write integers
     integer                                           :: ierror       ! Local error flag
+    integer                                           :: istat
     integer                                           :: n
+    real(fp)        , dimension(:)    , allocatable   :: rbuff1
     character(16)                                     :: grpnam       ! Data-group name for the NEFIS-file
 !
 !! executable statements -------------------------------------------------------
@@ -90,6 +93,7 @@ subroutine wrihisbal(filename  ,lundia    ,error     ,irequest  ,fds       , &
     neighb         => gdp%gdmassbal%neighb
     volnames       => gdp%gdmassbal%volnames
     horareas       => gdp%gdmassbal%horareas
+    io_prec        => gdp%gdpostpr%io_prec
     !
     ! Initialize local variables
     !
@@ -101,7 +105,7 @@ subroutine wrihisbal(filename  ,lundia    ,error     ,irequest  ,fds       , &
        !
        ! Set up the element chracteristics
        !
-       iddim_nbalpole = adddim(gdp, lundia, FILOUT_HIS, 'nbalpolygonse', nbalpol+1) ! balance polygons extended with label "open boundaries"
+       iddim_nbalpole = adddim(gdp, lundia, FILOUT_HIS, 'nbalpolygonse', size(volnames)) ! balance polygons extended with "open boundaries" and possibly "discharges"
        iddim_nbalpol  = adddim(gdp, lundia, FILOUT_HIS, 'nbalpolygons', nbalpol)
        iddim_nneighb  = adddim(gdp, lundia, FILOUT_HIS, 'nbalneighbrs', nneighb)
        iddim_2        = adddim(gdp, lundia, FILOUT_HIS, 'length_2', 2)
@@ -114,34 +118,34 @@ subroutine wrihisbal(filename  ,lundia    ,error     ,irequest  ,fds       , &
           call addelm(gdp, lundia, FILOUT_HIS, grpnam, 'BALVOLNAMESE', ' ', 80   , 1, dimids=(/iddim_nbalpole/), longname='Volume/polygon names') !CHARACTER
           call addelm(gdp, lundia, FILOUT_HIS, grpnam, 'BALVOLNAMES' , ' ', 80   , 1, dimids=(/iddim_nbalpol/) , longname='Volume/polygon names') !CHARACTER
        endif
-       call addelm(gdp, lundia, FILOUT_HIS, grpnam, 'BALAREAS', ' ', IO_REAL4, 1, dimids=(/iddim_nbalpol/), longname='Volume/polygon surface areas', unit='m2', attribs=(/idatt_coord/) )
+       call addelm(gdp, lundia, FILOUT_HIS, grpnam, 'BALAREAS', ' ', io_prec , 1, dimids=(/iddim_nbalpol/), longname='Volume/polygon surface areas', unit='m2', attribs=(/idatt_coord/) )
        call addelm(gdp, lundia, FILOUT_HIS, grpnam, 'BALNEIGHB', ' ', IO_INT4, 2, dimids=(/iddim_2,iddim_nneighb/), longname='Neighbouring volumes/polygons')
        !
     case (REQUESTTYPE_WRITE)
        !
-       if (inode == master) then
-          !
-          if (filetype == FTYPE_NEFIS) then
-             call wrtvar(fds, filename, filetype, grpnam, 1, &
-                       & gdp, ierror, lundia, volnames, 'BALVOLNAMES')
-          else
-             call wrtvar(fds, filename, filetype, grpnam, 1, &
-                       & gdp, ierror, lundia, volnames, 'BALVOLNAMESE')
-             if (ierror/= 0) goto 9999
-             !
-             call wrtvar(fds, filename, filetype, grpnam, 1, &
-                       & gdp, ierror, lundia, volnames(1:nbalpol), 'BALVOLNAMES')
-          endif
-          !
+       if (filetype == FTYPE_NEFIS) then
           call wrtvar(fds, filename, filetype, grpnam, 1, &
-                    & gdp, ierror, lundia, horareas, 'BALAREAS')
+                    & gdp, ierror, lundia, volnames, 'BALVOLNAMES')
+       else
+          call wrtvar(fds, filename, filetype, grpnam, 1, &
+                    & gdp, ierror, lundia, volnames, 'BALVOLNAMESE')
           if (ierror/= 0) goto 9999
           !
           call wrtvar(fds, filename, filetype, grpnam, 1, &
-                    & gdp, ierror, lundia, neighb, 'BALNEIGHB')
-          if (ierror/= 0) goto 9999
-          !
+                    & gdp, ierror, lundia, volnames(1:nbalpol), 'BALVOLNAMES')
        endif
+       !
+       allocate(rbuff1(nbalpol), stat=istat)
+       rbuff1(:) = horareas(:)
+       call dfreduce_gdp ( rbuff1, nbalpol, dfloat, dfsum, gdp )
+       call wrtvar(fds, filename, filetype, grpnam, 1, &
+                 & gdp, ierror, lundia, rbuff1, 'BALAREAS')
+       deallocate(rbuff1, stat=istat)
+       if (ierror/=0) goto 9999
+       !
+       call wrtvar(fds, filename, filetype, grpnam, 1, &
+                 & gdp, ierror, lundia, neighb, 'BALNEIGHB')
+       if (ierror/= 0) goto 9999
        !
     end select
     !

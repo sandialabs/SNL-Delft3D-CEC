@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dio-prop.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-prop.F90 $
+!  $Id: dio-prop.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-prop.F90 $
 ! DOC
 !
 !  propert.f - Subroutines for handling properties (key-value pairs)
@@ -294,13 +294,10 @@ contains
 
       retVal = .false.
 
-      lu = DioNewLun()
-      if ( lu > 0 ) then
-          open( lu, file = filename, status = 'old', iostat=ierror)
-          if ( ierror == 0 ) then
-              retVal = prop_file_by_lu(lu)
-              close( lu )
-          endif
+      open(newunit=lu, file = filename, status = 'old', iostat=ierror)
+      if ( ierror == 0 ) then
+          retVal = prop_file_by_lu(lu)
+          close( lu )
       endif
 
       end function prop_file_by_name
@@ -713,7 +710,7 @@ function StringsEqual(mode, str1, str2) result(retVal)
     endif
 end function StringsEqual
 
-
+! When all open-statements use the newunit-specifier this function can be removed
 function DioNewLun() result(retVal)
 
     ! return value

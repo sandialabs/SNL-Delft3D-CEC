@@ -7,7 +7,7 @@
 
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -82,7 +82,7 @@
       integer                               :: pSurf       !<    Offset of Surf data in pmsa array
       integer                               :: numIS       !<    Total number of fractions 
       real(fp), dimension(:,:), allocatable :: dbodsd      !<    Bed composition change
-      real(fp), dimension(:), allocatable   :: depchg      !<    Bed level change
+      real(fp), dimension(:)  , allocatable :: blchg       !<    Bed level change
       real(fp)                              :: S           !<    Total transport flux at exchange
       type(bed_data)                        :: bed         !<    Bed composition data 
 !
@@ -100,8 +100,8 @@
       MorFac         = pmsa( ipoint(iMorFac     +  1) )
       allocate( dbodsd(numIS,noseg) )
       dbodsd = 0.0_fp
-      allocate( depchg(noseg) )
-      depchg = 0.0_fp
+      allocate( blchg(noseg) )
+      blchg = 0.0_fp
 !
 !     Initialise pointers
 !
@@ -153,7 +153,7 @@
 !     Update bedcomposition
 !
       call getbedcomp(bed,1,1) 
-      if (updmorlyr(bed%comp, dbodsd, depchg, bed%messages) /= 0) then
+      if (updmorlyr(bed%comp, dbodsd, blchg, bed%messages) /= 0) then
           call writemessages(bed%messages, 6)
           stop
       endif
@@ -168,8 +168,8 @@
       do iseg = 1, noseg
          Surf  = pmsa( ipnt(iMorFac+2) )
 !
-         dZB = depchg(iseg)
-         dVB = depchg(iseg)*Surf
+         dZB = blchg(iseg)
+         dVB = blchg(iseg)*Surf
 !
 !        Put output and flux values into arrays
 !
@@ -185,6 +185,6 @@
 !
       deallocate(ipnt)
       deallocate(dbodsd)
-      deallocate(depchg)
+      deallocate(blchg)
 !
       end subroutine updmor

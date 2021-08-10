@@ -62,10 +62,14 @@ libflow2d3d_la_LIBADD = \
     $(top_builddir)/utils_lgpl/delftio/packages/delftio/src/delftio_sync/libDelftIO.la \
     $(top_builddir)/utils_lgpl/d_hydro_lib/packages/d_hydro_lib/src/libDHydroLib.la \
     $(top_builddir)/utils_lgpl/esmfsm/packages/esmfsm/src/fsm/libESMFSM.la \
+    $(top_builddir)/utils_lgpl/io_netcdf/packages/io_netcdf/src/libIONetcdf.la \
+    $(top_builddir)/utils_lgpl/io_hyd/packages/io_hyd/src/libIOHyd.la \
     $(top_builddir)/utils_lgpl/nefis/packages/nefis/src/libNefis.la \
     $(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common_mpi/src/libDeltaresCommonMpi.la \
     $(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src/libDeltaresCommon.la \
     $(top_builddir)/utils_lgpl/delftonline/src/delftonline/libDelftOnline.la \
+    $(top_builddir)/utils_lgpl/kdtree_wrapper/packages/kdtree_wrapper/src/libkdtreewrapper.la \
+    $(top_builddir)/third_party_open/kdtree2/src-f90/libkdtree2f.la \
     $(MPILIBS) \
     $(NETCDF_LIBS) $(NETCDF_FORTRAN_LIBS) -lnetcdff \
     $(FCLIBS) $(CCLIBS)

@@ -7,4 +7,4 @@
 
 include $(top_srcdir)/common.am
 
-SUBDIRS = interact waq_utils mod_timings mod_couplib
+SUBDIRS = waq_utils mod_timings mod_couplib dlwq_netcdf

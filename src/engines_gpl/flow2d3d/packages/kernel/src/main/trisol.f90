@@ -8,7 +8,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                 & error     ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -32,8 +32,8 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: trisol.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/main/trisol.f90 $
+!  $Id: trisol.f90 65922 2020-02-03 13:22:49Z jagers $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/main/trisol.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! This routine basically carries out the hydrodynamics
@@ -47,7 +47,6 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     use SyncRtcFlow
     use flow2d3d_timers
     use flow_tables
-    use m_rdturbine, only : updturbine, updturbinethrust
     !
     use globaldata
     !
@@ -194,7 +193,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     logical                              , pointer :: bubble
     logical                              , pointer :: lfsdu
     logical , dimension(:)               , pointer :: flbub
-    logical                              , pointer :: rtcact
+    integer                              , pointer :: rtcact
     integer(pntrsize)                    , pointer :: alfas
     integer(pntrsize)                    , pointer :: alpha
     integer(pntrsize)                    , pointer :: ampbc
@@ -317,6 +316,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     integer(pntrsize)                    , pointer :: precip
     integer(pntrsize)                    , pointer :: procbc
     integer(pntrsize)                    , pointer :: pship
+    integer(pntrsize)                    , pointer :: qsrcrt
     integer(pntrsize)                    , pointer :: qtfrac
     integer(pntrsize)                    , pointer :: qtfrct
     integer(pntrsize)                    , pointer :: qtfrt2
@@ -338,6 +338,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     integer(pntrsize)                    , pointer :: rhowat
     integer(pntrsize)                    , pointer :: rich
     integer(pntrsize)                    , pointer :: rint
+    integer(pntrsize)                    , pointer :: rintsm
     integer(pntrsize)                    , pointer :: rlabda
     integer(pntrsize)                    , pointer :: rmneg
     integer(pntrsize)                    , pointer :: rnpl
@@ -427,6 +428,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     integer(pntrsize)                    , pointer :: wenlm
     integer(pntrsize)                    , pointer :: windsu
     integer(pntrsize)                    , pointer :: windsv
+    integer(pntrsize)                    , pointer :: windcd
     integer(pntrsize)                    , pointer :: windu
     integer(pntrsize)                    , pointer :: windv
     integer(pntrsize)                    , pointer :: wphy
@@ -586,6 +588,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
 !
     integer                 :: icx
     integer                 :: icy
+    integer                 :: imode
     integer                 :: itype
     integer                 :: n
     integer                 :: nhystp
@@ -858,6 +861,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     precip              => gdp%gdr_i_ch%precip
     procbc              => gdp%gdr_i_ch%procbc
     pship               => gdp%gdr_i_ch%pship
+    qsrcrt              => gdp%gdr_i_ch%qsrcrt
     qtfrac              => gdp%gdr_i_ch%qtfrac
     qtfrct              => gdp%gdr_i_ch%qtfrct
     qtfrt2              => gdp%gdr_i_ch%qtfrt2
@@ -879,6 +883,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     rhowat              => gdp%gdr_i_ch%rhowat
     rich                => gdp%gdr_i_ch%rich
     rint                => gdp%gdr_i_ch%rint
+    rintsm              => gdp%gdr_i_ch%rintsm
     rlabda              => gdp%gdr_i_ch%rlabda
     rmneg               => gdp%gdr_i_ch%rmneg
     rnpl                => gdp%gdr_i_ch%rnpl
@@ -968,6 +973,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     wenlm               => gdp%gdr_i_ch%wenlm
     windsu              => gdp%gdr_i_ch%windsu
     windsv              => gdp%gdr_i_ch%windsv
+    windcd              => gdp%gdr_i_ch%windcd
     windu               => gdp%gdr_i_ch%windu
     windv               => gdp%gdr_i_ch%windv
     wphy                => gdp%gdr_i_ch%wphy
@@ -1237,8 +1243,8 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     !
     ! Communicate with RTC for first half time step
     !
-    if (rtcact) then
-       call rtc_comm_get(((nst*2)+1) * hdt,r(cbuvrt) ,nsluv     , gdp)
+    if (rtcact /= noRTC) then
+       call rtc_comm_get(((nst*2)+1) * hdt, r(cbuvrt), nsluv, r(qsrcrt) , nsrc, gdp)
     endif
     if (kc > 0 .or. nrcmp > 0) then
        call timer_start(timer_nodal_factor, gdp)
@@ -1252,7 +1258,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
        call timer_start(timer_incmeteo, gdp)
        call incmeteo(timhr     , grdang   , &
                 & r (windu ),r (windv ),r (patm  ), &
-                & i (kcs   ),r (alfas ), &
+                & i (kcs   ),r (alfas ),r (windcd), &
                 & r (windsu),r (windsv),r (w10mag), gdp)
        !
        call timer_stop(timer_incmeteo, gdp)
@@ -1333,11 +1339,11 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                  & icx       ,icy       ,i(kfsmin) ,i(kfsmax) , &
                  & ch(disint),ch(dismmt),i(itdis)  ,i(kcu)    ,i(kcv)    , &
                  & i(kfs)    ,i(ibuff)  ,i(mnksrc) ,r(alfas)  ,r(xcor)   , &
-                 & r(ycor)   ,r(dp)     ,r(disch)  , &
+                 & r(ycor)   ,r(dp)     ,r(disch)  ,r(voldis) , &
                  & r(disch0) ,r(disch1) ,r(rint)   ,r(rint0)  ,r(rint1)  , &
                  & r(umdis)  ,r(umdis0) ,r(umdis1) ,r(vmdis)  ,r(vmdis0) , &                 
                  & r(vmdis1) ,bubble    ,r(r0)     ,r(thick)  ,r(zwork)  , &
-                 & r(dzs0)   ,d(dps)    ,r(s0)     ,gdp       )
+                 & r(dzs0)   ,d(dps)    ,r(s0)     ,r(qsrcrt) ,gdp       )
        call timer_stop(timer_incdis, gdp)
        !
        ! Computation of discharge in case of culverts
@@ -1603,10 +1609,6 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
           call timer_stop(timer_updbar, gdp)
        endif
        !
-       call updturbine(gdp%turbines, r(dzu0), r(dzv0), r(dpu), r(dpv), &
-                     & r(hu), r(hv), r(s0), r(thick), r(u0), r(v0), &
-                     & r(alfas), hdt, nmaxddb, gdp)
-       !
        ! Computation of V1, i.e. evaluate momentum equation for one half
        ! timest calculate HV and set KFV = 0 for HV < HTRSH (.5*DRYFLC)
        !
@@ -1645,10 +1647,6 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
               & r(wrkb11) ,r(wrkb12) ,r(wrkb13) ,r(wrkb14) ,r(wrkb15) , &
               & r(wrkb16) ,sbkol     ,r(disnf)  ,r(precip) ,gdp       )
        call timer_stop(timer_1stadi, gdp)
-       !
-       call updturbinethrust(gdp%turbines, r(u0), r(u1), r(v0), r(v1), &
-                           & r(gvu), r(guv), r(wrkb2), nmaxddb, hdt, gdp)
-       !
        if (roller) then
           !
           ! Introduce time varying mass-flux associated with infragravity waves
@@ -1835,7 +1833,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
           call discha(kmax      ,nsrc      ,nbub      ,lstsci    ,lstsc     ,jstart    , &
                     & nmmaxj    ,icx       ,icy       ,ch(namsrc),i(mnksrc) , &
                     & i(kfs)    ,i(kcs)    ,r(sour)   ,r(sink)   ,r(volum1) ,r(volum0) , &
-                    & r(r0)     ,r(disch)  ,r(rint)   ,r(thick)  ,bubble    , &
+                    & r(r0)     ,r(disch)  ,r(rint)   ,r(rintsm) ,r(thick)  ,bubble    , &
                     & gdp       )
           if (nfl) then
              call discha_nf(kmax      ,lstsci    ,nmmax   ,i(kfs)   ,r(sour)  ,r(sink)   , &
@@ -1903,7 +1901,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                        & icx       ,icy       ,lundia    ,d(dps)    ,r(s0)     , &
                        & r(umean)  ,r(vmean)  ,r(z0urou) ,r(z0vrou) ,i(kfu)    , &
                        & i(kfv)    ,zmodel    ,i(kfsmx0) ,i(kfsmn0) ,r(dzs0)   , &
-                       & gdp       )        
+                       & lstsci    ,gdp       )        
              call timer_stop(timer_fallve, gdp)
           endif
           !
@@ -2193,9 +2191,10 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
        call updwaqflx(nst       ,zmodel    ,nmmax     ,kmax      ,i(kcs)    , &
                     & i(kcu)    ,i(kcv)    ,r(qxk)    ,r(qyk)    ,r(qzk)    , &
                     & nsrc      ,r(disch)  ,gdp       )
-       call updmassbal(.false.  ,r(qxk)    ,r(qyk)    ,i(kcs)    ,r(r1)     , &
-                    & r(volum1),r(sbuu)   ,r(sbvv)   , &
-                    & r(gsqs)  ,r(guu)    ,r(gvv)    ,d(dps)    ,gdp       )
+       call updmassbal(2        ,r(qxk)    ,r(qyk)    ,i(kcs)    ,r(r1)     , &
+                    & r(volum0) ,r(volum1) ,r(sbuu)   ,r(sbvv)   ,r(disch)  , &
+                    & i(mnksrc) ,r(sink)   ,r(sour)   ,r(gsqs)   ,r(guu)    , &
+                    & r(gvv)    ,d(dps)    ,r(rintsm) ,hdt       ,gdp       )
        call updcomflx(nst       ,zmodel    ,nmmax     ,kmax      ,i(kcs)    , &
                     & i(kcu)    ,i(kcv)    ,r(qxk)    ,r(qyk)    ,r(qzk)    , &
                     & nsrc      ,r(disch)  ,i(kfumin) ,i(kfvmin) ,r(qu)     , &
@@ -2248,9 +2247,10 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
        call timer_stop(timer_f0isf1, gdp)
     endif
     !
-    if (rtcact) then
+    if (rtcact /= noRTC) then
        call rtc_comm_put(i(kfs)    ,i(kfsmin) ,i(kfsmax) ,r(sig)    , &
                        & r(sig)    ,r(s1)     ,d(dps)    ,r(r0)     , &
+                       & nsluv     ,r(cbuv)   ,nsrc      ,r(disch)  , &
                        & gdp)
     endif
     !
@@ -2314,8 +2314,8 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     !
     ! Communicate with RTC for second half time step
     !
-    if (rtcact) then
-       call rtc_comm_get(((nst*2)+2) * hdt,r(cbuvrt) ,nsluv     , gdp)
+    if (rtcact /= noRTC) then
+       call rtc_comm_get(((nst*2)+2) * hdt, r(cbuvrt), nsluv, r(qsrcrt) , nsrc, gdp)
     endif
     if (wind) then
        !
@@ -2324,7 +2324,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
        call timer_start(timer_incmeteo, gdp)
        call incmeteo(timhr     , grdang   , &
                 & r (windu ),r (windv ),r (patm  ), &
-                & i (kcs   ),r (alfas ), &
+                & i (kcs   ),r (alfas ),r (windcd), &
                 & r (windsu),r (windsv),r (w10mag), gdp)
        !                   
        call timer_stop(timer_incmeteo, gdp)
@@ -2387,11 +2387,11 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                  & icx       ,icy       ,i(kfsmin) ,i(kfsmax) , &
                  & ch(disint),ch(dismmt),i(itdis)  ,i(kcu)    ,i(kcv)    , &
                  & i(kfs)    ,i(ibuff)  ,i(mnksrc) ,r(alfas)  ,r(xcor)   , &
-                 & r(ycor)   ,r(dp)     ,r(disch)  , &
+                 & r(ycor)   ,r(dp)     ,r(disch)  ,r(voldis) , &
                  & r(disch0) ,r(disch1) ,r(rint)   ,r(rint0)  ,r(rint1)  , &
                  & r(umdis)  ,r(umdis0) ,r(umdis1) ,r(vmdis)  ,r(vmdis0) , &                 
                  & r(vmdis1) ,bubble    ,r(r0)     ,r(thick)  ,r(zwork)  , &
-                 & r(dzs0)   ,d(dps)    ,r(s0)     ,gdp       )
+                 & r(dzs0)   ,d(dps)    ,r(s0)     ,r(qsrcrt) ,gdp       )
        call timer_stop(timer_incdis, gdp)
        !
        ! Computation of discharge in case of culverts
@@ -2628,10 +2628,6 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
           call timer_stop(timer_updbar, gdp)
        endif
        !
-       call updturbine(gdp%turbines, r(dzu0), r(dzv0), r(dpu), r(dpv), &
-                     & r(hu), r(hv), r(s0), r(thick), r(u0), r(v0), &
-                     & r(alfas), hdt, nmaxddb, gdp)
-       !
        ! Computation of U1, i.e. evaluate momentum equation for one half
        ! timest calculate HU and set KFU = 0 for HU < HTRSH (.5*DRYFLC)
        !
@@ -2670,10 +2666,6 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
               & r(wrkb11) ,r(wrkb12) ,r(wrkb13) ,r(wrkb14) ,r(wrkb15) , &
               & r(wrkb16) ,sbkol     ,r(disnf)  ,r(precip) ,gdp       )
        call timer_stop(timer_2ndadi, gdp)
-       !
-       call updturbinethrust(gdp%turbines, r(u0), r(u1), r(v0), r(v1), &
-                           & r(gvu), r(guv), r(wrkb2), nmaxddb, hdt, gdp)
-       !
        if (roller) then
           !
           ! Introduce time varying mass-flux associated with infragravity waves
@@ -2757,7 +2749,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
        !
        if (lfbedfrmrou) then
           call timer_start(timer_calksc, gdp)
-          call calksc(nmmax     ,itimtt    ,d(dps)    ,r(s1)     ,lsedtot   , &
+          call calksc(nmmax     ,d(dps)    ,r(s1)     ,lsedtot   , &
                     & r(wrkb3)  ,r(wrkb4)  ,i(kfs)    ,r(z0urou) ,r(z0vrou) , &
                     & i(kfu)    ,i(kfv)    ,r(sig)    ,kmax      ,r(hrms)   , &
                     & r(rlabda) ,r(tp)     ,r(deltau) ,r(deltav) ,icx       , &
@@ -2909,7 +2901,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
           call discha(kmax      ,nsrc      ,nbub      ,lstsci    ,lstsc     ,jstart    , &
                     & nmmaxj    ,icx       ,icy       ,ch(namsrc),i(mnksrc) , &
                     & i(kfs)    ,i(kcs)    ,r(sour)   ,r(sink)   ,r(volum1) ,r(volum0) , &
-                    & r(r0)     ,r(disch)  ,r(rint)   ,r(thick)  ,bubble    , &
+                    & r(r0)     ,r(disch)  ,r(rint)   ,r(rintsm) ,r(thick)  ,bubble    , &
                     & gdp       )
           if (nfl) then
              call discha_nf(kmax      ,lstsci    ,nmmax   ,i(kfs)   ,r(sour)  ,r(sink)   , &
@@ -2977,7 +2969,7 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                        & icx       ,icy       ,lundia    ,d(dps)    ,r(s0)     , &
                        & r(umean)  ,r(vmean)  ,r(z0urou) ,r(z0vrou) ,i(kfu)    , &
                        & i(kfv)    ,zmodel    ,i(kfsmx0) ,i(kfsmn0) ,r(dzs0)   , &
-                       & gdp       )
+                       & lstsci    ,gdp       )
              call timer_stop(timer_fallve, gdp)
           endif
           !
@@ -3274,9 +3266,15 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
        call updwaqflx(nst       ,zmodel    ,nmmax     ,kmax      ,i(kcs)    , &
                     & i(kcu)    ,i(kcv)    ,r(qxk)    ,r(qyk)    ,r(qzk)    , &
                     & nsrc      ,r(disch)  ,gdp       )
-       call updmassbal(nst+1 == ithisc,r(qxk)    ,r(qyk)    ,i(kcs)    ,r(r1)     , &
-                     & r(volum1),r(sbuu)   ,r(sbvv)   , &
-                     & r(gsqs)  ,r(guu)    ,r(gvv)    ,d(dps)    ,gdp       )
+       if (nst+1 == ithisc) then
+          imode = 3 ! output needed, so update fluxes and volumes
+       else
+          imode = 2 ! no output needed, so just update fluxes
+       endif
+       call updmassbal(imode    ,r(qxk)    ,r(qyk)    ,i(kcs)    ,r(r1)     , &
+                    & r(volum0) ,r(volum1) ,r(sbuu)   ,r(sbvv)   ,r(disch)  , &
+                    & i(mnksrc) ,r(sink)   ,r(sour)   ,r(gsqs)   ,r(guu)    , &
+                    & r(gvv)    ,d(dps)    ,r(rintsm) ,hdt       ,gdp       )
        call updcomflx(nst       ,zmodel    ,nmmax     ,kmax      ,i(kcs)    , &
                     & i(kcu)    ,i(kcv)    ,r(qxk)    ,r(qyk)    ,r(qzk)    , &
                     & nsrc      ,r(disch)  ,i(kfumin) ,i(kfvmin) ,r(qu)     , &
@@ -3306,9 +3304,10 @@ subroutine trisol(dischy    ,solver    ,icreep    ,ithisc    , &
        ! f0isf1 is now called at the START of the routine trisol.
        !
     endif
-    if (rtcact) then
+    if (rtcact /= noRTC) then
        call rtc_comm_put(i(kfs)    ,i(kfsmin) ,i(kfsmax) ,r(sig)    , &
                        & r(sig)    ,r(s1)     ,d(dps)    ,r(r0)     , &
+                       & nsluv     ,r(cbuv)   ,nsrc      ,r(disch)  , &
                        & gdp)
     endif
     if (sbkol) then

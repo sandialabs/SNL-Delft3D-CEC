@@ -18,7 +18,7 @@ function varargout=samplesfil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -43,8 +43,8 @@ function varargout=samplesfil(FI,domain,field,cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/samplesfil.m $
-%   $Id: samplesfil.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/samplesfil.m $
+%   $Id: samplesfil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 
@@ -159,7 +159,28 @@ if XYRead
         case 'y'
             Ans.Y = FI.XYZ(dim1,FI.Y)';
         case 'xy'
-            xyz = FI.XYZ(dim1,[FI.X FI.Y]);
+            if iscell(FI.XYZ)
+                xyz = zeros(nLoc,2);
+                nc = 0;
+                done = 0;
+                for c = 1:length(FI.XYZ)
+                    nq = size(FI.XYZ{c},2);
+                    if FI.X>nc && FI.X<=nc+nq
+                        xyz(:,1) = FI.XYZ{c}(dim1,FI.X-nc);
+                        done = done+1;
+                    end
+                    if FI.Y>nc && FI.Y<=nc+nq
+                        xyz(:,2) = FI.XYZ{c}(dim1,FI.Y-nc);
+                        done = done+1;
+                    end
+                    if done==2
+                        break
+                    end
+                    nc = nc+nq;
+                end
+            else
+                xyz = FI.XYZ(dim1,[FI.X FI.Y]);
+            end
             nPnt=size(xyz,1)/nTim;
             nCrd=size(xyz,2);
             Ans.XYZ=reshape(xyz,[nTim nPnt 1 nCrd]);
@@ -236,8 +257,22 @@ switch Props.NVal
         varargout = {hNew FI};
         return
     case 0
-    case 1
-        if nLoc==0 % if variable number of locations, then nTim==1
+    case {1,4}
+        if iscell(FI.XYZ)
+            nc = 0;
+            for c = 1:length(FI.XYZ)
+                nq = size(FI.XYZ{c},2);
+                if Props.SubFld>nc && Props.SubFld<=nc+nq
+                    if nLoc==0
+                        Ans.Val = FI.XYZ{c}(dim1,Props.SubFld-nc)';
+                    else
+                        Ans.Val = reshape(FI.XYZ{c}(dim1,Props.SubFld-nc),[nTim nLoc]);
+                    end
+                    break
+                end
+                nc = nc+nq;
+            end
+        elseif nLoc==0 % if variable number of locations, then nTim==1
             Ans.Val=FI.XYZ(dim1,Props.SubFld)';
         else
             Ans.Val=reshape(FI.XYZ(dim1,Props.SubFld),[nTim nLoc]);
@@ -277,7 +312,7 @@ DataProps={'locations'                  ''       [0 0 1 0 0]  0          0     '
 
 Out=cell2struct(DataProps,PropNames,2);
 
-params = 1:size(FI.XYZ,2);
+params = 1:length(FI.Params);
 params = setdiff(params,[FI.X FI.Y FI.Time]);
 if ~isempty(FI.Times)
     if length(FI.nLoc)==1
@@ -302,14 +337,17 @@ if NPar>0
         if isfield(FI,'ParamUnits')
             Out(i+3).Units  = FI.ParamUnits{params(i)};
         end
+        if iscell(FI.XYZ) % TODO: check which column contains chars.
+            Out(i+3).NVal = 4;
+        end
     end
 else
     Out=Out(1:2);
 end
 
 % No triangulation possible if only one or two points, or only one
-% coordinate
-if (length(FI.nLoc)==1 && FI.nLoc<2) || isempty(FI.Y) || isempty(FI.X)
+% coordinate, or if all data are strings
+if (length(FI.nLoc)==1 && FI.nLoc<2) || isempty(FI.Y) || isempty(FI.X) || iscell(FI.XYZ)
     Out(2)=[];
     for i=1:NPar
         if isempty(FI.X)
@@ -350,6 +388,7 @@ if isempty(FI.X) || isempty(FI.Y)
         Out(1) = Out(Minm);
         Out(1).Name = 'error bars';
         Out(1).NVal = -1;
+        Out(1).AxesType = 'Time-Val';
         Out(1).SubFld = [Out(Minm).SubFld -999 Out(Maxm).SubFld];
         if ~isempty(Mean)
             Out(1).SubFld(2) = Out(Mean).SubFld;

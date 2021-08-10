@@ -2,7 +2,7 @@ subroutine wrthisdad(lundia    ,error     ,filename  ,ithisc    , &
                    & lsedtot   ,irequest  ,fds       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine wrthisdad(lundia    ,error     ,filename  ,ithisc    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrthisdad.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrthisdad.f90 $
+!  $Id: wrthisdad.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrthisdad.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Writes the time varying Dredge and Dump group to the NEFIS HIS-DAT file
@@ -63,6 +63,7 @@ subroutine wrthisdad(lundia    ,error     ,filename  ,ithisc    , &
     character(24)                        , pointer :: date_time
     integer                              , pointer :: celidt
     type (datagroup)                     , pointer :: group
+    integer                              , pointer :: io_prec
 !
 ! Global variables
 !
@@ -118,6 +119,7 @@ subroutine wrthisdad(lundia    ,error     ,filename  ,ithisc    , &
     nalink            => gdp%gddredge%nalink
     ntimaccum         => gdp%gddredge%ntimaccum
     date_time         => gdp%gdinttim%date_time
+    io_prec           => gdp%gdpostpr%io_prec
     !
     ierror = 0
     select case (irequest)
@@ -138,11 +140,11 @@ subroutine wrthisdad(lundia    ,error     ,filename  ,ithisc    , &
           call addelm(gdp, lundia, FILOUT_HIS, grnam, 'ITHISC', ' ', IO_INT4        , 0, longname='timestep number (ITHISC*DT*TUNIT := time in sec from ITDATE)')
           call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DATE_TIME', ' ', 24          , 0, longname='Current simulation date and time [YYYY-MM-DD HH:MM:SS.FFFF]') !CHARACTER
        endif
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'LINK_SUM', ' ', IO_REAL4     , 2, dimids=(/iddim_nalink, iddim_lsedtot/), longname='Cumulative dredged material transported via this link', unit='m3')
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DREDGE_VOLUME', ' ', IO_REAL4, 1, dimids=(/iddim_nsource/), longname='Cumulative dredged material for this dredge area', unit='m3', attribs=(/idatt_crd_drd/) )
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DUMP_VOLUME', ' ', IO_REAL4  , 1, dimids=(/iddim_ndump/), longname='Cumulative dumped material for this dump area', unit='m3', attribs=(/idatt_crd_dmp/) )
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DREDGE_TFRAC', ' ', IO_REAL4 , 1, dimids=(/iddim_nsource/), longname='Time fraction spent dredging', attribs=(/idatt_crd_drd/) )
-       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'PLOUGH_TFRAC', ' ', IO_REAL4 , 1, dimids=(/iddim_nsource/), longname='Time fraction spent sploughing', attribs=(/idatt_crd_drd/) )
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'LINK_SUM', ' ', io_prec      , 2, dimids=(/iddim_nalink, iddim_lsedtot/), longname='Cumulative dredged material transported via this link', unit='m3')
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DREDGE_VOLUME', ' ', io_prec , 1, dimids=(/iddim_nsource/), longname='Cumulative dredged material for this dredge area', unit='m3', attribs=(/idatt_crd_drd/) )
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DUMP_VOLUME', ' ', io_prec   , 1, dimids=(/iddim_ndump/), longname='Cumulative dumped material for this dump area', unit='m3', attribs=(/idatt_crd_dmp/) )
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'DREDGE_TFRAC', ' ', io_prec  , 1, dimids=(/iddim_nsource/), longname='Time fraction spent dredging', attribs=(/idatt_crd_drd/) )
+       call addelm(gdp, lundia, FILOUT_HIS, grnam, 'PLOUGH_TFRAC', ' ', io_prec  , 1, dimids=(/iddim_nsource/), longname='Time fraction spent sploughing', attribs=(/idatt_crd_drd/) )
        !
        group%grp_dim = iddim_time
        celidt = 0

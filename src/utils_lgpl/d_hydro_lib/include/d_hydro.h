@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -37,6 +37,8 @@
 
 #pragma once
 
+// The following definition is needed since VisualStudio2015 before including <pthread.h>:
+#define HAVE_STRUCT_TIMESPEC
 
 #if HAVE_CONFIG_H
 #   include "config.h"
@@ -121,6 +123,10 @@ class DeltaresHydro {
             int     argc,
             char *  argv [],
             char *  envp []
+            );
+    public:
+        DeltaresHydro (
+            void
             );
     public:
         ~DeltaresHydro (

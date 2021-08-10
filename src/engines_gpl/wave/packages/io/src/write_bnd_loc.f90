@@ -17,7 +17,7 @@ subroutine write_bnd(xc        ,yc        ,mc        ,nc        , &
                 & inest      )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -41,8 +41,8 @@ subroutine write_bnd(xc        ,yc        ,mc        ,nc        , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: write_bnd_loc.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/io/src/write_bnd_loc.f90 $
+!  $Id: write_bnd_loc.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/io/src/write_bnd_loc.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -65,7 +65,6 @@ subroutine write_bnd(xc        ,yc        ,mc        ,nc        , &
     integer           :: i
     integer           :: j
     integer           :: lunbot
-    integer, external :: new_lun
     character(37)     :: fname
 !
 !! executable statements -------------------------------------------------------
@@ -74,8 +73,7 @@ subroutine write_bnd(xc        ,yc        ,mc        ,nc        , &
        fname      = ' '
        fname(1:12) = 'SWANIN_NGRID'
        write (fname(13:15),'(I3.3)') inest
-       lunbot = new_lun()
-       open (unit=lunbot, file=fname(1:15))
+       open (newunit=lunbot, file=fname(1:15))
        do i=1,mc
           if (xc(i,1)/=0.) write(lunbot,'(2(F15.6,3X))')  xc(i,1) ,yc(i,1)
        enddo

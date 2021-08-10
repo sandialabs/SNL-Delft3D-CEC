@@ -18,7 +18,7 @@ function Out=mike(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,8 +43,8 @@ function Out=mike(cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/mike.m $
-%   $Id: mike.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/mike.m $
+%   $Id: mike.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin==0
     if nargout>0
@@ -105,21 +105,15 @@ switch file_ext
         S.FileType='MikeDFS';
         S.Dat=file_ext;
         S.Def='';
+    case {'.xns11'}
+        S.FileType='MikeXFS';
+        S.Dat=file_ext;
+        S.Def='';
     otherwise
         error('Invalid filename or unknown MIKE file type')
 end
 
-if isunix
-    if ~isequal(filename(1),'/')
-        filename=[pwd '/' filename];
-        S.FileName=filename;
-    end
-else % PCWIN
-    if (length(filename)<2) || (~isequal(filename(1:2),'\\') && ~isequal(filename(2),':'))
-        filename=[pwd '\' filename];
-        S.FileName=filename;
-    end
-end
+S.FileName = absfullfile(filename);
 
 if isempty(S.Def)
     S=Local_open_mike_new(S,filename);
@@ -240,11 +234,13 @@ if fid<0
 end
 
 X=fread(fid,[1 64],'*char');
-if ~strcmp(X,'DHI_DFS_ MIKE Zero - this file contains binary data, do not edit')
+if ~strcmp(X,['DHI_' S.FileType(5:7) '_ MIKE Zero - this file contains binary data, do not edit'])
     error('Invalid start of MIKE Zero file.')
 end
 
-X=fread(fid,[1 17],'*char'); %  FOpenFileCreate
+if strcmp(S.FileType,'MikeDFS')
+    X=fread(fid,[1 17],'*char'); %  FOpenFileCreate
+end
 
 X=fread(fid,1,'uchar'); %<end of text>
 
@@ -258,16 +254,22 @@ V=fread(fid,[1 6],'int16'); % FileCreationDate
 X=fread(fid,4,'int32'); %104, 206, 0, 0
 
 S.Data={};
-n = lower(S.Dat(end));
-if isequal(n,'u')
-    S.NumCoords='u';
-else
-    S.NumCoords=n-'0';
+switch lower(S.Dat)
+    case {'.dfs0','.dfs1','.dfs2','.dfs3'}
+        n = lower(S.Dat(end));
+        S.NumCoords=n-'0';
+        S.DataType = 'structured';
+    case {'.dfsu'}
+        S.NumCoords='u';
+        S.DataType = 'unstructured';
+    case { '.xns11'}
+        S.NumCoords='x';
+        S.DataType = 'crosssections';
 end
+
 S.SparseStorage=0;
 S=read_info(fid,S,0);
-S.Unstructured = isequal(S.NumCoords,'u');
-if S.Unstructured
+if strcmp(S.DataType,'unstructured')
     fm = strmatch('MIKE_FM',S.Attrib.Name,'exact');
     S.NumCoords = S.Attrib(fm).Data(3);
     S.NumLayers = max(1,S.Attrib(fm).Data(4));
@@ -283,6 +285,7 @@ fclose(fid);
 function Info=read_info(fid,Info,loaddata)
 it=0;
 att=0;
+crs=0;
 static=0;
 fld=0;
 while 1
@@ -321,6 +324,10 @@ while 1
             N=fread(fid,1,'int32');
             %fprintf('%i: %i int16\n',Typ,N);
             Info.Data{end+1}=fread(fid,[1 N],'int16');
+        case 7
+            N=fread(fid,1,'int32');
+            %fprintf('%i: %i ??\n',Typ,N);
+            Info.Data{end+1}=fread(fid,[1 N],'uint16');
         case 254
             Opt=fread(fid,1,'uchar');
             X=fread(fid,1,'uchar');
@@ -328,6 +335,32 @@ while 1
             i2.Data={};
             i2=read_info(fid,i2,1);
             switch Opt
+                case 1 % 'JOTIJA'    [         0]    'CURRENT'    '3'    
+                    crs=crs+1;
+                    Info.CrossSection.Name{crs}    = deblank(i2.Data{4});
+                    Info.CrossSection.Branch{crs}  = deblank(i2.Data{1});
+                    Info.CrossSection.Offset(crs)  = i2.Data{2};
+                    Info.CrossSection.Version{crs} = deblank(i2.Data{3});
+                case 2 % 25 int32  : 0 2 1 ? ? 0 0 0 0 1 50 0 0 0 0 0 ? 0 0 0 0 0 0 0 0
+                       %                   1 2            3           4
+                       % 1: unknown range 4-17
+                       % 2: NPnts in cross section (size in block 3)
+                       % 3: NLevels in tables (size in block 5)
+                       % 4: 2 (if block 6 present)
+                       % 23 float64: 0 0 0 0 0 ? ? ? ? 0 1 1 1 1 1 0.001 1 1 1 1 1 1 1
+                    Info.CrossSection.Integers(crs,:) = i2.Data{1};
+                    Info.CrossSection.Reals(crs,:)    = i2.Data{2};
+                    Info.CrossSection.NPnts(crs)      = i2.Data{1}(5);
+                case 3 % 6 * NPnts float64
+                       % Y, Z, 1, 0, 0, 0
+                    Info.CrossSection.YZ{crs} = cat(1,i2.Data{1:2});
+                    %Info.CrossSection.ones(crs,:) = i2.Data{3};
+                    %Info.CrossSection.zeros(crs,:) = i2.Data{4/5/6};
+                case 5 % 6 * 50 float64
+                       % Z, Area(Z), Hydraulic Radius(Z), Wetted Perimeter(Z), 0, 1
+                    Info.CrossSection.ZARP{crs} = cat(1,i2.Data{1:4});
+                case 6 % N * 
+                    Info.CrossSection.GeoLine{crs} = cat(1,i2.Data{:});
                 case 16 %39  {}
                 case 17 %39
                     Info.FileTitle=deblank(i2.Data{1});
@@ -431,6 +464,7 @@ while 1
                         end
                         Fld=Fld1;
                     end
+                    %fprintf('%s\nGeneral Field: %s\n\n',fopen(fid),Fld);
                     Info=setfield(Info,Fld,i2);
             end
         case 255

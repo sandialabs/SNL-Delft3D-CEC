@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -23,7 +23,7 @@
 
       SUBROUTINE MESTOK ( LUNUT  , LUNIN  , LUNINC , LINE   , IPOSL  ,
      *                    IPOSR  , IWIDTH , LINERR , ITYPEX , ITYPE  ,
-     *                                                        IERR   )
+     *                                               LINENO , IERR   )
 C
 C     Deltares     SECTOR WATERRESOURCES AND ENVIRONMENT
 C
@@ -42,13 +42,14 @@ C     ----    -----    ------     ------- -----------
 C     LUNUT   INTEGER       1     INPUT   logical unitnumber output file
 C     LUNIN   INTEGER       1     INPUT   unit number in error
 C     LUNINC  CHAR*(*)      1     INPUT   file name of unit in error
-C     LINE    CHAR*(*)      1     INPUT   line red on unit in error
+C     LINE    CHAR*(*)      1     INPUT   line read on unit in error
 C     IPOSL   INTEGER       1     INPUT   left position token on error
 C     IPOSR   INTEGER       1     INPUT   right position token on error
 C     IWIDTH  INTEGER       1     INPUT   total width of the input line
 C     LINERR  CHAR*(*)      1     INPUT   text string to produce as error
 C     ITYPEX  INTEGER       1     INPUT   type of token expected
 C     ITYPE   INTEGER       1     INPUT   type of token found
+C     LINENO  INTEGER       1     INPUT   current line in the file
 C     IERR    INTEGER       1     INPUT   error number returned from read
 C
 C
@@ -73,7 +74,7 @@ C
 C         Line information when line is not blank
 C
       IF ( LINE .NE. ' ' ) THEN
-         WRITE ( LUNUT , 1020 )
+         WRITE ( LUNUT , 1020 ) LINENO, ' '
          IF ( IPOSL .NE. 0 .AND. IPOSR .NE. 0 ) THEN
             IWIDTH_TRIM = LEN_TRIM(LINE)
             DO 20 J = 1 , IWIDTH_TRIM , 80
@@ -116,7 +117,7 @@ C         Formats
 C
  1000 FORMAT ( ' ERROR reading file on unit:',I4,', filename: ',A )
  1010 FORMAT ( ' ERROR reading file on unit:',I4,' !' )
- 1020 FORMAT ( ' Line on input file was:' )
+ 1020 FORMAT ( ' Line on input file was (at line no. ', I0, '):', A )
  1030 FORMAT ( ' Error code from input processor was: ',I2 )
  1040 FORMAT ( ' Expected was a ',A,'!' )
  1050 FORMAT ( ' Expected was an ',A,'!' )

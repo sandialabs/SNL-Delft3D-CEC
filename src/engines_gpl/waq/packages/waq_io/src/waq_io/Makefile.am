@@ -13,11 +13,15 @@ noinst_LTLIBRARIES = libwaq_io.la
 FMODULES += \
         -I$(top_builddir)/engines_gpl/waq/include \
         -I$(top_builddir)/engines_gpl/waq/packages/waq_utils_f/src/waq_utils \
+        -I$(top_builddir)/engines_gpl/waq/packages/waq_utils_f/src/dlwq_netcdf \
         -I$(top_builddir)/engines_gpl/part/packages/io_f/src \
         -I$(top_builddir)/engines_gpl/part/packages/utils_f/src \
         -I$(top_builddir)/engines_gpl/part/packages/data_f/src \
 	    -I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src/rd_token \
 	    -I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src
+
+AM_FCFLAGS += $(FINCLUDES) $(FMODULES) ${NETCDF_CFLAGS} ${NETCDF_FORTRAN_CFLAGS}
+AM_FFLAGS  += $(FINCLUDES) $(FMODULES) ${NETCDF_CFLAGS} ${NETCDF_FORTRAN_CFLAGS}
 
 #-------------------------------------------------------------------------------
 #Sources
@@ -37,7 +41,6 @@ libwaq_io_la_SOURCES = bound.f \
        dlwq09.f \
        dlwq0f.f \
        dlwq0i.f \
-       dlwq0t.f \
        dlwq5a.f \
        dlwq5b.f \
        dlwq5c.f \
@@ -58,12 +61,12 @@ libwaq_io_la_SOURCES = bound.f \
        opt1.f \
        opt2.f \
        opt3.f \
-       outbo2.f \
        outboo.f \
        pointb.f \
        pointi.f \
        rdodef.f \
        rdpoin.f \
+       read_hydfile.f90 \
        readmp.f \
        rearaa.f \
        rwfunc.f \

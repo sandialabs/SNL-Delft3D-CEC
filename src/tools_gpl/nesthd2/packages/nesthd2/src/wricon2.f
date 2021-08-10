@@ -2,9 +2,10 @@
      *                   kmax  ,lstci ,nocon ,
      *                   tstart,dtmin ,
      *                   namcon,nambnd,itdate              )
+      implicit none
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +29,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wricon2.f 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/nesthd2/packages/nesthd2/src/wricon2.f $
+!  $Id: wricon2.f 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/nesthd2/packages/nesthd2/src/wricon2.f $
 !***********************************************************************
 ! Deltares                         marine and coastal management
 !
@@ -44,20 +45,25 @@
 ! subroutines called :
 !***********************************************************************
 
+      integer lundia, lun, notims, kmax, lstci, nocon, nobnd
+
       character(len=37), dimension(13) :: fmtbcc
       character(len=20), dimension(16) :: keywrd
 
       integer      itdate
 
-      real         bndval (nobnd ,notims,kmax  ,lstci ,2)
+      double precision bndval (nobnd ,notims,kmax  ,lstci ,2)
+      double precision tstart
+      double precision dtmin
 
       character*1  eol
       character*1  quote
       character*3  cdum
       character*17 layer
       character*20 nambnd (nobnd )
-      character*20 namcon (lstci )
+      character*20 namcon (lstci + 2 )
       character*40 cntain
+      integer ifmt, ibnd, ic, itim, itypc, k
 
       data         fmtbcc/'(a1,i5,                       t89,a1)',
      *                    '(a20,a1,a63,a3,a1,            t89,a1)',

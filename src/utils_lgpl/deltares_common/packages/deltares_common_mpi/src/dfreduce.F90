@@ -4,7 +4,7 @@
 subroutine dfreduce ( iptr, ilen, itype, ityprd, error, msgstr )
 !----- GPL ---------------------------------------------------------------------
 !
-!  Copyright (C)  Stichting Deltares, 2011-2015.
+!  Copyright (C)  Stichting Deltares, 2011-2020.
 !
 !  This program is free software: you can redistribute it and/or modify
 !  it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ subroutine dfreduce ( iptr, ilen, itype, ityprd, error, msgstr )
 !  Stichting Deltares. All rights reserved.
 !
 !-------------------------------------------------------------------------------
-!  $Id: dfreduce.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common_mpi/src/dfreduce.F90 $
+!  $Id: dfreduce.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common_mpi/src/dfreduce.F90 $
 !!--description-----------------------------------------------------------------
 !
 !   Performs a global reduction of type ITYPRD on
@@ -82,17 +82,17 @@ subroutine dfreduce ( iptr, ilen, itype, ityprd, error, msgstr )
         allocate(ibuff(ilen), stat = istat)
         if (istat /= 0) goto 999
         ibuff = 0
-        call mpi_allreduce ( iptr, ibuff, ilen, itype, ityprd, MPI_COMM_WORLD, ierr )
+        call mpi_allreduce ( iptr, ibuff, ilen, itype, ityprd, engine_comm_world, ierr )
     else if ( itype == dfreal ) then
         allocate(sbuff(ilen), stat = istat)
         if (istat /= 0) goto 999
         sbuff = 0.0_sp
-        call mpi_allreduce ( iptr, sbuff, ilen, itype, ityprd, MPI_COMM_WORLD, ierr )
+        call mpi_allreduce ( iptr, sbuff, ilen, itype, ityprd, engine_comm_world, ierr )
     else if ( itype == dfdble ) then
         allocate(dbuff(ilen), stat = istat)
         if (istat /= 0) goto 999
         dbuff = 0.0_hp
-        call mpi_allreduce ( iptr, dbuff, ilen, itype, ityprd, MPI_COMM_WORLD, ierr )
+        call mpi_allreduce ( iptr, dbuff, ilen, itype, ityprd, engine_comm_world, ierr )
     endif
     !
     if ( ierr /= MPI_SUCCESS ) then

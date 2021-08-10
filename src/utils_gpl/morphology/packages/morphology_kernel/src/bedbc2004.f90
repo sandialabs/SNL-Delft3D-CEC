@@ -9,10 +9,10 @@ subroutine bedbc2004(tp        ,rhowat    , &
                    & delm      ,fc1       ,fw1       ,phicur    ,kscr      , &
                    & i2d3d     ,mudfrac   ,fsilt     ,taucr1    ,psi       , &
                    & dzduu     ,dzdvv     ,eps       ,camax     ,iopsus    , &
-                   & ag        ,wave      ,tauadd    ,gamtcr    ) 
+                   & ag        ,wave      ,tauadd    ,gamtcr    ,betam     ) 
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -36,8 +36,8 @@ subroutine bedbc2004(tp        ,rhowat    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: bedbc2004.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/bedbc2004.f90 $
+!  $Id: bedbc2004.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/bedbc2004.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Compute bed roughness and shear stress parameters
@@ -56,6 +56,7 @@ subroutine bedbc2004(tp        ,rhowat    , &
 !
     integer, intent(in)   :: i2d3d
     real(fp)              :: aks    !  Description and declaration in esm_alloc_real.f90
+    real(fp), intent(in)  :: betam
     real(fp)              :: caks
     real(fp)              :: d10
     real(fp)              :: d50
@@ -238,6 +239,7 @@ subroutine bedbc2004(tp        ,rhowat    , &
        ! ksc due to ripples, mega-ripples and dunes
        !
        ra = 30.0_fp * z0rou
+       ra = min(10.0_fp*rc, ra)
        !
        ! convert velocity to velocity at top of wave mixing layer, based on
        ! ENHANCED bed roughness
@@ -336,7 +338,7 @@ subroutine bedbc2004(tp        ,rhowat    , &
        cmax  = min(max((d50/dsand)*cmaxs , 0.05_fp) , cmaxs)
        fpack = min(cmax/cmaxs , 1.0_fp)
     else
-       fclay = min((1.0_fp+mudfrac)**3, 2.0_fp)
+       fclay = min((1.0_fp+mudfrac)**betam, 2.0_fp)
     endif
     taucr1 = fpack * fch1 * fclay * taucr0
     taurat  = taubcw / taucr1

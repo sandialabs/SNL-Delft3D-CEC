@@ -1,6 +1,6 @@
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: d3d_in_openda.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/d3d_in_openda.f90 $
+!  $Id: d3d_in_openda.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/d3d_in_openda.f90 $
 module m_openda_quantities
 ! quantity-id's : in (from Delft3D to openDA)
 
@@ -132,7 +132,7 @@ contains
   else
       if (quantity_id /= windgu .and. quantity_id /=windgv) then
         print *,'ERROR: set_openda_buffer: number of noise parameters should be 1 if no noise grid is present'
-        stop
+        call throwexception()
       endif
       ! specific situation of a noise grid. The array vals in fact consists of triples
       ! (xloc, yloc, value)
@@ -318,6 +318,7 @@ subroutine compute_secundary_state(gdp       )
     integer(pntrsize)                    , pointer :: alfas
     integer(pntrsize)                    , pointer :: areau
     integer(pntrsize)                    , pointer :: areav
+    integer(pntrsize)                    , pointer :: bruvai
     integer(pntrsize)                    , pointer :: c
     integer(pntrsize)                    , pointer :: cdwlsu
     integer(pntrsize)                    , pointer :: cdwlsv
@@ -383,6 +384,7 @@ subroutine compute_secundary_state(gdp       )
     integer(pntrsize)                    , pointer :: r1
     integer(pntrsize)                    , pointer :: rho
     integer(pntrsize)                    , pointer :: rhowat
+    integer(pntrsize)                    , pointer :: rich
     integer(pntrsize)                    , pointer :: rlabda
     integer(pntrsize)                    , pointer :: rnpl
     integer(pntrsize)                    , pointer :: rob
@@ -558,8 +560,6 @@ subroutine compute_secundary_state(gdp       )
     character*4                          , pointer :: rouflo
     character*4                          , pointer :: rouwav
     character*8                          , pointer :: dischy
-    integer                              , pointer :: initia
-    integer                              , pointer :: initi
     integer                                        :: nmaxddb
     integer                                        :: nst
 
@@ -672,6 +672,7 @@ subroutine compute_secundary_state(gdp       )
     alfas               => gdp%gdr_i_ch%alfas
     areau               => gdp%gdr_i_ch%areau
     areav               => gdp%gdr_i_ch%areav
+    bruvai              => gdp%gdr_i_ch%bruvai
     c                   => gdp%gdr_i_ch%c
     cdwlsu              => gdp%gdr_i_ch%cdwlsu
     cdwlsv              => gdp%gdr_i_ch%cdwlsv
@@ -737,6 +738,7 @@ subroutine compute_secundary_state(gdp       )
     r1                  => gdp%gdr_i_ch%r1
     rho                 => gdp%gdr_i_ch%rho
     rhowat              => gdp%gdr_i_ch%rhowat
+    rich                => gdp%gdr_i_ch%rich
     rlabda              => gdp%gdr_i_ch%rlabda
     rnpl                => gdp%gdr_i_ch%rnpl
     rob                 => gdp%gdr_i_ch%rob
@@ -839,9 +841,6 @@ subroutine compute_secundary_state(gdp       )
     rouflo              => gdp%gdtricom%rouflo
     rouwav              => gdp%gdtricom%rouwav
     dischy              => gdp%gdtricom%dischy
-    initia              => gdp%gdtricom%initia
-    initi               => gdp%gdtricom%initi
-
 
     lundia              => gdp%gdinout%lundia
     
@@ -933,7 +932,7 @@ subroutine compute_secundary_state(gdp       )
        icy = 1
        call chkdry(jstart    ,nmmaxj    ,nmmax     ,kmax      ,lsec      , &
                  & lsecfl    ,lstsci    ,ltur      ,icx       ,icy       , &
-                 & initia    ,i(kcu)    ,i(kcv)    ,i(kcs)    ,i(kfu)    , &
+                 & i(kcu)    ,i(kcv)    ,i(kcs)    ,i(kfu)    , &
                  & i(kfv)    ,i(kfs)    ,i(kspu)   ,i(kspv)   ,r(dpu)    , &
                  & r(dpv)    ,r(hu)     ,r(hv)     ,r(hkru)   ,r(hkrv)   , &
                  & r(thick)  ,r(s1)     ,d(dps)    ,r(u1)     ,r(v1)     , &
@@ -943,7 +942,7 @@ subroutine compute_secundary_state(gdp       )
        icx = nmaxddb
        icy = 1
        call z_chkdry(jstart    ,nmmaxj    ,nmmax     ,kmax      ,lstsci    , &
-                   & ltur      ,icx       ,icy       ,initia    ,i(kcu)    , &
+                   & ltur      ,icx       ,icy       ,i(kcu)    , &
                    & i(kcv)    ,i(kcs)    ,i(kfu)    ,i(kfv)    ,i(kfs)    , &
                    & i(kspu)   ,i(kspv)   ,i(kfuz1)  ,i(kfvz1)  ,i(kfsz1)  , &
                    & i(kfumin) ,i(kfumax) ,i(kfvmin) ,i(kfvmax) ,i(kfsmin) , &
@@ -1207,7 +1206,8 @@ subroutine compute_secundary_state(gdp       )
                     & r(s1)     ,d(dps)    ,r(hu)     ,r(hv)     ,r(u1)     , &
                     & r(v1)     ,r(thick)  ,r(windsu) ,r(windsv) ,r(z0urou) , &
                     & r(z0vrou) ,i(kfu)    ,i(kfv)    ,i(kfs)    ,i(kcs)    , &
-                    & r(wrkb1)  ,r(wrkb2)  ,gdp       )
+                    & r(wrkb1)  ,r(wrkb2)  ,r(bruvai) ,r(rich)   ,r(rho)    , &
+                    & gdp       )
        else
           icx = nmaxddb
           icy = 1
@@ -1217,7 +1217,8 @@ subroutine compute_secundary_state(gdp       )
                       & i(kfvmax) ,i(kfsmin) ,i(kfsmax) ,r(rtur1)  , &
                       & r(s1)     ,d(dps)    ,r(u1)     ,r(v1)     ,r(windsu) , &
                       & r(windsv) ,r(z0urou) ,r(z0vrou) ,r(wrkb1)  ,r(wrkb2)  , &
-                      & r(dzu1)   ,r(dzv1)   ,r(dzs1)   ,gdp       )
+                      & r(dzu1)   ,r(dzv1)   ,r(dzs1)   ,r(bruvai) ,r(rich)   , &
+                      & r(rho)    ,gdp       )
        endif
     endif
     !

@@ -31,6 +31,7 @@ FMODULES += \
 #-------------------------------------------------------------------------------
 #Sources
 libKernelComputeSediment_la_SOURCES = \
+         morstatistics.f90 \
          adjust_bedload.f90 \
          avalan.f90 \
          dredge.f90 \

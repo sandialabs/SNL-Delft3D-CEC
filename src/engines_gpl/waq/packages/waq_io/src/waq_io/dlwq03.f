@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -23,7 +23,8 @@
 
       subroutine dlwq03 ( lun    , lchar  , filtype, nrftot , nrharm ,
      &                    ivflag , dtflg1 , iwidth , dtflg3 , vrsion ,
-     &                    ioutpt , gridps , syname , ierr   , iwar   )
+     &                    ioutpt , gridps , syname , ierr   , iwar   ,
+     &                    has_hydfile     , nexch                    )
 
 !       Deltares Software Centre
 
@@ -64,6 +65,8 @@
       use rd_token     !   for the reading of tokens
       use partmem      !   for PARTicle tracking
       use timers       !   performance timers
+      use dlwq_netcdf  !   read/write grid in netcdf
+      use output       !   output settings
 
       implicit none
 
@@ -85,6 +88,8 @@
       character(20), intent(in   ) :: syname (*)        !< array with substance names
       integer  ( 4), intent(inout) :: ierr              !< cumulative error   count
       integer  ( 4), intent(inout) :: iwar              !< cumulative warning count
+      logical      , intent(out)   :: has_hydfile       !< if true, much information comes from the hyd-file
+      integer  ( 4), dimension(3), intent(out) :: nexch !< number of exchanges as read via hyd-file
       type(GridPointerColl)           GridPs            !< Collection of grid pointers
 
       include 'sysn.inc'        !     common  /  sysn  /    System dimensions
@@ -118,8 +123,17 @@
       integer                 iknm1, iknm2      !  help variables for attributes
       integer                 iknmrk            !  help variables merged attributes
       integer                 ivalk             !  return value dhknmrk
-      
+
+      logical                 exist             !  whether a file exists or not
       character*255           ugridfile         !  name of the ugrid-file
+      character*255           hydfile           !  name of the hyd-file
+      integer :: ncid, ncidout
+      integer :: varid, varidout, meshid, meshidout, timeid, bndtimeid, ntimeid, wqid
+      integer :: inc_error
+
+      character(len=nf90_max_name) :: mesh_name
+      character(len=nf90_max_name) :: dimname
+
       integer(4) :: ithndl = 0
       if (timon) call timstrt( "dlwq03", ithndl )
 
@@ -131,24 +145,138 @@
       iwar2  = 0
       iposr  = 0
 
-!     Check if there is a keyword for the ugrid
+      nexch  = 0
+
+!     Check if there is a keyword for the grid or the hyd-file
+      lncout     = .false.
+      lchar (46) = ' '
       if ( gettoken( cdummy, idummy, itype, ierr2 ) .gt. 0 ) goto 240
-      if (itype .eq. 1 .and. cdummy .eq. 'UGRID') then
+      has_hydfile = .false.
+      if (cdummy .eq. 'HYD_FILE') then
+         if ( gettoken( hydfile, ierr2 ) .gt. 0 ) goto 240
+         !
+         ! Retrieve several file names:
+         ! - attributes
+         ! - volumes, areas, flows, lengths, ...
+         ! - UGRID-file
+         !
+         write ( lunut , 2450 )
+         write ( lunut , 2460 ) trim(hydfile)
+
+         call read_hydfile( lunut, hydfile, lchar, noseg, nexch, ierr2 )
+         if ( ierr2 /= 0 ) goto 240
+         has_hydfile = .true.
+         ugridfile   = lchar(46)
+      endif
+
+      if (cdummy .eq. 'UGRID' .or. (has_hydfile .and. ugridfile /= ' ') ) then
+
+         ! Turn on debug info from dlwaqnc
+         inc_error = dlwqnc_debug_status(.true.)
+         ! Check if the UGRID file is suitable for Delwaq Output
          write ( lunut , 2500 )
-         iwar2 = iwar2 + 1
-         if ( gettoken( ugridfile, ierr2 ) .gt. 0 ) goto 240
+
+         if ( .not. has_hydfile ) then
+            if ( gettoken( ugridfile, ierr2 ) .gt. 0 ) goto 240
+         endif
+
          write ( lunut , 2510 ) trim(ugridfile)
-!        Read number of computational volumes
-         if ( gettoken( noseg, ierr2 ) .gt. 0 ) goto 240
-      else if (itype .eq. 2) then
-!        Or the number of computational volumes was already read
-         noseg = idummy
+         inquire( file = ugridfile, exist = exist )
+         if ( .not. exist ) then
+            write ( lunut , 2511 )
+            lncout     = .false.
+         else
+            lncout     = .true.
+            lchar (46) = ugridfile
+         endif
+
+         if ( lncout ) then
+            ! Write the version of the netcdf library
+            write ( lunut , 2520 ) trim(nf90_inq_libvers())
+
+            ! Open the ugrid-file file
+            inc_error = nf90_open(trim(ugridfile), nf90_nowrite, ncid )
+            if (inc_error /= nf90_noerr ) then
+               write ( lunut , 2530 ) trim(ugridfile)
+               write ( lunut , 2599 ) trim(nf90_strerror(inc_error))
+               ierr = ierr + 1
+               lncout    = .false.
+            end if
+         end if
+
+         if ( lncout ) then
+            ! Find the variable with the attribute "delwaq_role"
+            ! If that does not exist, try and find one with the attribute "cf_role"
+            ! that has the value "mesh_topology"
+            inc_error = dlwqnc_find_var_with_att( ncid, "delwaq_role", varid )
+            if ( inc_error == nf90_noerr ) then
+               ! Determine the mesh variable from that
+               mesh_name = ' '
+               inc_error = nf90_get_att( ncid, varid, "mesh", mesh_name )
+               if ( inc_error /= nf90_noerr ) then
+                  write ( lunut , 2555 )
+                  write ( lunut , 2599 ) trim(nf90_strerror(inc_error))
+                  lncout    = .false.
+                  lchar(46) = ' '
+                  iwar = iwar + 1
+    !              ierr = ierr + 1
+               endif
+            else
+               inc_error = dlwqnc_find_var_with_att( ncid, "cf_role", varid, "mesh_topology" )
+
+               if ( inc_error /= nf90_noerr ) then
+                  write ( lunut , 2540 )
+                  write ( lunut , 2599 ) trim(nf90_strerror(inc_error))
+                  lncout    = .false.
+                  lchar(46) = ' '
+                  iwar = iwar + 1
+    !              ierr      = ierr + 1
+               else
+                  ! Get the name of this variable
+                  inc_error = nf90_inquire_variable( ncid, varid, name = mesh_name )
+                  if ( inc_error /= nf90_noerr ) then
+                     write ( lunut , 2540 )
+                     write ( lunut , 2599 ) trim(nf90_strerror(inc_error))
+                     lncout    = .false.
+                     lchar(46) = ' '
+                     iwar = iwar + 1
+    !                 ierr      = ierr + 1
+                  endif
+               endif
+            endif
+
+            if ( lncout ) then
+               write ( lunut , 2550 ) trim(mesh_name)
+
+               ! Get the meshid
+               inc_error = nf90_inq_varid( ncid, mesh_name, meshid )
+               if ( inc_error /= nf90_noerr ) then
+                  write ( lunut , 2556 ) trim(mesh_name)
+                  write ( lunut , 2599 ) trim(nf90_strerror(inc_error))
+!                 ierr      = ierr + 1
+                  lncout    = .false.
+                  lchar(46) = ' '
+                  iwar = iwar + 1
+               endif
+            endif
+            ! Everything seems to be fine for now, switch on netcdf output
+         endif
+
+!       Read number of computational volumes - if required
+         if ( .not. has_hydfile ) then
+            if ( gettoken( noseg, ierr2 ) .gt. 0 ) goto 240
+         endif
+
+         ! TODO: check the number of segments with the information in the waqgeom-file
+
       else
-!        Or something went wrong
-         write ( lunut , 2005 )
-         ierr = ierr+1
-         goto 240
+!       Or the number of computational volumes was already read
+
+         if ( .not. has_hydfile ) then
+            noseg = idummy
+         endif
       end if
+
       if ( noseg .gt. 0 ) then
          write ( lunut , 2000 ) noseg
       else
@@ -195,7 +323,8 @@
             case default
 !                   call with record length 0 => IMOPT1 of -4 not allowed
                call opt1 ( imopt1  , lun     , 6       , lchar   , filtype ,
-     &                     dtflg1  , dtflg3  , 0       , ierr2   , iwar2   )
+     &                     dtflg1  , dtflg3  , 0       , ierr2   , iwar2   ,
+     &                     .false. )
                if ( ierr2 .gt. 0 ) goto 240
                if ( gettoken( nx, ierr2 ) .gt. 0 ) goto 240
                if ( gettoken( ny, ierr2 ) .gt. 0 ) goto 240
@@ -245,6 +374,11 @@
       iamerge = 0
       ikmerge = 0
 
+      if ( has_hydfile ) then
+         ierr2 = force_include_file( lchar(40) )
+         if ( ierr2 /= 0 ) goto 240
+      endif
+
       if ( vrsion .lt. 4.20 ) then                             !   attributes not supported
          nkopt = 0
       else
@@ -264,7 +398,8 @@
          if ( gettoken( ikopt1, ierr2 ) .gt. 0 ) goto 240      !   the file option for this info
          write ( lunut , 2130 ) ikopt1
          call opt1 ( ikopt1  , lun     , 40      , lchar   , filtype ,
-     &               dtflg1  , dtflg3  , 0       , ierr2   , iwar2   )
+     &               dtflg1  , dtflg3  , 0       , ierr2   , iwar2   ,
+     &               .false. )
          if ( ierr2  .gt. 0 ) goto 240
          if ( ikopt1 .eq. 0 ) then                             !   binary file
             call dhopnf  ( lun(40) , lchar(40) , 40 , 2 , ierr2 )
@@ -406,7 +541,8 @@
          if ( gettoken( ikopt1, ierr2 ) .gt. 0 ) goto 240
          write ( lunut , 2130 ) ikopt1
          call opt1 ( ikopt1  , lun     , 40      , lchar   , filtype ,
-     &               dtflg1  , dtflg3  , 0       , ierr2   , iwar2   )
+     &               dtflg1  , dtflg3  , 0       , ierr2   , iwar2   ,
+     &               .false. )
          if ( ierr2 .gt. 0 ) goto 240
          if ( ikopt1 .eq. 0 ) then
             write ( lunut , 2320 )
@@ -446,11 +582,15 @@
 
       write ( lunut , 2390 )
       ierr2 = 0
+
       call opt0   ( lun    , 7      , 0        , 0        , noseg  ,
      &              1      , 1      , nrftot(2), nrharm(2), ifact  ,
      &              dtflg1 , disper , volume   , iwidth   , lchar  ,
-     &              filtype, dtflg3 , vrsion   , ioutpt   , ierr2   ,
-     &              iwar2  )
+     &              filtype, dtflg3 , vrsion   , ioutpt   , ierr2  ,
+     &              iwar2  , has_hydfile       )
+
+      call check_volume_time( lunut, lchar(7), noseg, ierr2 )
+
       if ( .not. alone ) then
          if ( lchar(7) .ne. fnamep(6) ) then
             write ( lunut , 2395 ) fnamep(6)
@@ -535,6 +675,117 @@
  2395 format ( / ' ERROR, volumes for Delpar from different file : ',A20 )
  2400 format ( / ' ERROR, end of file on unit:' ,I3, / ' Filename: ',A20 )
  2410 format ( / ' ERROR, reading file on unit:',I3, / ' Filename: ',A20 )
- 2500 format ( / ' WARNING, Found UGRID keyword, but not supported yet (ignored)' )
- 2510 format ( / ' File containing the grid: ', A, ' (ignored)' )
+ 2450 format ( / ' Found HYD_FILE keyword' )
+ 2460 format ( / ' Retrieving file names and grid parameters from: ', A )
+ 2500 format ( / ' Found UGRID keyword' )
+ 2510 format ( / ' File containing the grid: ', A )
+ 2511 format ( / ' Warning: the file does not exist - turning NetCDF output off')
+ 2520 format ( / ' NetCDF version: ', A )
+ 2530 format ( / ' ERROR, opening NetCDF file. Filename: ',A )
+ 2540 format ( / ' WARNING, no variable found with required attribute "delwaq_role" or "cf_role"'
+     &         / '          this version of Delwaq is not compatible with older non-ugrid waqgeom-files'  )
+ 2550 format ( / ' Mesh used for Delwaq output: ', A )
+ 2555 format ( / ' ERROR, Getting the mesh name failed' )
+ 2556 format ( / ' Getting the mesh ID failed - variable: ', A )
+
+ 2590 format ( / ' ERROR, closing NetCDF file. Filename: ',A )
+ 2599 format ( / ' NetCDF error message: ', A )
+
+      contains
+
+      !
+      ! Check the contents of the volumes file: id the time step compatible?
+      !
+      subroutine check_volume_time( lunut, filvol, noseg, ierr2 )
+
+      integer, intent(in)          :: lunut      !< LU-number of the report file
+      character(len=*), intent(in) :: filvol     !< Name of the volumes file to be checked
+      integer, intent(in)          :: noseg      !< Number of segments
+      integer, intent(out)         :: ierr2      !< Whether an error was found or not
+
+      include 'sysi.inc'        !     common  /  sysi  /    Timer characteristics
+
+      integer                      :: i, ierr
+      integer                      :: luvol
+      integer                      :: time1, time2, time3
+      real                         :: dummy
+      character(len=14)            :: string
+
+      open( newunit = luvol, file = filvol, access = 'stream',
+     &      status = 'old', iostat = ierr )
+
+      !
+      ! The existence has already been checked, if the file does
+      ! not exist, skip the check
+      !
+      if ( ierr /= 0 ) then
+          return
+      endif
+
+      !
+      ! For "steering files", we need an extra check
+      ! - skip the check on the times though
+      !
+      ! Ignore the error condition - it might occur with
+      ! very small models (one or two segments, for instance)
+      !
+      read( luvol, iostat = ierr ) string
+      if ( string == 'Steering file ' ) then
+          return
+      endif
+
+      !
+      ! Regular volume files
+      !
+      read( luvol, iostat = ierr, pos = 1 ) time1, (dummy, i = 1,noseg )
+      if ( ierr /= 0 ) then
+          ierr2 = ierr2 + 1
+          write ( lunut , 110 ) ierr
+          return
+      endif
+      read( luvol, iostat = ierr ) time2, (dummy, i = 1,noseg )
+      if ( ierr /= 0 ) then
+          write ( lunut , 120 )
+          return
+      endif
+      read( luvol, iostat = ierr ) time3, (dummy, i = 1,noseg )
+      if ( ierr /= 0 ) then
+          write ( lunut , 130 )
+          return
+      endif
+
+      !
+      ! The times must be increasing and the intervals must be the same
+      !
+      if ( time1 >= time2 .or. time2 >= time3 ) then
+          ierr2 = ierr2 + 1
+          write ( lunut , 140 ) time1, time2, time3
+          return
+      endif
+      if ( (time2 - time1) /= (time3 - time2) ) then
+          ierr2 = ierr2 + 1
+          write ( lunut , 150 ) time1, time2, time3
+          return
+      endif
+      if ( mod( (time2 - time1), idt ) /= 0 ) then
+          ierr2 = ierr2 + 1
+          write ( lunut , 160 ) time1, time2, time3, idt
+          return
+      endif
+
+  110 format( ' ERROR: the volumes file seems to be too small'
+     &      /,'        Error code: ', i0)
+  120 format( ' NOTE: the volumes file appears to hold one record only')
+  130 format( ' NOTE: the volumes file appears to hold two records only'
+     &)
+  140 format( ' ERROR: the times in the volumes file are not monotonical
+     &ly increasing',/,' Successive times: ',3i12)
+  150 format( ' ERROR: the times in the volumes file are not equidistant
+     &',/,' Successive times: ',3i12)
+  160 format( ' ERROR: the time step does not divide the time interval i
+     &n the volumes file',
+     &/,' Successive times in the volumes file: ',3i12,
+     &/,'Time step for water quality: ',i12)
+
+      end subroutine check_volume_time
       end

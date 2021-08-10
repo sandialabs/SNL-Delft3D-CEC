@@ -3,7 +3,7 @@ function qp_gridviewhelper(UD,Info,DomainNr,Props,fld)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -28,8 +28,8 @@ function qp_gridviewhelper(UD,Info,DomainNr,Props,fld)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_gridviewhelper.m $
-%   $Id: qp_gridviewhelper.m 5474 2015-10-02 18:11:10Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_gridviewhelper.m $
+%   $Id: qp_gridviewhelper.m 65778 2020-01-14 14:07:42Z mourits $
 
 F = UD.GridView.Fig;
 UseGrid = get(F,'userdata');
@@ -50,7 +50,7 @@ if ~iscell(UseGrid) || (~isequal(UseGrid(1:3),UseGridNew(1:3)) && UseGridNew{2}>
     %
     % read grid
     [Chk,GRID]=qp_getdata(Info,DomainNr,Props(i_grd),'grid');
-    GRID.ValLocation = NewLoc;
+    [GRID.ValLocation] = deal(NewLoc);
     %
     % push grid to gridview (which triggers update)
     % TODO: Change selection?
@@ -65,8 +65,22 @@ elseif iscell(UseGrid) && length(UseGrid)>3 && ~isequal(UseGrid{4},NewLoc)
             set(UD.MainWin.EditMN,'userdata',Range.Range,'string','') % set string to empty to force update
             set(UD.MainWin.AllM,'userdata',{0 Range.Range(1) RangeMax})
         case 'point'
-            set(UD.MainWin.AllM,'userdata',{0 Range.Range(1) RangeMax})
+            set(UD.MainWin.AllM,'userdata',{0 Range.Range(1) RangeMax(1)})
+            if length(RangeMax)>1
+                set(UD.MainWin.AllN,'userdata',{0 Range.Range(2) RangeMax(2)})
+            end
         case 'range'
-            set(UD.MainWin.AllM,'userdata',{0 Range.Range{1} RangeMax})
+            if iscell(Range.Range)
+                set(UD.MainWin.AllM,'userdata',{isequal(Range.Range{1},1:RangeMax(1)) Range.Range{1} RangeMax(1)})
+                if length(RangeMax)>1
+                    set(UD.MainWin.AllN,'userdata',{isequal(Range.Range{2},1:RangeMax(2)) Range.Range{2} RangeMax(2)})
+                end
+            else
+                r = Range.Range;
+                set(UD.MainWin.AllM,'userdata',{r(1)==1 && r(2)==RangeMax(1) r(1):r(2) RangeMax(1)})
+                if length(RangeMax)>1
+                    set(UD.MainWin.AllN,'userdata',{r(3)==1 && r(4)==RangeMax(2) r(3):r(4) RangeMax(2)})
+                end
+            end
     end
 end

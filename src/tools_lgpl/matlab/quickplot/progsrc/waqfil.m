@@ -19,6 +19,7 @@ function S = waqfil(cmd,file,varargin)
 %
 %   Volume, salinity, temperature, and shear stress files
 %     * .vol, .sal, .tem, .vdf, .tau files: NSeg
+%     * new .srf files fall into this category as well
 %
 %   Segment function and parameter files
 %     * .segfun files                     : NSeg, NPar
@@ -36,7 +37,7 @@ function S = waqfil(cmd,file,varargin)
 %     * .chz files                        : -
 %
 %   Segment surface area and depth files
-%     * .srf, *.dps files                 : -
+%     * .srf (old format), *.dps files    : -
 %
 %   table files
 %     * .lgt files                        : -
@@ -45,7 +46,7 @@ function S = waqfil(cmd,file,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -70,8 +71,8 @@ function S = waqfil(cmd,file,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/waqfil.m $
-%   $Id: waqfil.m 5023 2015-04-29 12:31:57Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/waqfil.m $
+%   $Id: waqfil.m 65778 2020-01-14 14:07:42Z mourits $
 
 if length(cmd)<3
     error('Unknown command: %s',cmd)
@@ -96,8 +97,12 @@ switch lower(cmd(1:4))
                 S = openlen(file,varargin{:});
             case '.chz'
                 S = openchz(file,varargin{:});
-            case {'.srf','.dps'}
-                S = opensrf(file,varargin{:});
+            case {'.srf','.srfold','.dps'}
+                if nargin==3
+                    S = openvol(file,varargin{:});
+                else
+                    S = opensrf(file,varargin{:});
+                end
             case '.lgt'
                 S = openlgt(file,varargin{:});
             otherwise
@@ -119,11 +124,13 @@ switch lower(cmd(1:4))
             case '.len'
                 S = readlen(file,varargin{:});
             case '.chz'
-                %S = readchz(file,varargin{:});
                 S = file.Chezy(varargin{end},:)';
-            case {'.srf','.dps'}
-                %S = readsrf(file,varargin{:});
-                S = file.Srf;
+            case {'.srf','.srfold','.dps'}
+                if isfield(file,'Srf')
+                    S = file.Srf;
+                else
+                    S = readvol(file,varargin{:});
+                end
             case '.lgt'
                 S = readlgt(file,varargin{:});
         end
@@ -271,6 +278,9 @@ else
     X = fread(fid,[1 6],'int32');
 end
 %
+if X(1)==0
+    error('Could this be a new format srf file?')
+end
 S.Dims    = X(1:2);
 S.NAct    = X(3);
 S.XXX     = X(4:6);

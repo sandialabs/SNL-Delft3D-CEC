@@ -50,7 +50,7 @@ function varargout=shape(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -75,8 +75,8 @@ function varargout=shape(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/shape.m $
-%   $Id: shape.m 5308 2015-07-31 13:15:48Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/shape.m $
+%   $Id: shape.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin==0
     if nargout>0
@@ -185,6 +185,9 @@ if exist([S.FileBase '.shx'])
     S.Idx=2*fread(fidx,[2 inf],'int32'); % offset stored in words (16 bit)
     fclose(fidx);
     S.IndexExt='.shx';
+else
+    NShapeMax = 1024;
+    S.Idx = zeros(1,NShapeMax);
 end
 
 while ~feof(fid)
@@ -208,6 +211,10 @@ while ~feof(fid)
     ShapeTp=fread(fid,1,'int32');
     NShapes=NShapes+1;
     if ~Index
+        if NShapes>NShapeMax
+            NShapeMax = 2*NShapeMax;
+            S.Idx(1,NShapeMax) =  0;
+        end
         S.Idx(NShapes)=ftell(fid)-12;
     end
     switch ShapeTp
@@ -236,6 +243,8 @@ while ~feof(fid)
         case {11,21} % pointz, pointm
             % x,y,z or x,y,m
             fread(fid,3,'float64');
+            TNPnt=TNPnt+1;
+            TNPrt=TNPrt+1;
         case {13,15,23,25} % polylinez, polygonz, polylinem, polygonm
             % box, NPrt, NPnt, {iprt}, {x,y} zrange, {z} or mrange, {m}
             fread(fid,4,'float64');
@@ -277,6 +286,9 @@ S.NShapes=NShapes;
 S.NPrt=TNPrt;
 S.NPnt=TNPnt;
 S.Check='OK';
+if ~Index
+    S.Idx = S.Idx(1:NShapes);
+end
 
 if ~exist([S.FileBase '.dbf'])
     return
@@ -384,7 +396,11 @@ switch datatype
         fid=fopen([S.FileBase S.ShapeExt],'r','l');
         fseek(fid,S.Idx(1,shapes(1)),-1);
         TNPnt=0;
-        Out=repmat(NaN,S.NPnt+S.NPrt-1,2);
+        if S.ShapeTpName(end)=='z'
+            Out=repmat(NaN,S.NPnt+S.NPrt-1,3);
+        else
+            Out=repmat(NaN,S.NPnt+S.NPrt-1,2);
+        end
         Obj=repmat(NaN,S.NPnt+S.NPrt-1,1);
         for shp=shapes
             fseek(fid,S.Idx(1,shp),-1);
@@ -467,13 +483,12 @@ switch datatype
                     fread(fid,NrSize(2)-2,'int16');
             end
         end
-        if TNPnt>0 && TNPnt<size(Out,1)
-            Out(TNPnt:end,:)=[];
-            Obj(TNPnt:end,:)=[];
-        end
-    case 'patches'
     otherwise
-end
+    end
+    if TNPnt>0 && TNPnt<size(Out,1)
+        Out(TNPnt+1:end,:)=[];
+        Obj(TNPnt+1:end,:)=[];
+    end
 try
     fclose(fid);
 end

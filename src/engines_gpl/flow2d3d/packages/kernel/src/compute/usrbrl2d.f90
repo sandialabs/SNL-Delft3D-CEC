@@ -1,11 +1,11 @@
 subroutine usrbrl2d(icx       ,icy       ,nmmax     ,kmax      ,kfu       , &
                   & kspu      ,guu       ,gvu       ,qxk       ,bbk       , &
-                  & ubrlsu    ,dps       ,hkru      ,s0        ,hu        , &
-                  & umean     ,thick     ,dteu      ,taubpu    ,mom_output, &
-                  & u1        ,gdp       )
+                  & ddk       ,ubrlsu    ,dps       ,hkru      ,s0        , &
+                  & hu        ,umean     ,thick     ,dteu      ,taubpu    , &
+                  & mom_output,u1        ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine usrbrl2d(icx       ,icy       ,nmmax     ,kmax      ,kfu       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: usrbrl2d.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/usrbrl2d.f90 $
+!  $Id: usrbrl2d.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/usrbrl2d.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! The routine adds additional energy losses due to 2D  hydraulic structures.
@@ -79,6 +79,8 @@ subroutine usrbrl2d(icx       ,icy       ,nmmax     ,kmax      ,kfu       , &
     real(fp)  , dimension(gdp%d%nmlb:gdp%d%nmub)        , intent(in)  :: umean  !  Description and declaration in esm_alloc_real.f90
     real(fp)  , dimension(gdp%d%nmlb:gdp%d%nmub, kmax)                :: bbk    !!  Internal work array, coefficient la-
                                                                                 !!  yer velocity in (N,M,K) implicit part
+    real(fp)  , dimension(gdp%d%nmlb:gdp%d%nmub, kmax)                :: ddk    !!  Internal work array, diagonal space
+                                                                                !!  at (N,M,K)
     real(fp)  , dimension(gdp%d%nmlb:gdp%d%nmub, kmax)  , intent(in)  :: qxk    !  Description and declaration in esm_alloc_real.f90
     real(fp)  , dimension(gdp%d%nmlb:gdp%d%nmub)        , intent(in)  :: taubpu !  Description and declaration in esm_alloc_real.f90
     real(fp)  , dimension(gdp%d%nmlb:gdp%d%nmub, kmax)  , intent(in)  :: ubrlsu !  Description and declaration in esm_alloc_real.f90
@@ -97,6 +99,7 @@ subroutine usrbrl2d(icx       ,icy       ,nmmax     ,kmax      ,kfu       , &
     integer      :: nm     ! Loop counter over NMMAX 
     integer      :: nmu    ! NM+ICX 
     real(fp)     :: avolk  ! help constant in computation of qvolk
+    real(fp)     :: absvbov! absolute value of vbov
     real(fp)     :: d1     ! Distance between crest and downstream depth 
     real(fp)     :: dd     ! Downstream depth 
     real(fp)     :: dte0   ! Local backup of DTEU value 
@@ -219,7 +222,8 @@ subroutine usrbrl2d(icx       ,icy       ,nmmax     ,kmax      ,kfu       , &
           !
           dteu(nm) = (1.0_fp - thetaw)*dteu(nm) + thetaw*dte0
           if (toest=='volk') vbov = qvolk/max(hu(nm), 1E-6_fp)
-          if (vbov>eps) then
+          absvbov = abs(vbov)
+          if (absvbov>eps) then
              do k = 1, kmax
                 term = (ag*dteu(nm)/vbov)*ubrlsu(nm, k)/(gvu(nm)*thick(k))
                 if (mom_output) then

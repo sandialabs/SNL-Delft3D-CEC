@@ -4,10 +4,10 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
                 & betac     ,dml       ,restid    ,icreep    ,trasol    ,forfuv    , &
                 & forfww    ,ktemp     ,keva      ,temint    ,evaint    ,lturi     , &
                 & tkemod    ,riglid    ,tstprt    ,prsmap    ,prshis    ,selmap    , &
-                & selhis    ,filrol    ,gdp       )
+                & selhis    ,filrol    ,kmax      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -31,8 +31,8 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: readmd.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/readmd.f90 $
+!  $Id: readmd.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/readmd.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads all records from the MD-file
@@ -122,7 +122,6 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
     integer                       , pointer :: nmax
     integer                       , pointer :: mmax
     integer                       , pointer :: nmaxus
-    integer                       , pointer :: kmax
     integer                       , pointer :: nmmax
     integer                       , pointer :: lstsc
     integer                       , pointer :: lstsci
@@ -164,6 +163,7 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
     real(fp)                      , pointer :: gammax
     real(fp)                      , pointer :: rmincf
     real(fp)                      , pointer :: thetqh
+    real(fp)                      , pointer :: thetqt
     real(fp)                      , pointer :: nudvic
     integer                       , pointer :: ibaroc
     integer                       , pointer :: iter1
@@ -261,6 +261,7 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
 !
     integer                                     :: icreep  !  Description and declaration in tricom.igs
     integer                                     :: keva    !  Description and declaration in tricom.igs
+    integer                                     :: kmax    !  Description and declaration in esm_alloc_int.f90
     integer                                     :: ktemp   !  Description and declaration in tricom.igs
     integer                                     :: lturi   !  Description and declaration in tricom.igs
     integer                                     :: lundia  !  Description and declaration in inout.igs
@@ -328,8 +329,6 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
     real(fp)                              :: tinciw      ! Time in UNIT's to activate the Internal Wave Energy calculation
     real(fp)                              :: tlfsmo      ! Timespan for smoothing (in minutes)
     real(fp)                              :: zini        ! Initial water elevation in the model
-    real(fp)       , dimension(mxkmax, 5) :: wrkini      ! Work array for initial values in RDIC
-    character(1)                          :: ctunit      ! Time scale for time parameters, currently set to 'M'(inute - fixed).
     character(1)                          :: equili      ! Equilibrium or advection and diffusion default = no equilibrium ('N') which means LSEC = 1
     character(1)                          :: sphere      ! Flag Yes / No spherical coordinates
     character(1)   , dimension(mxnto)     :: datbnd      ! Type of open boundary: -'H'(armonic/Tide) -'T'(ime series/time dependent)
@@ -347,7 +346,6 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
     nmax                => gdp%d%nmax
     mmax                => gdp%d%mmax
     nmaxus              => gdp%d%nmaxus
-    kmax                => gdp%d%kmax
     nmmax               => gdp%d%nmmax
     lstsc               => gdp%d%lstsc
     lstsci              => gdp%d%lstsci
@@ -419,6 +417,7 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
     gammax              => gdp%gdnumeco%gammax
     rmincf              => gdp%gdnumeco%rmincf
     thetqh              => gdp%gdnumeco%thetqh
+    thetqt              => gdp%gdnumeco%thetqt
     ibaroc              => gdp%gdnumeco%ibaroc
     iter1               => gdp%gdnumeco%iter1
     bndneu              => gdp%gdnumeco%bndneu
@@ -626,8 +625,8 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
     !
     call rdirt(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
              & citdat    ,tstart    ,tstop     ,tzone     ,itdate    , &
-             & julday    ,itstrt    ,itfinish  ,dt        ,ctunit    , &
-             & tunit     ,gdp       )
+             & julday    ,itstrt    ,itfinish  ,dt        ,tunit     , &
+             & gdp       )
     if (error) goto 9999
     !
     ! Open boundary correction
@@ -641,8 +640,7 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
     call rdic(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
             & runid     ,restid    ,filic     ,fmtfil    ,salin     , &
             & temp      ,const     ,secflo    ,lturi     ,lsal      , &
-            & ltem      ,lstsc     ,zini      ,wrkini    ,wrkini    , &
-            & wrkini    ,wrkini    ,wrkini    ,wrkini    ,mmax      , &
+            & ltem      ,lstsc     ,zini      ,mmax      , &
             & nmax      ,nmaxus    ,kmax      ,lstsci    ,ltur      , &
             & ch(namcon),r(s1)     ,r(u1)     ,r(v1)     ,r(r1)     , &
             & r(rtur1)  ,r(decay)  ,r(umnldf) ,r(vmnldf) ,i(kfu)    , &
@@ -656,8 +654,9 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
        call rdbcg(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                 & itlfsm    ,tlfsmo    ,dt        ,tunit     ,nto       , &
                 & lstsc     ,bndneu    ,cstbnd    ,ch(nambnd),ch(typbnd), &
-                & r(rettim) ,ntoq      ,thetqh    ,restid    ,filic     , &
-                & paver     ,pcorr     ,tstart    ,tstop     ,gdp       )
+                & r(rettim) ,ntoq      ,thetqh    ,thetqt    ,restid    , &
+                & filic     ,paver     ,pcorr     ,tstart    ,tstop     , &
+                & gdp       )
        if (error) goto 9999
     endif
     !
@@ -722,7 +721,7 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
     !
     call rdproc(error     ,nrrec     ,mdfrec    ,htur2d     ,salin    , &
               & temp      ,wind      ,ktemp     ,keva       ,ivapop   , &
-              & irov      ,ctunit    ,z0v       ,sferic     ,tgfcmp   , &
+              & irov      ,z0v       ,sferic     ,tgfcmp   , &
               & temeqs    ,saleqs    ,wstcof    ,rhoa       ,secflo   , &
               & betac     ,equili    ,lsec      ,chzmin     ,rmincf   , &
               & rtcmod    ,couplemod ,nonhyd    ,mmax       ,nmax     , &
@@ -809,7 +808,7 @@ subroutine readmd(lunmd     ,lundia    ,lunscr    ,error     ,runid     ,runtxt 
               & nprttm    ,itfinish  ,iphisf    ,iphisi    ,iphisl    , &
               & itmapf    ,itmapi    ,itmapl    ,ithisf    ,ithisi    , &
               & ithisl    ,itcomf    ,itcomi    ,itcoml    ,itrsti    , &
-              & itnflf    ,itnfli    ,itnfll    ,gdp       )
+              & itnflf    ,itnfli    ,itnfll    ,lstsci    ,gdp       )
     if (error) goto 9999
     !
     ! Read waq parameters, such as output flag for writing binary waq files

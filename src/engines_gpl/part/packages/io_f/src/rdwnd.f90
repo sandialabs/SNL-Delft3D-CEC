@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -149,27 +149,27 @@
          case ( 1 )
             write ( lunut, 1010 )
             write ( lunut, 1001 ) trim(errormessage)
-            call srstop(1)
+            call stop_exit(1)
          case ( 2 )
             write ( lunut, 1020 )
             write ( lunut, 1001 ) trim(errormessage)
-            call srstop(1)
+            call stop_exit(1)
          case ( 3 )
             write ( lunut, 1030 )
             write ( lunut, 1001 ) trim(errormessage)
-            call srstop(1)
+            call stop_exit(1)
          case ( 4 )
             write ( lunut, 1040 )
             write ( lunut, 1001 ) trim(errormessage)
-            call srstop(1)
+            call stop_exit(1)
          case ( 5 )
             write ( lunut, 1040 )
             write ( lunut, 1001 ) trim(errormessage)
-            call srstop(1)
+            call stop_exit(1)
          case ( 6 )
             write ( lunut, 1040 )
             write ( lunut, 1001 ) trim(errormessage)
-            call srstop(1)
+            call stop_exit(1)
       end select
 
       if ( timon ) call timstop( ithndl )

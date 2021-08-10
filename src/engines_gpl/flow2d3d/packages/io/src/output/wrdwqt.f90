@@ -1,11 +1,10 @@
 subroutine wrdwqt(comfil    ,lundia    ,error     ,itcur     ,itimc     , &
                 & nsrc      ,mnksrc    ,mmax      ,nmax      ,kmax      , &
                 & nmaxus    ,lstsci    ,lsal      ,ltem      ,r1        , &
-                & dicuv     ,dicww     ,discum    ,taubmx    ,rbuff     , &
-                & gdp       )
+                & dicuv     ,dicww     ,discum    ,taubmx    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +28,8 @@ subroutine wrdwqt(comfil    ,lundia    ,error     ,itcur     ,itimc     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrdwqt.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrdwqt.f90 $
+!  $Id: wrdwqt.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrdwqt.f90 $
 !!--description-----------------------------------------------------------------
 !
 !
@@ -77,7 +76,6 @@ subroutine wrdwqt(comfil    ,lundia    ,error     ,itcur     ,itimc     , &
     real(fp)    , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub, 0:kmax)      , intent(in)  :: dicww  !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub, kmax + 2)    , intent(in)  :: dicuv  !  Description and declaration in esm_alloc_real.f90
     real(fp)    , dimension(gdp%d%nlb:gdp%d%nub, gdp%d%mlb:gdp%d%mub, kmax, lstsci), intent(in)  :: r1     !  Description and declaration in esm_alloc_real.f90
-    real(fp)    , dimension(nmaxus, mmax, kmax)                                                  :: rbuff  !  Description and declaration in r-i-ch.igs
     real(fp)    , dimension(nsrc)                                                                :: discum !  Description and declaration in esm_alloc_real.f90
     character(*)                                                                                 :: comfil !!  Name for communication file
                                                                                                            !!  com-<case><label>

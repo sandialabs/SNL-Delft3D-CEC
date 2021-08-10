@@ -6,7 +6,7 @@ function ecoplot(cmd)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -31,8 +31,8 @@ function ecoplot(cmd)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/ecoplot.m $
-%   $Id: ecoplot.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/ecoplot.m $
+%   $Id: ecoplot.m 65778 2020-01-14 14:07:42Z mourits $
 
 mfig = findall(0,'tag','ECO-Plot');
 if isempty(mfig)
@@ -63,7 +63,7 @@ switch cmd
       %
       pathui = findobj(mfig,'tag','PWD');
       cwd = get(pathui,'userdata');
-      newdir = ui_getdir(cwd,'Select New Work Directory');
+      newdir = uigetdir(cwd,'Select New Work Directory');
       if ischar(newdir)
          cd(newdir)
          if ~isequal(newdir(end),filesep)
@@ -820,6 +820,7 @@ try
             PS.Stations=locs;
             PS.Ops=qp_state_startup;
             PS.Ops.axestype='Time-Val';
+            PS.Ops.plotcoordinate = 'time';
             PS.Ops.colourbar='none';
             PS.Ops.colour=Clrs(iclr,:);
             PS.Ops.clippingvalues=realset('-999');
@@ -906,7 +907,7 @@ try
                hNewAll = cat(1,hNewAll,hNew);
             end
             %
-            if iscell(tstr)
+            if iscell(tstr) && ~isempty(tstr)
                tstr{1} = [protectstring(cases(i).name) ': ' tstr{1}];
                set(tt,'string',tstr)
             end
@@ -1277,14 +1278,12 @@ A = strrep(A,'^','\^');
 function FI2 = embed(FI,Props)
 FI2.QPF = 1;
 FI2.Name = '<user defined variables>';
-FI2.Data.Name = Props.Name;
+FI2.Data = Props;
 FI2.Data.FileInfo = FI;
 FI2.Data.Domain = 1;
 FI2.Data.Props = Props;
 FI2.Data.Selected = {0 1 [] [] []};
 FI2.Data.SubField = {};
-FI2.Data.DimFlag = Props.DimFlag;
-FI2.Data.DataInCell = Props.DataInCell;
 FI2.Data.Tri = 0;
 FI2.FileType = '<user defined variables>';
 FI2.Options = 1;

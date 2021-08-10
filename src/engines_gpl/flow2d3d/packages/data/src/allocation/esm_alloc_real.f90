@@ -1,7 +1,7 @@
 subroutine esm_alloc_real(lundia, error, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine esm_alloc_real(lundia, error, gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: esm_alloc_real.f90 5618 2015-11-28 09:29:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/allocation/esm_alloc_real.f90 $
+!  $Id: esm_alloc_real.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/allocation/esm_alloc_real.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Determines memory requirements for the
@@ -291,10 +291,20 @@ subroutine esm_alloc_real(lundia, error, gdp)
     !-----array for: x,y,z position of sources
     !
     !                           xyzsrc  (3     ,nsrc         )
+    !                           qsrcrt  (2     ,nsrc         )
     !
     pntnam = 'XYZSRC'        !  Coordinates for discharge points
     ierr = mkfpnt(pntnam, 3*nsrc, gdp)
     if (ierr <= -9) goto 9999
+    !
+    pntnam = 'qsrcrt'        !  RTC-controlled discharge data:
+                             !  QSRCRT(1,*) = Return status from RTC
+                             !              > 0 : OK
+                             !              < 0 : Not OK/Found
+                             !  QSRCRT(2,*) = Value from RTC
+    ierr = mkfpnt(pntnam, 2*nsrc, gdp)
+    if (ierr <= -9) goto 9999
+
     !
     !-----arrays for: boundaries
     !
@@ -940,7 +950,7 @@ subroutine esm_alloc_real(lundia, error, gdp)
     ierr = mkfpnt(pntnam, 4*nsluv, gdp)
     if (ierr <= -9) goto 9999
     !
-    pntnam = 'cbuvrt'        !  Run time barrier data:
+    pntnam = 'cbuvrt'        !  RTC-controlled barrier data:
                              !  CBUVRT(1,*) = Return status from RTC
                              !              > 0 : OK
                              !              < 0 : Not OK/Found
@@ -1168,9 +1178,10 @@ subroutine esm_alloc_real(lundia, error, gdp)
     !                        disch (nsrc  )
     !                        disch0(nsrc  )
     !                        disch1(nsrc  )
-    !                        rint  (lstsc ,nsrc      )
-    !                        rint0 (lstsc ,nsrc      )
-    !                        rint1 (lstsc ,nsrc      )
+    !                        rint   (lstsc ,nsrc      )
+    !                        rintsm (lstsc ,nsrc      )
+    !                        rint0  (lstsc ,nsrc      )
+    !                        rint1  (lstsc ,nsrc      )
     !                        umdis (nsrc  )
     !                        umdis0(nsrc  )
     !                        umdis1(nsrc  )
@@ -1207,15 +1218,19 @@ subroutine esm_alloc_real(lundia, error, gdp)
     ierr = mkfpnt(pntnam, nsrc, gdp)
     if (ierr <= -9) goto 9999
     !
-    pntnam = 'rint'          !  Concentration at discharge points
+    pntnam = 'rint'          !  Concentration at discharge points (as obtained from BCC file)
     ierr = mkfpnt(pntnam, lstsc*nsrc, gdp)
     if (ierr <= -9) goto 9999
     !
-    pntnam = 'rint0'         !  Old concentration value at discharge points
+    pntnam = 'rintsm'        !  Concentration at discharge points (actual values as used in simulation)
     ierr = mkfpnt(pntnam, lstsc*nsrc, gdp)
     if (ierr <= -9) goto 9999
     !
-    pntnam = 'rint1'         !  New concentration value at discharge points
+    pntnam = 'rint0'         !  Old concentration value at discharge points (as obtained from BCC file)
+    ierr = mkfpnt(pntnam, lstsc*nsrc, gdp)
+    if (ierr <= -9) goto 9999
+    !
+    pntnam = 'rint1'         !  New concentration value at discharge points (as obtained from BCC file)
     ierr = mkfpnt(pntnam, lstsc*nsrc, gdp)
     if (ierr <= -9) goto 9999
     !
@@ -1264,6 +1279,7 @@ subroutine esm_alloc_real(lundia, error, gdp)
     !                        patm  (nmaxddb  ,mmaxddb)
     !                        w10mag(nmaxddb  ,mmaxddb)
     !                        evap  (nmaxddb  ,mmaxddb)
+    !                        windcd(nmaxddb  ,mmaxddb)
     !
     pntnam = 'windu'         !  Current wind velocity at 10 m in the ksi-dir.
     ierr = mkfpnt(pntnam, nmaxddb*mmaxddb, gdp)
@@ -1304,6 +1320,11 @@ subroutine esm_alloc_real(lundia, error, gdp)
     pntnam = 'zprecp'       !  Instantaneous precipitation at monitoring stations
     ierr = mkfpnt(pntnam, nostat, gdp)
     if (ierr <= -9) goto 9999
+    !
+    pntnam = 'windcd'        !  Time and space varying wind drag coef.
+    ierr = mkfpnt(pntnam, nmaxddb*mmaxddb, gdp)
+    if (ierr <= -9) goto 9999
+    !
     !
     !
     !-----arrays for: diffusion, concentrations
@@ -1439,9 +1460,9 @@ subroutine esm_alloc_real(lundia, error, gdp)
     !                        sinkw (nmaxddb  ,mmaxddb) * kfacwv *kfacrl
     !                        sourw (nmaxddb  ,mmaxddb) * kfacwv *kfacrl
     !                        sinkr (nmaxddb  ,mmaxddb) * kfacwv *kfacrl
-    !                        sourr (nmaxddb  ,mmaxddb) * kfacwv *kfacrl
-    !                        fxw   (nmaxddb  ,mmaxddb) * kfacwv *kfacrl
-    !                        fyw   (nmaxddb  ,mmaxddb) * kfacwv *kfacrl
+    !                        sourr (nmaxddb  ,mmaxddb) * kfacwv
+    !                        fxw   (nmaxddb  ,mmaxddb) * kfacwv
+    !                        fyw   (nmaxddb  ,mmaxddb) * kfacwv
     !                        dfu   (nmaxddb  ,mmaxddb)
     !                        dfv   (nmaxddb  ,mmaxddb)
     !                        deltau(nmaxddb  ,mmaxddb)
@@ -1463,7 +1484,7 @@ subroutine esm_alloc_real(lundia, error, gdp)
     ierr = mkfpnt(pntnam, nmaxddb*mmaxddb*kfacwv, gdp)
     if (ierr <= -9) goto 9999
     !
-    pntnam = 'teta'          !  Angle waves
+    pntnam = 'teta'          !  Angle between wave direction and local grid orientation
     ierr = mkfpnt(pntnam, nmaxddb*mmaxddb*kfacwv, gdp)
     if (ierr <= -9) goto 9999
     !
@@ -2171,6 +2192,10 @@ subroutine esm_alloc_real(lundia, error, gdp)
     if (ierr <= -9) goto 9999
     !
     pntnam = 'zwndsp'        !  Wind speed at the monitoring stations
+    ierr = mkfpnt(pntnam, nostat, gdp)
+    if (ierr <= -9) goto 9999
+    !
+    pntnam = 'zwndcd'        !  Wind drag coef at the monitoring stations
     ierr = mkfpnt(pntnam, nostat, gdp)
     if (ierr <= -9) goto 9999
     !

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -88,6 +88,7 @@
       integer                               :: i , i1 , i2
       integer                               :: iy1, im1, id1, ih1, in1, is1
       integer                               :: iy2, im2, id2, ih2, in2, is2
+      real(8)                               :: dummy        ! second in double precision (not used)
       integer                               :: maxdim
       integer                               :: ierr_alloc
 
@@ -208,14 +209,14 @@
          ! errors and warnings
 
          if ( times(1) .gt. a1 ) then
-            call gregor ( times(1), iy1, im1, id1, ih1, in1, is1)
-            call gregor ( a1      , iy2, im2, id2, ih2, in2, is2)
+            call gregor ( times(1), iy1, im1, id1, ih1, in1, is1, dummy)
+            call gregor ( a1      , iy2, im2, id2, ih2, in2, is2, dummy)
             write ( lunut , 1030 )  iy1, im1, id1, ih1, in1, is1,
      *                              iy2, im2, id2, ih2, in2, is2
          endif
          if ( times(nobrk) .lt. a2 ) then
-            call gregor ( times(nobrk), iy1, im1, id1, ih1, in1, is1)
-            call gregor ( a2          , iy2, im2, id2, ih2, in2, is2)
+            call gregor ( times(nobrk), iy1, im1, id1, ih1, in1, is1, dummy)
+            call gregor ( a2          , iy2, im2, id2, ih2, in2, is2, dummy)
             write ( lunut , 1040 )  iy1, im1, id1, ih1, in1, is1,
      *                              iy2, im2, id2, ih2, in2, is2
          endif

@@ -5,7 +5,7 @@ subroutine vihsec(u         ,v         ,guu       ,gvu       ,gvv       , &
                 & rxx       ,rxy       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine vihsec(u         ,v         ,guu       ,gvu       ,gvv       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: vihsec.f90 5574 2015-11-09 08:50:18Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/vihsec.f90 $
+!  $Id: vihsec.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/vihsec.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Computes the horizontal stresses RXX, RXY and RYY

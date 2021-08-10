@@ -1,9 +1,9 @@
-subroutine rwbotc(comfil    ,lundia    ,error     ,initi     ,itima     , &
+subroutine rwbotc(comfil    ,lundia    ,error     ,itima     , &
                 & itcomi    ,mmax      ,nmax      ,nmaxus    ,dp        , &
                 & rbuff     ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine rwbotc(comfil    ,lundia    ,error     ,initi     ,itima     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rwbotc.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/rwbotc.f90 $
+!  $Id: rwbotc.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/rwbotc.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Write dp array to communication file
@@ -53,12 +53,6 @@ subroutine rwbotc(comfil    ,lundia    ,error     ,initi     ,itima     , &
 !
 ! Global variables
 !
-    integer                                                , intent(in)  :: initi  !!  Control parameter
-                                                                                   !!  =1 initialization
-                                                                                   !!  =2 initialization and read restart
-                                                                                   !!     information from the communication
-                                                                                   !!     file
-                                                                                   !!  =3 no initialization
     integer                                                , intent(in)  :: itcomi !  Description and declaration in inttim.igs
     integer                                                , intent(in)  :: itima  !!  Time to start simulation (N * tscale)
                                                                                    !!  according to DELFT3D conventions
@@ -114,10 +108,9 @@ subroutine rwbotc(comfil    ,lundia    ,error     ,initi     ,itima     , &
        celidt = celidt + 1
     endif
     !
-    !-----write nrcel, dp and itstrt to communication file for initi=1
-    !     if itcomi > 0
+    !-----write nrcel, dp and itstrt to communication file if itcomi > 0
     !
-    if (initi==1 .and. itcomi>0) then
+    if (itcomi>0) then
        ierror = open_datdef(comfil, fds, .false.)
        if (ierror /= 0) goto 9999
        !
@@ -155,16 +148,6 @@ subroutine rwbotc(comfil    ,lundia    ,error     ,initi     ,itima     , &
        !
        ierror = clsnef(fds)
        if (ierror/= 0) goto 9999
-    endif
-    !
-    !-----Read nrcel from communication file for initi=2 or 3
-    !
-    if (initi==2 .or. initi==3) then
-    endif
-    !
-    !-----Read nrcel from communication file for initi.ge.4
-    !
-    if (initi>=4 .and. itcomi>0) then
     endif
     !
     ! write error message if error occured and set error= .true.

@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: df.c 5481 2015-10-08 08:03:19Z mooiman $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/nefis/packages/nefis/src/df.c $
+// $Id: df.c 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/nefis/packages/nefis/src/df.c $
 /*
  *   <df.c> - Functions related to define the element, cel group and data set
  *
@@ -49,7 +49,7 @@
 #include <limits.h>
 #include <ctype.h>
 
-#if defined(WIN32) || defined(WIN64) || defined(GNU_PC)
+#if defined(_WIN32) || defined(GNU_PC)
 #  include <io.h>
 #elif defined(salford32)
 #  include <io.h>
@@ -841,7 +841,7 @@ BInt4 Define_group ( BInt4   set         ,
             nefis_errno = convert_ieee( &vp, &cp, 2*SIZE_BINT8, SIZE_BINT8, "INTEGER", from_xdr);
             for ( i=0; i<2; i++ )
             {
-                grp_buf.ptr[   i] = *( (BInt8 *) cp + i);
+                grp_buf.ptr[   i] = *( (BUInt8 *) cp + i);
             }
 
             index = offset[5]/SIZE_BINT4;

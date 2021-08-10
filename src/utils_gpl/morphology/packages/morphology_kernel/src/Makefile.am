@@ -15,7 +15,8 @@ noinst_LTLIBRARIES = libMorphologyKernel.la
 #-------------------------------------------------------------------------------
 #Includes
 FINCLUDES += \
-	-I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/include
+	-I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/include \
+	-I$(top_builddir)/utils_gpl/morphology/include
 
 FMODULES += \
 	-I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src \
@@ -66,6 +67,10 @@ libMorphologyKernel_la_SOURCES = \
          tranb4.f90 \
          tranb5.f90 \
          tranb7.f90 \
+		 trab19.f90 \
+		 trab20.f90 \
+		 ua_rvr.f90 \
+		 ua_vt.f90 \
          updmorfac.f90 \
          wave.f90
 

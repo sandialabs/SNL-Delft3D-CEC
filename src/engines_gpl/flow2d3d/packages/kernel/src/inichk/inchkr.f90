@@ -1,10 +1,10 @@
 subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
                 & cyclic    ,sferic    ,grdang    ,temeqs    ,saleqs    , &
                 & lturi     ,rouflo    ,rouwav    ,ktemp     ,temint    , &
-                & evaint    ,initia    ,gdp       )
+                & evaint    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !
-!  Copyright (C)  Stichting Deltares, 2011-2015.
+!  Copyright (C)  Stichting Deltares, 2011-2020.
 !
 !  This program is free software: you can redistribute it and/or modify
 !  it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
 !  Stichting Deltares. All rights reserved.
 !
 !-------------------------------------------------------------------------------
-!  $Id: inchkr.f90 4808 2015-03-16 21:20:43Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/inchkr.f90 $
+!  $Id: inchkr.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/inchkr.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Initialises and checks various params. and arrays
@@ -114,11 +114,13 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     real(fp), dimension(:)               , pointer :: tairarr
     real(fp), dimension(:)               , pointer :: clouarr
     real(fp), dimension(:)               , pointer :: swrfarr
+    real(fp), dimension(:)               , pointer :: secchi
     logical                              , pointer :: rhum_file
     logical                              , pointer :: tair_file
     logical                              , pointer :: clou_file
     logical                              , pointer :: prcp_file
     logical                              , pointer :: swrf_file
+    logical                              , pointer :: scc_file
     real(fp)                             , pointer :: morfac
     integer                              , pointer :: morfacpar
     integer                              , pointer :: morfacrec
@@ -152,6 +154,7 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     integer(pntrsize)                    , pointer :: alfas
     integer(pntrsize)                    , pointer :: areau
     integer(pntrsize)                    , pointer :: areav
+    integer(pntrsize)                    , pointer :: bruvai
     integer(pntrsize)                    , pointer :: c
     integer(pntrsize)                    , pointer :: cdwlsu
     integer(pntrsize)                    , pointer :: cdwlsv
@@ -183,6 +186,8 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     integer(pntrsize)                    , pointer :: dpv
     integer(pntrsize)                    , pointer :: rint0
     integer(pntrsize)                    , pointer :: rint1
+    integer(pntrsize)                    , pointer :: sink
+    integer(pntrsize)                    , pointer :: sour
     integer(pntrsize)                    , pointer :: umdis0
     integer(pntrsize)                    , pointer :: umdis1
     integer(pntrsize)                    , pointer :: vmdis0
@@ -233,7 +238,9 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     integer(pntrsize)                    , pointer :: r1
     integer(pntrsize)                    , pointer :: rho
     integer(pntrsize)                    , pointer :: rhowat
+    integer(pntrsize)                    , pointer :: rich
     integer(pntrsize)                    , pointer :: rint
+    integer(pntrsize)                    , pointer :: rintsm
     integer(pntrsize)                    , pointer :: rlabda
     integer(pntrsize)                    , pointer :: rnpl
     integer(pntrsize)                    , pointer :: rob
@@ -276,6 +283,7 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     integer(pntrsize)                    , pointer :: w10mag
     integer(pntrsize)                    , pointer :: windsu
     integer(pntrsize)                    , pointer :: windsv
+    integer(pntrsize)                    , pointer :: windcd
     integer(pntrsize)                    , pointer :: windu
     integer(pntrsize)                    , pointer :: windv
     integer(pntrsize)                    , pointer :: ws
@@ -371,8 +379,6 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
 !
 ! Global variables
 !
-    integer              :: initia      !!  if < 0: iteration process of morsys
-                                        !!  else  : equal to initi
     integer              :: ktemp       !  Description and declaration in tricom.igs
     integer              :: lturi       !  Description and declaration in tricom.igs
     integer              :: lundia      !  Description and declaration in inout.igs
@@ -472,11 +478,13 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     tairarr             => gdp%gdheat%tairarr
     clouarr             => gdp%gdheat%clouarr
     swrfarr             => gdp%gdheat%swrfarr
+    secchi              => gdp%gdheat%secchi
     rhum_file           => gdp%gdheat%rhum_file
     tair_file           => gdp%gdheat%tair_file
     clou_file           => gdp%gdheat%clou_file
     prcp_file           => gdp%gdheat%prcp_file
     swrf_file           => gdp%gdheat%swrf_file
+    scc_file            => gdp%gdheat%scc_file
     morfac              => gdp%gdmorpar%morfac
     morfacpar           => gdp%gdmorpar%morfacpar
     morfacrec           => gdp%gdmorpar%morfacrec
@@ -510,6 +518,7 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     alfas               => gdp%gdr_i_ch%alfas
     areau               => gdp%gdr_i_ch%areau
     areav               => gdp%gdr_i_ch%areav
+    bruvai              => gdp%gdr_i_ch%bruvai
     c                   => gdp%gdr_i_ch%c
     cdwlsu              => gdp%gdr_i_ch%cdwlsu
     cdwlsv              => gdp%gdr_i_ch%cdwlsv
@@ -541,6 +550,8 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     dpv                 => gdp%gdr_i_ch%dpv
     rint0               => gdp%gdr_i_ch%rint0
     rint1               => gdp%gdr_i_ch%rint1
+    sink                => gdp%gdr_i_ch%sink
+    sour                => gdp%gdr_i_ch%sour
     umdis0              => gdp%gdr_i_ch%umdis0
     umdis1              => gdp%gdr_i_ch%umdis1
     vmdis0              => gdp%gdr_i_ch%vmdis0
@@ -590,7 +601,9 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     r1                  => gdp%gdr_i_ch%r1
     rho                 => gdp%gdr_i_ch%rho
     rhowat              => gdp%gdr_i_ch%rhowat
+    rich                => gdp%gdr_i_ch%rich
     rint                => gdp%gdr_i_ch%rint
+    rintsm              => gdp%gdr_i_ch%rintsm
     rlabda              => gdp%gdr_i_ch%rlabda
     rnpl                => gdp%gdr_i_ch%rnpl
     rob                 => gdp%gdr_i_ch%rob
@@ -633,6 +646,7 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     w10mag              => gdp%gdr_i_ch%w10mag
     windsu              => gdp%gdr_i_ch%windsu
     windsv              => gdp%gdr_i_ch%windsv
+    windcd              => gdp%gdr_i_ch%windcd
     windu               => gdp%gdr_i_ch%windu
     windv               => gdp%gdr_i_ch%windv
     ws                  => gdp%gdr_i_ch%ws
@@ -779,7 +793,7 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     if (ntoq /= 0) then
        call inibcq(lundia    ,error     ,runid     ,i(itbct)  ,nto       , &
                  & ntof      ,ntoq      ,kcd       ,ch(nambnd),r(hydrbc) , &
-                 & bubble    ,gdp       )
+                 & bubble    ,kmax      ,gdp       )
        if (error) goto 9999
     endif
     !
@@ -835,13 +849,13 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     ! The following arrays must be filled (when relevant)
     ! before the first call to postpr.
     ! - windu, windv, patm
-    ! - rhumarr, tairarr, clouarr, swrfarr
+    ! - rhumarr, tairarr, clouarr, swrfarr, secchi
     ! - sdu_t0 (subsidence/uplift) 
     ! 
     if (wind) then
        call incmeteo(timhr     , grdang   , &
                    & r (windu ),r (windv ),r (patm  ), &
-                   & i (kcs   ),r (alfas ), &
+                   & i (kcs   ),r (alfas ), r(windcd), &
                    & r (windsu),r (windsv),r (w10mag), gdp)
     endif
     if (rhum_file) then
@@ -867,6 +881,11 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     if (swrf_file) then
        success = getmeteoval(gdp%runid, 'swrf', timhr * 60.0_fp, &
                            &gdp%gdparall%mfg, gdp%gdparall%nfg, nlb, nub, mlb, mub, swrfarr , 0)
+       call checkmeteoresult(success, gdp)
+    endif
+    if (scc_file) then
+       success = getmeteoval(gdp%runid, 'Secchi_depth', timhr * 60.0_fp, &
+                           &gdp%gdparall%mfg, gdp%gdparall%nfg, nlb, nub, mlb, mub, secchi , 0)
        call checkmeteoresult(success, gdp)
     endif
     if (lfsdu) then 
@@ -896,7 +915,7 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
     ! INISED: set initial array values for sediment
     ! only initialise sediment at beginning of morsys simulation
     !
-    if (sedim .and. initia/=3) then
+    if (sedim) then
        call inised(lundia    ,error     ,nmax      ,mmax      ,nmaxus    , &
                  & nmmax     ,lsed      ,lsedtot   ,i(kcs)    ,gdp       )
        if (error) goto 9999
@@ -943,7 +962,7 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
        icy = 1
        call chkdry(jstart    ,nmmaxj    ,nmmax     ,kmax      ,lsec      , &
                  & lsecfl    ,lstsci    ,ltur      ,icx       ,icy       , &
-                 & initia    ,i(kcu)    ,i(kcv)    ,i(kcs)    ,i(kfu)    , &
+                 & i(kcu)    ,i(kcv)    ,i(kcs)    ,i(kfu)    , &
                  & i(kfv)    ,i(kfs)    ,i(kspu)   ,i(kspv)   ,r(dpu)    , &
                  & r(dpv)    ,r(hu)     ,r(hv)     ,r(hkru)   ,r(hkrv)   , &
                  & r(thick)  ,r(s1)     ,d(dps)    ,r(u1)     ,r(v1)     , &
@@ -953,7 +972,7 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
        icx = nmaxddb
        icy = 1
        call z_chkdry(jstart    ,nmmaxj    ,nmmax     ,kmax      ,lstsci    , &
-                   & ltur      ,icx       ,icy       ,initia    ,i(kcu)    , &
+                   & ltur      ,icx       ,icy       ,i(kcu)    , &
                    & i(kcv)    ,i(kcs)    ,i(kfu)    ,i(kfv)    ,i(kfs)    , &
                    & i(kspu)   ,i(kspv)   ,i(kfuz1)  ,i(kfvz1)  ,i(kfsz1)  , &
                    & i(kfumin) ,i(kfumax) ,i(kfvmin) ,i(kfvmax) ,i(kfsmin) , &
@@ -1002,9 +1021,10 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
               & r(s1)     ,d(dps)    ,r(gsqs)   ,r(guu)    ,r(gvv)    , &
               & r(hu)     ,r(hv)     ,r(dzs1)   ,r(dzu1)   ,r(dzv1)   , &
               & r(volum1) ,r(porosu) ,r(porosv) ,r(areau)  ,r(areav)  ,gdp       )
-    call updmassbal(.true.   ,r(qxk)    ,r(qyk)    ,i(kcs)    ,r(r1)     , &
-                  & r(volum1),r(sbuu)   ,r(sbvv)   ,&
-                  & r(gsqs)  ,r(guu)    ,r(gvv)    ,d(dps)    ,gdp       )
+    call updmassbal(1         ,r(qxk)    ,r(qyk)    ,i(kcs)    ,r(r1)     , &
+                  & r(volum0) ,r(volum1) ,r(sbuu)   ,r(sbvv)   ,r(disch)  , &
+                  & i(mnksrc) ,r(sink)   ,r(sour)   ,r(gsqs)   ,r(guu)    , &
+                  & r(gvv)    ,d(dps)    ,r(rintsm) ,0.0_fp    ,gdp       )
     !
     ! F0ISF1: copy old (1) in new arrays (0)
     ! N.B.:
@@ -1243,7 +1263,8 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
                     & r(s1)     ,d(dps)    ,r(hu)     ,r(hv)     ,r(u1)     , &
                     & r(v1)     ,r(thick)  ,r(windsu) ,r(windsv) ,r(z0urou) , &
                     & r(z0vrou) ,i(kfu)    ,i(kfv)    ,i(kfs)    ,i(kcs)    , &
-                    & r(wrkb1)  ,r(wrkb2)  ,gdp       )
+                    & r(wrkb1)  ,r(wrkb2)  ,r(bruvai) ,r(rich)   ,r(rho)    , &
+                    & gdp       )
        else
           icx = nmaxddb
           icy = 1
@@ -1253,7 +1274,8 @@ subroutine inchkr(lundia    ,error     ,runid     ,timhr     ,dischy    , &
                       & i(kfvmax) ,i(kfsmin) ,i(kfsmax) ,r(rtur1)  , &
                       & r(s1)     ,d(dps)    ,r(u1)     ,r(v1)     ,r(windsu) , &
                       & r(windsv) ,r(z0urou) ,r(z0vrou) ,r(wrkb1)  ,r(wrkb2)  , &
-                      & r(dzu1)   ,r(dzv1)   ,r(dzs1)   ,gdp       )
+                      & r(dzu1)   ,r(dzv1)   ,r(dzs1)   ,r(bruvai) ,r(rich)   , &
+                      & r(rho)    ,gdp       )
        endif
     endif
     !

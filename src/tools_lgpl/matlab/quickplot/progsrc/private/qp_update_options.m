@@ -3,7 +3,7 @@ function qp_update_options(OH,UD,Ops)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -28,8 +28,8 @@ function qp_update_options(OH,UD,Ops)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_update_options.m $
-%   $Id: qp_update_options.m 5632 2015-12-09 08:50:03Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_update_options.m $
+%   $Id: qp_update_options.m 65778 2020-01-14 14:07:42Z mourits $
 
 set(OH,'enable','off','visible','off')
 
@@ -37,30 +37,43 @@ if isempty(Ops)
     return
 end
 
-OTHER = {'other option 1','other option 2','other option 3'};
+%--------------------------------------------------------------------------
+Choices = [];
+Choices = makechoices(Choices,Ops,'plotcoordinate');
+Choices = makechoices(Choices,Ops,'vectorcomponent');
+Choices = makechoices(Choices,Ops,'presentationtype');
+Choices = makechoices(Choices,Ops,'vectorcolour');
+Choices = makechoices(Choices,Ops,'angleconvention');
+Choices = makechoices(Choices,Ops,'vectorstyle');
+Choices = makechoices(Choices,Ops,'vectorscalingmode');
+Choices = makechoices(Choices,Ops,'verticalscalingmode');
+Choices = makechoices(Choices,Ops,'horizontalalignment');
+Choices = makechoices(Choices,Ops,'verticalalignment');
+Choices = makechoices(Choices,Ops,'thinningmode');
+Choices = makechoices(Choices,Ops,'linestyle');
+Choices = makechoices(Choices,Ops,'marker');
+Choices = makechoices(Choices,Ops,'thresholddistribution');
+Choices = makechoices(Choices,Ops,'colourmap');
+%--------------------------------------------------------------------------
+
 Active=UD.Active;
 
 if isfield(Ops,'axestimezone_shift') && ~isnan(Ops.axestimezone_shift)
-    atz = findobj(OH,'tag','axestimezone=?');
     set(findobj(OH,'tag','axestimezone'),'enable','on');
+    atz=findobj(OH,'tag','axestimezone=?');
     set(atz,'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'plotcoordinate')
-    coords = {Ops.plotcoordinate,OTHER{:}};
-    i = 1;
     set(findobj(OH,'tag','plotcoordinate'),'enable','on');
     pd=findobj(OH,'tag','plotcoordinate=?');
-    set(pd,'string',coords,'value',i,'enable','on','backgroundcolor',Active)
+    set(pd,'value',1,imatch(Choices,Ops,'plotcoordinate'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'vectorcomponent')
     set(findobj(OH,'tag','component'),'enable','on');
     compon=findobj(OH,'tag','component=?');
-    set(compon,'enable','on','backgroundcolor',Active)
-    compList = {Ops.vectorcomponent,OTHER{:}};
-    comp = 1;
-    set(compon,'value',1,'string',compList,'value',comp)
+    set(compon,'value',1,imatch(Choices,Ops,'vectorcomponent'),'enable','on','backgroundcolor',Active)
 end
 
 %    switch Ops.vectorcomponent
@@ -73,9 +86,7 @@ end
 if isfield(Ops,'presentationtype')
     set(findobj(OH,'tag','presenttype'),'enable','on')
     pt=findobj(OH,'tag','presenttype=?');
-    PrsTps = {Ops.presentationtype,OTHER{:}};
-    p = 1;
-    set(pt,'enable','on','value',1,'string',PrsTps,'value',p,'backgroundcolor',Active)
+    set(pt,'value',1,imatch(Choices,Ops,'presentationtype'),'enable','on','backgroundcolor',Active)
 %    switch Ops.presentationtype
 %        case 'vector'
 %            Ops.vectorcomponent='edge';
@@ -86,9 +97,7 @@ if isfield(Ops,'vectorcolour')
     colvect=findobj(OH,'tag','colourvectors');
     set(colvect,'enable','on')
     colvecm=findobj(OH,'tag','vectorcolour=?');
-    vecCLR = {Ops.vectorcolour,OTHER{:}};
-    colveci = 1;
-    set(colvecm,'value',1,'string',vecCLR,'value',colveci)
+    set(colvecm,'value',1,imatch(Choices,Ops,'vectorcolour'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'units')
@@ -106,11 +115,8 @@ end
 
 if isfield(Ops,'angleconvention')
     pd=findobj(OH,'tag','angleconvention=?');
-    conventions = {Ops.angleconvention,OTHER{:}};
-    i = 1;
-    set(pd,'value',1,'string',conventions,'value',i)
+    set(pd,'value',1,imatch(Choices,Ops,'angleconvention'),'enable','on','backgroundcolor',Active)
     set(findobj(OH,'tag','angleconvention'),'enable','on');
-    set(pd,'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'colourdams')
@@ -122,49 +128,41 @@ if isfield(Ops,'operator')
     oper=findobj(OH,'tag','operator');
     set(oper,'enable','on')
     oper=findobj(OH,'tag','operator=?');
-    operstr = {Ops.operator,OTHER{:}};
-    operi   = 1;
     set(oper,'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'vectorstyle')
     set(findobj(OH,'tag','vectorstyle'),'enable','on')
     vstyle=findobj(OH,'tag','vectorstyle=?');
-    vstyles={Ops.vectorstyle,OTHER{:}};
-    i = 1;
-    set(vstyle,'enable','on','backgroundcolor',Active,'string',vstyles,'value',i)
+    set(vstyle,imatch(Choices,Ops,'vectorstyle'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'vectorscalingmode')
     set(findobj(OH,'tag','vecscalem'),'enable','on')
     vsmode=findobj(OH,'tag','vecscalem=?');
-    vsmodes={Ops.vectorscalingmode,OTHER{:}};
-    i=1;
-    set(vsmode,'enable','on','backgroundcolor',Active,'string',vsmodes,'value',i)
+    set(vsmode,imatch(Choices,Ops,'vectorscalingmode'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'vectorscale')
-    oneunitis=findobj(OH,'tag','1vecunit=?');
     set(findobj(OH,'tag','1vecunit'),'enable','on')
-    set(oneunitis,'enable','on','backgroundcolor',Active,'string',num2str(Ops.vectorscale))
+    oneunitis=findobj(OH,'tag','1vecunit=?');
+    set(oneunitis,'string',num2str(Ops.vectorscale),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'verticalscalingmode')
     set(findobj(OH,'tag','vertscalem'),'enable','on')
     vsm=findobj(OH,'tag','vertscalem=?');
-    VsMeths = {Ops.verticalscalingmode,OTHER{:}};
-    vsi = 1;
-    set(vsm,'enable','on','backgroundcolor',Active,'string',VsMeths,'value',vsi)
+    set(vsm,imatch(Choices,Ops,'verticalscalingmode'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'verticalscalefactor')
     set(findobj(OH,'tag','vscale'),'enable','on')
     enl=findobj(OH,'tag','vscale=?');
-    set(enl,'enable','on','backgroundcolor',Active,'string',num2str(Ops.verticalscalefactor))
+    set(enl,'string',num2str(Ops.verticalscalefactor),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'extend2edge')
-    h = findobj(OH,'tag','extend2edge');
+    h=findobj(OH,'tag','extend2edge');
     set(h,'enable','on','value',Ops.extend2edge)
 end
 
@@ -185,34 +183,28 @@ if isfield(Ops,'horizontalalignment')
     set(findobj(OH,'tag','horizontalalignment'),'enable','on');
     set(findobj(OH,'tag','verticalalignment'),'enable','on');
     hHorAlign=findobj(OH,'tag','horizontalalignment=?');
-    strHorAlign={Ops.horizontalalignment,OTHER{:}};
-    iHorAlign=1;
-    set(hHorAlign,'enable','on','backgroundcolor',Active,'string',strHorAlign,'value',iHorAlign)
+    set(hHorAlign,imatch(Choices,Ops,'horizontalalignment'),'enable','on','backgroundcolor',Active)
     %
     hVerAlign=findobj(OH,'tag','verticalalignment=?');
-    strVerAlign={Ops.verticalalignment,OTHER{:}};
-    iVerAlign=1;
-    set(hVerAlign,'enable','on','backgroundcolor',Active,'string',strVerAlign,'value',iVerAlign)
+    set(hVerAlign,imatch(Choices,Ops,'verticalalignment'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'thinningmode')
     set(findobj(OH,'tag','thinfld'),'enable','on');
     thinfld=findobj(OH,'tag','thinfld=?');
-    thinmodes = {Ops.thinningmode,OTHER{:}};
-    i = 1;
-    set(thinfld,'enable','on','backgroundcolor',Active,'string',thinmodes,'value',i)
+    set(thinfld,imatch(Choices,Ops,'thinningmode'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'thinningfactors')
     set(findobj(OH,'tag','thinfact'),'enable','on');
     thinfact=findobj(OH,'tag','thinfact=?');
-    set(thinfact,'enable','on','backgroundcolor',Active,'string',num2str(Ops.thinningfactors))
+    set(thinfact,'string',num2str(Ops.thinningfactors),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'thinningdistance')
     set(findobj(OH,'tag','thindist'),'enable','on');
     thindist=findobj(OH,'tag','thindist=?');
-    set(thindist,'enable','on','backgroundcolor',Active,'string',num2str(Ops.thinningdistance))
+    set(thindist,'string',num2str(Ops.thinningdistance),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'colour')
@@ -231,17 +223,20 @@ if isfield(Ops,'facecolour')
     end
 end
 
-if isfield(Ops,'textboxfacecolour')
-    hTextbox=findobj(OH,'tag','textbox=?');
-    set(hTextbox,'enable','on','enable','on','backgroundcolor',Ops.textboxfacecolour)
+if isfield(Ops,'fontsize')
+    if isfield(Ops,'textboxfacecolour') && ~isequal(Ops.textboxfacecolour,'none')
+        set(findobj(OH,'tag','textbox=?'),'enable','on','value',1)
+        hTextbox=findobj(OH,'tag','textboxfacecolour=?');
+        set(hTextbox,'enable','on','backgroundcolor',Ops.textboxfacecolour)
+    else
+        set(findobj(OH,'tag','textbox=?'),'enable','on','value',0)
+    end
 end
 
 if isfield(Ops,'linestyle')
     set(findobj(OH,'tag','linestyle'),'enable','on')
     lns=findobj(OH,'tag','linestyle=?');
-    lnstls = {Ops.linestyle,OTHER{:}};
-    i = 1;
-    set(lns,'enable','on','backgroundcolor',Active,'string',lnstls,'value',i)
+    set(lns,imatch(Choices,Ops,'linestyle'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'linewidth')
@@ -253,9 +248,7 @@ end
 if isfield(Ops,'marker')
     set(findobj(OH,'tag','marker'),'enable','on')
     mrk=findobj(OH,'tag','marker=?');
-    mrkrs = {Ops.marker,OTHER{:}};
-    imrk = 1;
-    set(mrk,'enable','on','backgroundcolor',Active,'string',mrkrs,'value',imrk)
+    set(mrk,imatch(Choices,Ops,'marker'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'markersize') && ~isequal(Ops.marker,'none')
@@ -286,16 +279,14 @@ if isfield(Ops,'presentationtype') && isfield(Ops,'thresholds') && ...
 end
 
 if isfield(Ops,'thresholds')
-    c = Ops.thresholds;
     set(findobj(OH,'tag','thresholds'),'enable','on')
+    c = Ops.thresholds;
     set(findobj(OH,'tag','thresholds=?'),'enable','on','backgroundcolor',Active,'string',vec2str(c,'noones','nobrackets'),'userdata',c)
 end
 
 if isfield(Ops,'thresholddistribution')
     thrd=findobj(OH,'tag','threshdistr=?');
-    thrdStr = {Ops.thresholddistribution,OTHER{:}};
-    i = 1;
-    set(thrd,'enable','on','backgroundcolor',Active,'string',thrdStr,'value',i)
+    set(thrd,imatch(Choices,Ops,'thresholddistribution'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'colourlimits')
@@ -322,10 +313,8 @@ end
 if isfield(Ops,'colourmap')
     set(findobj(OH,'tag','colourmap'),'enable','on')
     set(findobj(OH,'tag','colourmapbutton'),'enable','on')
-    cmaps = {Ops.colourmap,OTHER{:}};
-    imap = 1;
     cmap=findobj(OH,'tag','colourmap=?');
-    set(cmap,'enable','on','backgroundcolor',Active,'string',cmaps,'value',imap)
+    set(cmap,imatch(Choices,Ops,'colourmap'),'enable','on','backgroundcolor',Active)
 end
 
 if isfield(Ops,'colourbar')
@@ -340,9 +329,13 @@ if isfield(Ops,'axestype')
 end
 
 if isfield(Ops,'clippingvalues')
-    c = Ops.clippingvalues;
     set(findobj(OH,'tag','clippingvals'),'enable','on')
+    c = Ops.clippingvalues;
     set(findobj(OH,'tag','clippingvals=?'),'enable','on','backgroundcolor',Active,'string',clip2str(c),'userdata',c)
+end
+
+if isfield(Ops,'clipnans')
+    set(findobj(OH,'tag','clipnans'),'enable','on','value',Ops.clipnans)
 end
 
 if isfield(Ops,'xclipping')
@@ -357,9 +350,29 @@ end
 
 set(findall(OH,'enable','on'),'enable','inactive')
 
+
 function Str = clip2str(c)
 if isstruct(c)
     Str=realset(c);
 else
     Str=vec2str(c,'noones','nobrackets');
+end
+
+
+function settings = imatch(Choices,Ops,fld)
+settings.string = Choices.(fld);
+if ~ischar(Ops.(fld))
+    settings.value = 1;
+else
+    settings.value = ustrcmpi(Ops.(fld),settings.string);
+end
+
+
+function Choices = makechoices(Choices,Ops,fld)
+OTHER = {'other option 1','other option 2','other option 3'};
+if isfield(Ops,fld)
+    Choices.(fld) = [{Ops.(fld)} OTHER];
+    if ~ischar(Choices.(fld){1})
+        Choices.(fld){1} = '<non-string object>';
+    end
 end

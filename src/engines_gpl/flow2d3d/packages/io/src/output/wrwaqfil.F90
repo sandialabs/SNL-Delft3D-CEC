@@ -1,15 +1,16 @@
       subroutine wrwaqfil ( mmax   , kmax   , nlb    , nub    , mlb    , &
-     &                      mub    , nmaxus , nsrc   , kcs    , kfsmin , &
+     &                      mub    , nmaxus , nsrc   , kcs    , kcu    , kcv  , kfsmin , &
      &                      kfsmax , nst    , runid  , xcor   , ycor   , &
      &                      xz     , yz     , guv    , gvu    , guu    , &
      &                      gvv    , gsqs   , vol1   , dtsec  , itdate , &
      &                      tstart , tstop  , dt     , thick  , lsal   , &
      &                      ltem   , lsed   , r1     , areau  , areav  , &
-     &                      tau    , vdiff  , depth  , chezu  , chezv  , &
-     &                      chez   , mnksrc , namsrc , zmodel , gdp    )
+     &                      tau    , vdiff  , dps    , dp     , chezu  , chezv , &
+     &                      chez   , mnksrc , namsrc , nto    , nambnd , mnbnd , &
+     &                      zmodel , ztop   , zbot   , gdp    )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -33,8 +34,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrwaqfil.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrwaqfil.F90 $
+!  $Id: wrwaqfil.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrwaqfil.F90 $
 !!--description-----------------------------------------------------------------
 ! Routine is called every time step to allow a direct writing of WAQ files
 ! Routine is now written in fixed format compatible form, 2nd author is not very
@@ -46,6 +47,8 @@
 !!--declarations----------------------------------------------------------------
       use precision
       use dfparall
+      use io_ugrid, only: t_ug_meta
+      use m_write_waqgeom_curvilinear
 !
       use globaldata
       !
@@ -111,6 +114,7 @@
       character(256)          , pointer :: flaggr
       real(fp)                , pointer :: mtimstep  ! Maximum step size CFL criterion
       real(fp)                          :: dryflc2   ! Half of drying and flooding treshold (m) / kmax
+      logical                 , pointer :: sferic
 !
 !           Global variables
 !
@@ -123,14 +127,17 @@
       integer nmaxus                   !!  User nmax, may be odd, nmax is allways even
       integer nsrc                     !!  Number of sources and sinks
       integer kcs   (nlb:nub,mlb:mub)  !!  Fixed property of the computational volumes
+      integer kcu   (nlb:nub,mlb:mub)  !!  Fixed property of the computational volumes
+      integer kcv   (nlb:nub,mlb:mub)  !!  Fixed property of the computational volumes
       integer kfsmin(nlb:nub,mlb:mub)  !!  Variable lowest active layer (z-model-only)
       integer kfsmax(nlb:nub,mlb:mub)  !!  Variable upper  active layer (z-model-only)
       integer nst                      !!  Time step number
+      integer nto                      !!  Number of open boundaries (tidal openings)
       character(*) runid               !!  To make file names
-      real(fp) xcor                    !!  X-coordinates of depth points
-      real(fp) ycor                    !!  Y-coordinates of depth points
-      real(fp) xz                      !!  X-coordinates of zeta points
-      real(fp) yz                      !!  Y-coordinates of zeta points
+      real(fp) xcor(nlb:nub,mlb:mub)   !!  X-coordinates of depth points
+      real(fp) ycor(nlb:nub,mlb:mub)   !!  Y-coordinates of depth points
+      real(fp) xz(nlb:nub,mlb:mub)     !!  X-coordinates of zeta points
+      real(fp) yz(nlb:nub,mlb:mub)     !!  Y-coordinates of zeta points
       real(fp) guv                     !!  distance between zeta points over v points
       real(fp) gvu                     !!  distance between zeta points over u points
       real(fp) guu                     !!  distance between depth points over u points
@@ -151,14 +158,20 @@
       real(fp) areav                   !!  Area's in the v points
       real(fp) tau                     !!  Tau's at the bottom
       real(fp) vdiff                   !!  vertical diffusivity
-      real(hp) depth(nlb:nub,mlb:mub)  !!  depth of zeta points below ref layer
+      real(hp) dps(nlb:nub,mlb:mub)    !!  depth of zeta points below ref layer
+      real(fp) dp(nlb:nub,mlb:mub)     !!  depth of corner points below ref layer
       real(fp) chezu                   !!  chezy values in u points
       real(fp) chezv                   !!  chezy values in v points
       logical  chez                    !!  if true, there is a chezy value
       integer       mnksrc(7,nsrc)     !!  location of sources and withdrawals
       character(20) namsrc(  nsrc)     !!  names of the wasteloads
+      character(20) nambnd(  nto)      !!  names of the open boundaries
+      integer mnbnd(7,nto)             !!  indices of the open boundaries
       logical  zmodel                  !!  true if z-model feature is used
-      character(30) runtxt(10)         !!  explanatory text
+      real(fp) zbot                    !!  Maximum depth in the model (relative to the reference level; unit: metres; positive upwards).
+                                       !!  It marks the lower boundary of the grid.
+      real(fp) ztop                    !!  The ‘imaginary’ maximum water level in the model (relative to the reference level; unit: metres; positive upwards).
+                                       !!  This imaginary level is used only to determine the grid distribution. It does not mark the maximum surface level.
 !
 !           Local variables
 !
@@ -175,7 +188,10 @@
       character(5) sf                  !!  character variable for s(ediment concentration)f(iles)
       character(8) ssrff               !!  character variable for s(ediment) s(edimentation and) r(esuspension) f(lux) f(iles)
       integer  (4) istat               !!  allocate return status
+      integer, allocatable :: isaggrl(:) !!  segment aggregation pointer (only top/bottom layer, depending on zmodel)
+      integer  (4) ipiv                !!  help variable for array shift
       integer, external :: newunit
+      type(t_ug_meta)     :: meta
 !
 !! executable statements -------------------------------------------------------
 !
@@ -236,6 +252,9 @@
       mtimstep   => gdp%gdwaqpar%mtimstep
 
       dryflc2    =  gdp%gdnumeco%dryflc/2.0/kmax
+      
+      sferic              => gdp%gdtricom%sferic
+    
 !
       if (     .not. waqfil ) return
       if ( nst .lt.  itwqff ) return
@@ -296,13 +315,14 @@
      &                   mlb    , mub    , kcs    , kfsmin , isaggr ,    &
      &                   ilaggr , iqaggr , ifrmto , aggre  , flaggr ,    &
      &                   noseg  , noq1   , noq2   , noq3   , noq    ,    &
-     &                   nobnd  , kmk    , zmodel , filnam , lundia )
+     &                   nobnd  , kmk    , zmodel , filnam , lundia)
 
+!
 !           allocate the real aggregation arrays that are needed:
 !                    sag for aggregation on segment basis (dimension 0:noseg)
 !                    qag for aggregation on flux    basis (dimension 0:noq  )
 !                    and 2 volume arrays
-
+!
          idim = (noseg+1)*max(lsed,1)
                        allocate ( gdp%gdwaqpar%vol    (0:noseg) , stat=istat)
          if (istat==0) allocate ( gdp%gdwaqpar%sag    (  idim ) , stat=istat)
@@ -337,21 +357,61 @@
          iwlk       => gdp%gdwaqpar%iwlk
          ksrwaq     => gdp%gdwaqpar%ksrwaq
 
+        !
 !           write the .hyd file
+        !
+        if (parll) then
+            write(filnam,'(3a,i3.3,a)') 'com-', trim(runid), '-', inode
+        else
+            filnam ='com-'//trim(runid)
+        endif
 
          nd = gdp%gdprognm%numdomains
-         call wrwaqhyd ( filnam , itdate , tstart , tstop  , dt     ,    &
-     &                   itwqff , itwqfl , itwqfi , nmaxus , mmax   ,    &
-     &                   kmax   , thick  , lsal   , ltem   , lsed   ,    &
-     &                   chez   , nsrc   , mnksrc , namsrc , runid  ,    &
-     &                   nowalk , iwlk   , aggre  , flaggr , zmodel ,    &
-     &                   ilaggr , nd     , nlb    , nub    , mlb    ,    &
-     &                   mub    , kfsmin , ksrwaq )
+         call wrwaqhyd (filnam , itdate , tstart , tstop  , dt     ,    &
+                        itwqff , itwqfl , itwqfi , nmaxus , mmax   ,    &
+                        kmax   , thick  , lsal   , ltem   , lsed   ,    &
+                        chez   , nsrc   , mnksrc , namsrc , runid  ,    &
+                        nowalk , iwlk   , aggre  , flaggr , zmodel ,    &
+                        ilaggr , nd     , nlb    , nub    , mlb    ,    &
+                        mub    , kfsmin , ksrwaq , noseg  , noq1   ,    &
+                        noq2   , noq3   , xz     , yz     , zbot   ,    &
+                        ztop )
+         if (parll) then
+            write(filnam,'(3a,i3.3,a)') 'com-', trim(runid), '-', inode, '.'
+         else
+            filnam ='com-'//trim(runid)//'.'
+         endif
 
 !           write the .cco file
 
          call wrwaqcco ( nmaxus , mmax, ilaggr(kmax), nlb  , nub    ,    &
      &                   mlb    , mub , xcor        , ycor , filnam )
+
+         !
+         !
+         ! global attributes
+         !
+         meta%institution = "Deltares"
+         meta%source      = "Delft3D-FLOW"   
+         meta%references  = "http://www.deltares.nl"    
+         call getfullversionstring_flow2d3d(meta%version)
+         meta%modelname   = filnam(1:(len(trim(filnam))-1))
+
+         allocate ( isaggrl(nmaxus*mmax) , stat=istat)
+         if (istat/=0) then
+            write(*,*) '*** ERROR: wrwaqfil: memory allocation error'
+            return
+         endif
+         ipiv = 0
+         if ( zmodel ) ipiv = ( kmax - 1 ) * nmaxus * mmax
+         isaggrl( 1 : nmaxus * mmax ) = isaggr ( 1 + ipiv : nmaxus * mmax + ipiv )
+         
+         call wrwaqgeomcl( meta   , lundia, nmaxus , mmax  , kmax  , &
+                           nlb    , nub    , mlb   , mub   ,         &
+                           xcor   , ycor  , xz     , yz    , dp    , &
+                           kcs    , kcu   , kcv    , sferic, aggre , &
+                           isaggrl, nto   , nambnd , mnbnd)
+         deallocate ( isaggrl , stat = istat )
 
 !           open all files for time dependent write
 !           WARNING: WAQ input files must be written using form=binary
@@ -361,102 +421,76 @@
 ! This part is copied for binary and unformatted
 #ifdef HAVE_FC_FORM_BINARY
 
-         lunvol    = newunit()
-         open  ( lunvol , file=trim(filnam)//'vol' , form = 'binary' , SHARED )
-         lunare    = newunit()
-         open  ( lunare , file=trim(filnam)//'are' , form = 'binary' , SHARED )
-         lunflo    = newunit()
-         open  ( lunflo , file=trim(filnam)//'flo' , form = 'binary' , SHARED )
+         open  ( newunit = lunvol , file=trim(filnam)//'vol' , form = 'binary' , SHARED )
+         open  ( newunit = lunare , file=trim(filnam)//'are' , form = 'binary' , SHARED )
+         open  ( newunit = lunflo , file=trim(filnam)//'flo' , form = 'binary' , SHARED )
          if ( lsal .gt. 0 ) then
-            lunsal    = newunit()
-            open  ( lunsal , file=trim(filnam)//'sal' , form = 'binary' , SHARED )
+            open  ( newunit = lunsal , file=trim(filnam)//'sal' , form = 'binary' , SHARED )
          endif
          if ( ltem .gt. 0 ) then
-            luntem    = newunit()
-            open  ( luntem , file=trim(filnam)//'tem' , form = 'binary' , SHARED )
+            open  ( newunit = luntem , file=trim(filnam)//'tem' , form = 'binary' , SHARED )
          endif
          do l = 1, lsed
-            lunsed(l) = newunit()
             sf = "sed00"
             write( sf(4:5), '(i2.2)' ) l
-            open  ( lunsed(l), file=trim(filnam)//sf  , form = 'binary' , SHARED )
+            open  ( newunit = lunsed(l), file=trim(filnam)//sf  , form = 'binary' , SHARED )
             ! sedimentation
-            lunsedflx(l,1) = newunit()
             ssrff = "sedflx00"
             write( ssrff(7:8), '(i2.2)' ) l
-            open  ( lunsedflx(l,1), file=trim(filnam)//ssrff  , form = 'binary' , SHARED )
+            open  ( newunit = lunsedflx(l,1), file=trim(filnam)//ssrff  , form = 'binary' , SHARED )
             ! resuspension
-            lunsedflx(l,2) = newunit()
             ssrff = "resflx00"
             write( ssrff(7:8), '(i2.2)' ) l
-            open  ( lunsedflx(l,2), file=trim(filnam)//ssrff  , form = 'binary' , SHARED )
+            open  ( newunit = lunsedflx(l,2), file=trim(filnam)//ssrff  , form = 'binary' , SHARED )
          enddo
          if ( ilaggr(kmax) .gt. 1 ) then
-            lunvdf    = newunit()
-            open  ( lunvdf , file=trim(filnam)//'vdf' , form = 'binary' , SHARED )
+            open  ( newunit = lunvdf , file=trim(filnam)//'vdf' , form = 'binary' , SHARED )
          endif
-         luntau    = newunit()
-         open  ( luntau , file=trim(filnam)//'tau' , form = 'binary' , SHARED )
+         open  ( newunit = luntau , file=trim(filnam)//'tau' , form = 'binary' , SHARED )
  !       lunfmap   = newunit()
  !       open  ( lunfmap, file=trim(filnam)//'fmap', form = 'binary' )
          if ( nsrc .gt. 0 ) then
-            lunsrctmp = newunit()
-            open  ( lunsrctmp , file='TMP_'//trim(filnam)//'src' , SHARED )
+            open  ( newunit = lunsrctmp , file='TMP_'//trim(filnam)//'src' , SHARED )
             if ( nowalk .gt. 0 ) then
-               lunwlk    = newunit()
-               open  ( lunwlk , file=trim(filnam)//'wlk' )
+               open  ( newunit = lunwlk , file=trim(filnam)//'wlk' )
             endif
-            lunsrc    = newunit()
-            open  ( lunsrc , file=trim(filnam)//'src' )    ! final file
+            open  ( newunit = lunsrc , file=trim(filnam)//'src' )    ! final file
          endif
 #else
-         lunvol    = newunit()
-         open  ( lunvol , file=trim(filnam)//'vol' , form = 'unformatted', access='stream')
-         lunare    = newunit()
-         open  ( lunare , file=trim(filnam)//'are' , form = 'unformatted', access='stream')
-         lunflo    = newunit()
-         open  ( lunflo , file=trim(filnam)//'flo' , form = 'unformatted', access='stream')
+         open  ( newunit = lunvol , file=trim(filnam)//'vol' , form = 'unformatted', access='stream')
+         open  ( newunit = lunare , file=trim(filnam)//'are' , form = 'unformatted', access='stream')
+         open  ( newunit = lunflo , file=trim(filnam)//'flo' , form = 'unformatted', access='stream')
          if ( lsal .gt. 0 ) then
-            lunsal    = newunit()
-            open  ( lunsal , file=trim(filnam)//'sal' , form = 'unformatted', access='stream')
+            open  ( newunit = lunsal , file=trim(filnam)//'sal' , form = 'unformatted', access='stream')
          endif
          if ( ltem .gt. 0 ) then
-            luntem    = newunit()
-            open  ( luntem , file=trim(filnam)//'tem' , form = 'unformatted', access='stream')
+            open  ( newunit = luntem , file=trim(filnam)//'tem' , form = 'unformatted', access='stream')
          endif
          do l = 1, lsed
-            lunsed(l) = newunit()
             sf = "sed00"
             write( sf(4:5), '(i2.2)' ) l
-            open  ( lunsed(l), file=trim(filnam)//sf  , form = 'unformatted', access='stream')
+            open  ( newunit = lunsed(l), file=trim(filnam)//sf  , form = 'unformatted', access='stream')
             ! sedimentation
-            lunsedflx(l,1) = newunit()
             ssrff = "sedflx00"
             write( ssrff(7:8), '(i2.2)' ) l
-            open  ( lunsedflx(l,1), file=trim(filnam)//ssrff  , form = 'unformatted', access='stream')
+            open  ( newunit = lunsedflx(l,1), file=trim(filnam)//ssrff  , form = 'unformatted', access='stream')
             ! resuspension
-            lunsedflx(l,2) = newunit()
             ssrff = "resflx00"
             write( ssrff(7:8), '(i2.2)' ) l
-            open  ( lunsedflx(l,2), file=trim(filnam)//ssrff  , form = 'unformatted', access='stream')
+            open  ( newunit = lunsedflx(l,2), file=trim(filnam)//ssrff  , form = 'unformatted', access='stream')
          enddo
          if ( ilaggr(kmax) .gt. 1 ) then
-            lunvdf    = newunit()
-            open  ( lunvdf , file=trim(filnam)//'vdf' , form = 'unformatted', access='stream')
+            open  ( newunit = lunvdf , file=trim(filnam)//'vdf' , form = 'unformatted', access='stream')
          endif
-         luntau    = newunit()
-         open  ( luntau , file=trim(filnam)//'tau' , form = 'unformatted', access='stream')
+         open  ( newunit = luntau , file=trim(filnam)//'tau' , form = 'unformatted', access='stream')
  !       lunfmap   = newunit()
  !       open  ( lunfmap, file=trim(filnam)//'fmap', form = 'unformatted', access='stream')
          if ( nsrc .gt. 0 ) then
-            lunsrctmp = newunit()
-            open  ( lunsrctmp , file='TMP_'//trim(filnam)//'src' )
+            open  ( newunit = lunsrctmp , file='TMP_'//trim(filnam)//'src' )
             if ( nowalk .gt. 0 ) then
-               lunwlk    = newunit()
-               open  ( lunwlk , file=trim(filnam)//'wlk' )
+               open  ( newunit = lunwlk , file=trim(filnam)//'wlk' )
             endif
-            lunsrc    = newunit()
-            open  ( lunsrc , file=trim(filnam)//'src' )    ! final file
+            open  ( newunit = lunsrc , file=trim(filnam)//'src' )    ! final file
          endif
 #endif
 
@@ -465,7 +499,7 @@
          call wrwaqsrf ( nmaxus , mmax   , kmax   , nlb    , nub    ,    &
      &                   mlb    , mub    , gsqs   , guv    , gvu    ,    &
      &                   guu    , gvv    , xcor   , ycor   , xz     ,    &
-     &                   yz     , depth  , chezu  , chezv  , chez   ,    &
+     &                   yz     , dps    , chezu  , chezv  , chez   ,    &
      &                   noseg  , noq1   , noq2   , noq3   , nobnd  ,    &
      &                   aggre  , isaggr , iqaggr , ilaggr , ifrmto ,    &
      &                   horsurf, itop   , filnam )
@@ -486,11 +520,11 @@
      &                   cumresflx, lunsedflx, itwqfi*2    )
 
 !           write first part of the sources files where appropriate
-
-         call wrwaqld0 ( nsrc      , nmaxus , mmax   , kmax   , mnksrc , &
-     &                   discumwaq , loads  , nobrk  , nowalk , iwlk   , &
-     &                   itim      , mode   , isaggr , lunwlk )
-
+     if ( nsrc > 0 ) then
+            call wrwaqld0 ( nsrc      , nmaxus , mmax   , kmax   , mnksrc , &
+        &                   discumwaq , loads  , nobrk  , nowalk , iwlk   , &
+        &                   itim      , mode   , isaggr , lunwlk )
+     endif
          return
 !
 !        End of (firsttime), note the return

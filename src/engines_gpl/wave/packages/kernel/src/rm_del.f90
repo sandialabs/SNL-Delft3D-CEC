@@ -1,7 +1,7 @@
 subroutine rm_del( filnamin )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine rm_del( filnamin )
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rm_del.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/kernel/src/rm_del.f90 $
+!  $Id: rm_del.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/kernel/src/rm_del.f90 $
 !!--description-----------------------------------------------------------------
 ! Test existence of file and if delete file, using
 ! status='delete' in close statement
@@ -44,7 +44,6 @@ subroutine rm_del( filnamin )
 !
     integer           :: istat
     integer           :: luntmp  ! Unit number for file
-    integer, external :: new_lun
     logical           :: ex      ! Logical flag used for INQUIRE state-
     character(300)    :: filnam
 !
@@ -52,13 +51,12 @@ subroutine rm_del( filnamin )
 !
     filnam = adjustl(filnamin)
     inquire (file = trim(filnam), exist = ex, iostat =  istat)
-    if (ex) then
+    if (istat==0 .and. ex) then
        inquire (file = trim(filnam), opened = ex, iostat =  istat)
-       if (ex) then
+       if (istat==0 .and. ex) then
           inquire (file = trim(filnam), number = luntmp, iostat =  istat)
        else
-          luntmp = new_lun()
-          open (luntmp, file = trim(filnam), iostat =  istat)
+          open (newunit=luntmp, file = trim(filnam), iostat =  istat)
        endif
        close (luntmp, status = 'delete', iostat =  istat)
     endif

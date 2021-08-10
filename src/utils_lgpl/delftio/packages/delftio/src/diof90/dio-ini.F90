@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dio-ini.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-ini.F90 $
+!  $Id: dio-ini.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-ini.F90 $
 module Dio_Ini
 
 use Dio_Prop
@@ -120,25 +120,22 @@ function DioIniFileOpen(iniFile, name, mode) result(retVal)
     iniFile % blockGroup   = ''
     iniFile % lastGroup    = ''
 
-    lun = DioNewLun()
-    if (lun .gt. 0) then
-        ierr = -1
-        if ( mode .eq. 'r') then
-            open (lun, file=name, action='read', &
-                    status='old', form='formatted', iostat=ierr)
-        else if ( mode .eq. 'w') then
-            open (lun, file=name, action='write', &
-                    form='formatted', iostat=ierr)
-        else if ( mode .eq. 'a') then
-            open (lun, file=name, action='write', position='append', &
-                    status='old', form='formatted', iostat=ierr)
-        endif
-        if (ierr == 0 ) then
-            iniFile % name     = name
-            iniFile % mode     = mode
-            iniFile % lun      = lun
-            retVal = .true.
-        endif
+    ierr = -1
+    if ( mode .eq. 'r') then
+       open (newunit=lun, file=name, action='read', &
+             status='old', form='formatted', iostat=ierr)
+    else if ( mode .eq. 'w') then
+       open (newunit=lun, file=name, action='write', &
+             form='formatted', iostat=ierr)
+    else if ( mode .eq. 'a') then
+       open (newunit=lun, file=name, action='write', position='append', &
+             status='old', form='formatted', iostat=ierr)
+    endif
+    if (ierr == 0 ) then
+       iniFile % name  = name
+       iniFile % mode  = mode
+       iniFile % lun   = lun
+       retVal = .true.
     endif
 
 end function DioIniFileOpen
@@ -159,7 +156,7 @@ subroutine DioIniFileClose(iniFile)
     ! - If lun opened, close it.
     ! - Reset iniFile info
 
-    if ( iniFile % lun > 0 ) then
+    if ( iniFile % lun .ne. 0 ) then
         inquire( iniFile % lun, opened = opend )
         if ( opend ) then
             close(iniFile % lun)
@@ -189,9 +186,11 @@ subroutine DioIniFileCloseAndDelete(iniFile)
     ! - If lun opened, close and delete it.
     ! - Reset iniFile info
 
-    if ( iniFile % lun > 0 ) then
+    if ( iniFile % lun .ne. 0 ) then
         inquire( iniFile % lun, opened = opend )
-        if ( opend ) close(iniFile % lun, status='delete')
+        if ( opend ) then
+           close(iniFile % lun, status='delete')
+        endif
     endif
     iniFile % name     = ''
     iniFile % mode     = ''

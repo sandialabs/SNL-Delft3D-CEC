@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -52,7 +52,7 @@ contains
 !                          for iopt=0 file is 'old'
 !
 !     subroutines called : delete_file
-!                          srstop
+!                          stop_exit
 !
 !     function           : open file dependent on ftype
 !
@@ -147,7 +147,7 @@ contains
       write(*,'(  a,a  )') ' Expected file type   : ',ftype
       write(*,'(  a    )') ' Please check if file exists'
       write(*,'(  a    )') ' Please check correct file type'
-      call srstop(1)
+      call stop_exit(1)
 !
       end subroutine
 end module

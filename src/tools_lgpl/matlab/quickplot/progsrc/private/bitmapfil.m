@@ -19,7 +19,7 @@ function varargout=bitmapfil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -44,8 +44,8 @@ function varargout=bitmapfil(FI,domain,field,cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/bitmapfil.m $
-%   $Id: bitmapfil.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/bitmapfil.m $
+%   $Id: bitmapfil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
 
@@ -232,17 +232,30 @@ if isfield(FI.FileInfo,'times')
 else
     FileName=FI.FileName;
 end
-Data=imread(FileName);
+try
+    [Data,cmap,Alpha]=imread(FileName);
+catch
+    Data=imread(FileName);
+    Alpha=[];
+end
 if size(Data,3)==1
     Data=idx2rgb(Data,FI.FileInfo.Colormap);
 end
 Data=Data(end:-1:1,:,:);
 ydir=get(Parent,'ydir');
 set(Parent,'NextPlot','add')
+fig = get(Parent,'parent');
 if size(Data,3)==4
     hNew=image(xlim,ylim,Data(:,:,1:3), ...
         'parent',Parent, ...
         'AlphaData',Data(:,:,4));
+    set(fig,'renderer','OpenGL') % need this for transparency
+elseif ~isempty(Alpha)
+    Alpha=Alpha(end:-1:1,:);
+    hNew=image(xlim,ylim,Data, ...
+        'parent',Parent, ...
+        'AlphaData',Alpha);
+    set(fig,'renderer','OpenGL') % need this for transparency
 else
     hNew=image(xlim,ylim,Data, ...
         'parent',Parent);
@@ -253,7 +266,7 @@ set(Parent,'ydir',ydir)
 
 
 % -----------------------------------------------------------------------------
-function OK=optfig(h0);
+function OK=optfig(h0)
 Inactive=get(0,'defaultuicontrolbackground');
 FigPos=get(h0,'position');
 FigPos(3:4) = getappdata(h0,'DefaultFileOptionsSize');

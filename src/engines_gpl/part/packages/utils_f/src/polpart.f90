@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -24,7 +24,7 @@
       subroutine polpart( pol_file, nrowsmax, xpol, ypol, nrows, lunpr   )
 
 !
-!     programmer : michel jeuken
+!     programmer : michelle jeuken
 !     function   : read a single polygon from a file
 !     date       : september 2013
 !
@@ -33,7 +33,6 @@
 !
       use precision_part ! single/double precision
       use timers
-      use wait_mod
 
       implicit none ! force explicit typing
 
@@ -117,23 +116,20 @@
 
   900 write(*,'(//a,a)')       ' Error: problem with pol-file ',pol_file(:len_file)
       write(*,'(a)')           ' Could not open/find pol-file ??'
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with pol-file ',pol_file(:len_file)
       write(lunpr,'(a,a)')     ' Could not open/find pol-file ??'
-      stop  ' Part aborted'
+      call stop_exit(1)
 
   920 write(*,'(//a,a)')       ' Error: problem with pol-file ',pol_file(:len_file)
       write(*,'(//a,a)')       ' End-of-file found on pol-file '
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with pol-file ',pol_file(:len_file)
       write(lunpr,'(//a,a)')   ' End-of-file found on pol-file '
-      stop  ' Part aborted'
+      call stop_exit(1)
 
   930 write(*,'(//a,a)')       ' Error: problem with pol-file ',pol_file(:len_file)
       write(*,'(//a,a)')       ' Error while reading pol-file'
-      call wait
       write(lunpr,'(//a,a)')   ' Error: problem with pol-file ',pol_file(:len_file)
       write(lunpr,'(//a,a)')   ' Error while reading pol-file'
-      stop  ' Part aborted'
+      call stop_exit(1)
 
       end subroutine polpart

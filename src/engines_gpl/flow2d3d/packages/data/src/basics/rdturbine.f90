@@ -43,7 +43,7 @@ subroutine rdturbine(filtrb, lundia, turbines, error)
     !use grid_dimens_module, only: griddimtype
     use turbine_module, only: structure_turbines, allocate_turbines
     use message_module, only: write_error, write_warning, FILE_NOT_FOUND, FILE_READ_ERROR, PREMATURE_EOF
-    use table_handles, only: readtable, gettable, GETTABLE_NAME
+    use table_handles, only: readtable, gettable
     use mathconsts, only: pi
     !
     implicit none
@@ -189,7 +189,7 @@ subroutine rdturbine(filtrb, lundia, turbines, error)
           call prop_get_string(aturbine, '*', 'ThrustCurve', turbines%nr(itrb)%thrustcrvname)
           call gettable(turbines%curves, turbines%nr(itrb)%thrustcrvname, 'thrust coefficient', &
                 & turbines%nr(itrb)%thrustcrvnr(1), turbines%nr(itrb)%thrustcrvnr(2), &
-                & nval, 1, message, GETTABLE_NAME)
+                & nval, 1, message)
           if (nval/=1) then
               write(message,'(3A)') 'Unable to find table for thrust curve "',trim(turbines%nr(itrb)%thrustcrvname),'"'
               call write_error(message,unit=lundia)
@@ -201,7 +201,7 @@ subroutine rdturbine(filtrb, lundia, turbines, error)
           if (turbines%nr(itrb)%powercrvname /= ' ') then
               call gettable(turbines%curves, turbines%nr(itrb)%powercrvname, 'power coefficient', &
                     & turbines%nr(itrb)%powercrvnr(1), turbines%nr(itrb)%powercrvnr(2), &
-                    & nval, 1, message, GETTABLE_NAME)
+                    & nval, 1, message)
               if (nval/=1) then
                   write(message,'(3A)') 'Unable to find table for power curve "',trim(turbines%nr(itrb)%powercrvname),'"'
                   call write_error(message,unit=lundia)

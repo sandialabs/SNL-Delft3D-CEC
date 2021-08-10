@@ -6,7 +6,7 @@
 #   Copyright (C)  Stichting Deltares, 2011-2013.
 #-------------------------------------------------------------------------------
 include $(top_srcdir)/common.am
-bin_PROGRAMS = test_18
+noinst_PROGRAMS = test_18
 
 #-------------------------------------------------------------------------------
 #Includes

@@ -1,8 +1,9 @@
       subroutine getwgh (lundia,fout  ,lunadm,mcbsp ,ncbsp ,typbnd,
      *                   mnes  ,nnes  ,weight,angle               )
+      implicit none
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +27,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: getwgh.f 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/nesthd2/packages/nesthd2/src/getwgh.f $
+!  $Id: getwgh.f 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/nesthd2/packages/nesthd2/src/getwgh.f $
 !***********************************************************************
 ! Deltares                         marine and coastal management
 !
@@ -41,11 +42,13 @@
 ! limitations        :
 ! subroutines called :
 !***********************************************************************
+      integer lundia, lunadm, k1, k2, m, n, mcbsp, ncbsp, iwght
+      double precision angle
       integer       mnes   (  4  ), nnes (  4  )
 
-      real          pi
+      double precision pi
 
-      real          weight (  4  )
+      double precision weight (  4  )
 
       character*1   typbnd
       character*100 record

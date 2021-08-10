@@ -9,7 +9,7 @@ function [data,scalar,vpt]=computecomponent(data,Ops)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -34,8 +34,8 @@ function [data,scalar,vpt]=computecomponent(data,Ops)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/computecomponent.m $
-%   $Id: computecomponent.m 5507 2015-10-20 09:50:46Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/computecomponent.m $
+%   $Id: computecomponent.m 65778 2020-01-14 14:07:42Z mourits $
 
 if ischar(Ops)
     vpt=Ops;
@@ -163,13 +163,16 @@ for d=1:length(data)
             else
                 sf = qp_unitconversion('radians',Ops.units);
             end
-            switch Ops.angleconvention
-                case {'Nautical','Nautical Positive'}
-                    data(d).Val=sf*atan2(data(d).XComp,data(d).YComp); % Nautical convention
-                otherwise
-                    data(d).Val=sf*atan2(data(d).YComp,data(d).XComp); % Cartesian convention
+            if strncmpi(Ops.angleconvention,'Nautical To',10)
+                    data(d).Val=sf*atan2(data(d).XComp,data(d).YComp);
+            elseif strncmpi(Ops.angleconvention,'Nautical From',12)
+                    data(d).Val=sf*atan2(-data(d).XComp,-data(d).YComp);
+            elseif strncmpi(Ops.angleconvention,'Cartesian To',12)
+                    data(d).Val=sf*atan2(data(d).YComp,data(d).XComp);
+            elseif strncmpi(Ops.angleconvention,'Cartesian From',14)
+                    data(d).Val=sf*atan2(-data(d).YComp,-data(d).XComp);
             end
-            if strfind(Ops.angleconvention,'Positive')
+            if strfind(Ops.angleconvention,'[0 to')
                 neg = data(d).Val<0;
                 data(d).Val(neg) = data(d).Val(neg)+2*pi*sf;
             end

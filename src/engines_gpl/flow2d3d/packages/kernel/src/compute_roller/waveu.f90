@@ -3,7 +3,7 @@ subroutine waveu(nmmax     ,kfs       ,sourw     , &
                & c         ,hbd       ,ewabr1    ,df        ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine waveu(nmmax     ,kfs       ,sourw     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: waveu.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute_roller/waveu.f90 $
+!  $Id: waveu.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute_roller/waveu.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Computes wave energy dissipation terms due to breaking and bottom friction
@@ -241,38 +241,35 @@ subroutine waveu(nmmax     ,kfs       ,sourw     , &
           endif
           !
           do nm = 1, nmmax
-             sinkw(nm) = 0.0_fp
              sourw(nm) = 0.0_fp
-             df(nm)    = 0.0_fp
-             if (kfs(nm) /= 0) then
+             if (kfs(nm)/=0 .and. tp(nm)>0.02_fp .and. ewave0(nm)>0.01_fp .and. c(nm)>0.01_fp) then
                 hdis = max (0.1_fp , s0(nm)+real(dps(nm),fp))           
-                if (tp(nm)<0.02_fp .or. ewave0(nm)<0.01_fp) then
-                   afp = 1.0_fp
+                afp  = alfarol / tp(nm)
+                kwav = 2.0_fp* pi / (c(nm)*tp(nm))
+                if (comparereal(gamdis,-1.0_fp) == 0) then
+                   !
+                   ! gamma according to Ruessink et al (2003) 
+                   !
+                   gamdisi = 0.76_fp*kwav*hdis + 0.29_fp
+                elseif (comparereal(gamdis,-2.0_fp) == 0) then
+                   !
+                   ! gamma according to Battjes & Stive (1985) 
+                   !
+                   gamdisi = gamBaSti
                 else
-                   afp  = alfarol / tp(nm)
-                   kwav = 2.0_fp* pi / (c(nm)*tp(nm))
-                   if (comparereal(gamdis,-1.0_fp) == 0) then
-                      !
-                      ! gamma according to Ruessink et al (2003) 
-                      !
-                      gamdisi = 0.76_fp*kwav*hdis + 0.29_fp
-                   elseif (comparereal(gamdis,-2.0_fp) == 0) then
-                      !
-                      ! gamma according to Battjes & Stive (1985) 
-                      !
-                      gamdisi = gamBaSti
-                   else
-                      gamdisi = gamdis
-                   endif
-                   if (f_lam < 0.0_fp) then
-                      hdis = hbd(nm)
-                   endif
-                   hb2       = (0.88_fp / kwav * tanh(gamdisi/0.88_fp*kwav*hdis) )**2
-                   hrms2     = ewave0(nm) * 8.0_fp/ rhow / ag
-                   dw        = 0.25_fp * afp * rhow * ag * exp(-hb2/hrms2) * (hb2+hrms2)
-                   df(nm)    = rhow * fwee * (pi**2.5_fp) * ( sqrt(hrms2)/(tp(nm)*sinh(kwav*hdis)) )**3
-                   sinkw(nm) = (dw+df(nm)) / ewave0(nm)
+                   gamdisi = gamdis
                 endif
+                if (f_lam < 0.0_fp) then
+                   hdis = hbd(nm)
+                endif
+                hb2       = (0.88_fp / kwav * tanh(gamdisi/0.88_fp*kwav*hdis) )**2
+                hrms2     = ewave0(nm) * 8.0_fp/ rhow / ag
+                dw        = 0.25_fp * afp * rhow * ag * exp(-hb2/hrms2) * (hb2+hrms2)
+                df(nm)    = rhow * fwee * (pi**2.5_fp) * ( sqrt(hrms2)/(tp(nm)*sinh(kwav*hdis)) )**3
+                sinkw(nm) = (dw+df(nm)) / ewave0(nm)
+             else
+                df(nm)    = 0.0_fp
+                sinkw(nm) = 0.0_fp
              endif
           enddo
        endif

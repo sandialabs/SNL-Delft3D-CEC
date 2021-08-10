@@ -55,9 +55,9 @@ function nc_cat_a ( input_ncfiles, output_ncfile, abscissa_var )
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% $Id: nc_cat_a.m 449 2011-04-11 08:10:53Z jagers $
-% $LastChangedDate: 2011-04-11 02:10:53 -0600 (Mon, 11 Apr 2011) $
-% $LastChangedRevision: 449 $
+% $Id: nc_cat_a.m 64370 2019-07-17 20:37:24Z jagers $
+% $LastChangedDate: 2019-07-17 21:37:24 +0100 (Wed, 17 Jul 2019) $
+% $LastChangedRevision: 64370 $
 % $LastChangedBy: jagers $
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

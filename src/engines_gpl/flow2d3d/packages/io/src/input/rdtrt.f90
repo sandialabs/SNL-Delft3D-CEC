@@ -2,7 +2,7 @@ subroutine rdtrt(lundia    ,error     ,lftrto    ,dt        ,mmax      , &
                & nmax      ,nmaxus    ,kmax      ,itimtt    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine rdtrt(lundia    ,error     ,lftrto    ,dt        ,mmax      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdtrt.f90 4951 2015-04-16 13:58:26Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdtrt.f90 $
+!  $Id: rdtrt.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdtrt.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Reads the dimensions ntrt, nttaru, nttarv
@@ -56,12 +56,15 @@ subroutine rdtrt(lundia    ,error     ,lftrto    ,dt        ,mmax      , &
     integer                    , pointer :: nttaru
     integer                    , pointer :: nttarv
     integer                    , pointer :: ntrt
+    integer                    , pointer :: max_cl
     integer                    , pointer :: mfg
     integer                    , pointer :: nfg
     integer , dimension(:,:)   , pointer :: ittaru
     integer , dimension(:,:)   , pointer :: ittarv
     integer , dimension(:,:)   , pointer :: ittdef
+    integer , dimension(:)     , pointer :: itrt_list
     real(fp)                   , pointer :: dryflc
+    real(fp), dimension(:)     , pointer :: fraccu_list
     real(fp), dimension(:,:)   , pointer :: rgcalu
     real(fp), dimension(:,:)   , pointer :: rgcalv
     real(fp), dimension(:)     , pointer :: rttaru
@@ -140,11 +143,14 @@ subroutine rdtrt(lundia    ,error     ,lftrto    ,dt        ,mmax      , &
     nttaru         => gdp%gdtrachy%nttaru
     nttarv         => gdp%gdtrachy%nttarv
     ntrt           => gdp%gdtrachy%ntrt
+    max_cl         => gdp%gdtrachy%max_cl
     dryflc         => gdp%gdnumeco%dryflc
     mfg            => gdp%gdparall%mfg
     nfg            => gdp%gdparall%nfg
     waqol          => gdp%gdwaqpar%waqol
     gdtrachy       => gdp%gdtrachy
+    itrt_list      => gdp%gdtrachy%itrt_list
+    fraccu_list    => gdp%gdtrachy%fraccu_list
     !
     ! Allocate trachytope arrays that are used in main routines
     !
@@ -736,6 +742,26 @@ subroutine rdtrt(lundia    ,error     ,lftrto    ,dt        ,mmax      , &
        txtput1 = keyw
        write (lundia, '(a,a,f7.3)') txtput1,': ',alf_area_ser
        !
+    endif
+    !
+    max_cl  = -1
+    keyw    = 'TrtMxR'
+    txtput1 = keyw
+    call prop_get(gdp%mdfile_ptr, '*', keyw, max_cl)
+    if (max_cl == -1) then
+       ! Not specified, use default value
+       !
+       max_cl = 8
+       write (lundia, '(a,a,i0,a)') txtput1,': ',max_cl, ' (default value)'
+    else
+       write (lundia, '(a,a,i0)') txtput1,': ',max_cl
+    endif
+    if (istat==0) allocate(gdtrachy%fraccu_list(max_cl)  , stat = istat)
+    if (istat==0) allocate(gdtrachy%itrt_list(max_cl)    , stat = istat)
+    !
+    if (istat/=0) then
+       call prterr(lundia, 'U021', 'RDTRT: memory alloc error (step 2)')
+       call d3stop(1, gdp)
     endif
     !
     write (lundia, '(a)') '*** End    of trachytopes input'

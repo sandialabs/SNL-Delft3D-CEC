@@ -24,7 +24,7 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory=".\lib\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\include;src\mod_couplib;..\..\..\..\third_party_open\mpich2\x64\include" FixedFormLineLength="fixedLength132" ModulePath="$(OutDir)" Traceback="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\include;src\mod_couplib;..\..\..\..\third_party_open\mpich2\x64\include;..\..\..\..\third_party_open\netcdf\x64\$(ConfigurationName)" FixedFormLineLength="fixedLength132" ModulePath="$(OutDir)" Traceback="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -34,7 +34,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory=".\lib\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" OmitFramePointers="false" AdditionalIncludeDirectories="..\..\include;src\mod_couplib;..\..\..\..\third_party_open\mpich2\x64\include" FixedFormLineLength="fixedLength132" ModulePath="$(OutDir)" Traceback="true"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" OmitFramePointers="false" AdditionalIncludeDirectories="..\..\include;src\mod_couplib;..\..\..\..\third_party_open\mpich2\x64\include;..\..\..\..\third_party_open\netcdf\x64\$(ConfigurationName)" FixedFormLineLength="fixedLength132" ModulePath="$(OutDir)" Traceback="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -44,47 +44,16 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration></Configurations>
 	<Files>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<Filter Name="interact">
-		<File RelativePath=".\src\interact\alarm.f"/>
-		<File RelativePath=".\src\interact\answer.f"/>
-		<File RelativePath=".\src\interact\args.f"/>
-		<File RelativePath=".\src\interact\calc.f"/>
-		<File RelativePath=".\src\interact\clrlin.f"/>
-		<File RelativePath=".\src\interact\clrscr.f"/>
-		<File RelativePath=".\src\interact\cmsrm.f"/>
-		<File RelativePath=".\src\interact\concat.f"/>
-		<File RelativePath=".\src\interact\cup.f"/>
-		<File RelativePath=".\src\interact\cursor.f"/>
-		<File RelativePath=".\src\interact\date.f"/>
-		<File RelativePath=".\src\interact\datype.f"/>
-		<File RelativePath=".\src\interact\delay.f"/>
-		<File RelativePath=".\src\interact\delstr.f"/>
-		<File RelativePath=".\src\interact\dosarg.f"/>
-		<File RelativePath=".\src\interact\formfe.f"/>
-		<File RelativePath=".\src\interact\fsopen.f"/>
-		<File RelativePath=".\src\interact\gets.f"/>
-		<File RelativePath=".\src\interact\inkey.f"/>
-		<File RelativePath=".\src\interact\lenstr.f"/>
-		<File RelativePath=".\src\interact\locate.f"/>
-		<File RelativePath=".\src\interact\match.f"/>
-		<File RelativePath=".\src\interact\moresc.f"/>
-		<File RelativePath=".\src\interact\parsfn.f"/>
-		<File RelativePath=".\src\interact\pastfn.f"/>
-		<File RelativePath=".\src\interact\piece.f"/>
-		<File RelativePath=".\src\interact\popcur.f"/>
-		<File RelativePath=".\src\interact\popdlm.f"/>
-		<File RelativePath=".\src\interact\pshcur.f"/>
-		<File RelativePath=".\src\interact\pshdlm.f"/>
-		<File RelativePath=".\src\interact\setdlm.f"/>
-		<File RelativePath=".\src\interact\stod.f"/>
-		<File RelativePath=".\src\interact\stoi.f"/>
-		<File RelativePath=".\src\interact\stor.f"/>
-		<File RelativePath=".\src\interact\stos.f"/>
-		<File RelativePath=".\src\interact\stosh.f"/>
-		<File RelativePath=".\src\interact\stost.f"/>
-		<File RelativePath=".\src\interact\token.f"/>
-		<File RelativePath=".\src\interact\uprcas.f"/>
-		<File RelativePath=".\src\interact\wipe.f"/></Filter>
+		<Filter Name="dlwq_netcdf">
+		<File RelativePath=".\src\dlwq_netcdf\dlwq_netcdf.F90">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="NetCDF3"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="NetCDF4"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="NetCDF4"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" Preprocess="preprocessYes" PreprocessorDefinitions="NetCDF3"/></FileConfiguration></File></Filter>
 		<Filter Name="mod_couplib">
 		<File RelativePath=".\src\mod_couplib\m_coupcns.F90">
 			<FileConfiguration Name="Debug|Win32">
@@ -231,10 +200,6 @@
 				<Tool Name="VFFortranCompilerTool" ReentrantCode="reentrancyThreaded" LocalVariableStorage="localStorageAutomatic"/></FileConfiguration></File>
 		<File RelativePath=".\src\waq_utils\dhkmst.f"/>
 		<File RelativePath=".\src\waq_utils\dhltim.f"/>
-		<File RelativePath=".\src\waq_utils\dhmmar.f"/>
-		<File RelativePath=".\src\waq_utils\dhmmca.f"/>
-		<File RelativePath=".\src\waq_utils\dhmmja.f"/>
-		<File RelativePath=".\src\waq_utils\dhmmra.f"/>
 		<File RelativePath=".\src\waq_utils\dhnlun.f"/>
 		<File RelativePath=".\src\waq_utils\dhnolay.f"/>
 		<File RelativePath=".\src\waq_utils\dhnoseg.f"/>
@@ -251,6 +216,7 @@
 		<File RelativePath=".\src\waq_utils\dhucas.f"/>
 		<File RelativePath=".\src\waq_utils\dhzerc.f"/>
 		<File RelativePath=".\src\waq_utils\dhzeri.f"/>
+		<File RelativePath=".\src\waq_utils\dlwq0t.f"/>
 		<File RelativePath=".\src\waq_utils\dlwq1_grid_mod.f"/>
 		<File RelativePath=".\src\waq_utils\dlwq_data.f"/>
 		<File RelativePath=".\src\waq_utils\dwq_proces_set.f"/>
@@ -259,9 +225,7 @@
 		<File RelativePath=".\src\waq_utils\fileutils.f90"/>
 		<File RelativePath=".\src\waq_utils\filldm.f"/>
 		<File RelativePath=".\src\waq_utils\getcom.f"/>
-		<File RelativePath=".\src\waq_utils\getper.f"/>
 		<File RelativePath=".\src\waq_utils\gkwini.f"/>
-		<File RelativePath=".\src\waq_utils\gregor.f"/>
 		<File RelativePath=".\src\waq_utils\julian.f"/>
 		<File RelativePath=".\src\waq_utils\makpnt.f"/>
 		<File RelativePath=".\src\waq_utils\monsys.f"/>
@@ -274,18 +238,18 @@
 		<File RelativePath=".\src\waq_utils\progress.f90"/>
 		<File RelativePath=".\src\waq_utils\putget.f"/>
 		<File RelativePath=".\src\waq_utils\putgtc.f"/>
-		<File RelativePath=".\src\waq_utils\putper.f"/>
 		<File RelativePath=".\src\waq_utils\rapdef.f"/>
 		<File RelativePath=".\src\waq_utils\rbpdef.f"/>
+		<File RelativePath=".\src\waq_utils\rd_stt.f90"/>
+		<File RelativePath=".\src\waq_utils\rd_sub.f90"/>
 		<File RelativePath=".\src\waq_utils\rdvers.f"/>
 		<File RelativePath=".\src\waq_utils\rdwrk3.f"/>
 		<File RelativePath=".\src\waq_utils\rdwrk4.f"/>
 		<File RelativePath=".\src\waq_utils\reptim.f"/>
-		<File RelativePath=".\src\waq_utils\space.f"/>
 		<File RelativePath=".\src\waq_utils\SRSTOP.F"/>
 		<File RelativePath=".\src\waq_utils\stasub.f"/>
 		<File RelativePath=".\src\waq_utils\strip.f"/>
-		<File RelativePath=".\src\waq_utils\UNLOCK.F"/>
+		<File RelativePath=".\src\waq_utils\unlock.f90"/>
 		<File RelativePath=".\src\waq_utils\usedcp.f"/>
 		<File RelativePath=".\src\waq_utils\wapdef.f"/>
 		<File RelativePath=".\src\waq_utils\waqmem.f90"/>

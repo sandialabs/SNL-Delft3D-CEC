@@ -57,6 +57,7 @@ libKernelGeneral_la_SOURCES = \
          n_and_m_to_nm.f90 \
          newlun.f90 \
          nm_to_diag.f90 \
+         nm_to_nmglob.f90 \
          nm_to_n_and_m.f90 \
          nuliar.f90 \
          open_datdef.f90 \

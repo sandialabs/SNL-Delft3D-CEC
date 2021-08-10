@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -28,7 +28,9 @@ module part14_mod
                           ictmax , nwaste , mwaste , xwaste , ywaste ,    &
                           zwaste , aconc  , rem    , npart  , ndprt  ,    &
                           mpart  , xpart  , ypart  , zpart  , wpart  ,    &
-                          iptime , nopart , pblay  , radius , lgrid  ,    &
+                          iptime , nopart , pblay  , radius , nrowswaste, &
+                          xpolwaste       , ypolwaste       , lgrid  ,    &
+                          lgrid2 , nmax   , mmax   , xp     , yp     ,    &
                           dx     , dy     , ftime  , tmassu , nosubs ,    &
                           ncheck , t0buoy , modtyp , abuoy  , t0cf   ,    &
                           acf    , lun2   , kpart  , layt   , tcktot ,    &
@@ -58,9 +60,9 @@ module part14_mod
 !>           the time step instead of the present even spreading. Something for the future.
 !>         - Then location information for the wasteload is set as the location of the
 !>           released particles.
-!>         - This information is perturbed in the <find> routine to spread the particles
+!>         - This information is perturbed in the <findcircle> routine to spread the particles
 !>           along a circle. Because even mass per distance means lower concentrations at
-!>           the edge of the circle, the find routine compensates somewhat for that.
+!>           the edge of the circle, the findcircle routine compensates somewhat for that.
 !>         - This only was the horizontal. Particles are distributed over the layers
 !>           vertically and depending on the type of modelling randomly distributed vertically
 !>           in their layer
@@ -78,7 +80,7 @@ module part14_mod
 
 !     Logical unit numbers  : lun2 - output file to print statistics
 
-!     Subroutines called    : find - distributes particles over a circel
+!     Subroutines called    : findcircle - distributes particles over a circle
 
 !     functions   called    : rnd  - random number generator
 
@@ -118,7 +120,15 @@ module part14_mod
       integer  ( ip), intent(inout) :: nopart                !< number of active particles
       real     ( rp), intent(in   ) :: pblay                 !< relative thickness lower layer
       real     ( rp), intent(in   ) :: radius (nodye+nocont) !< help var. radius (speed)
+      real     ( sp), pointer       :: xpolwaste(:,:)        !< x-coordinates of waste polygon
+      real     ( sp), pointer       :: ypolwaste(:,:)        !< y-coordinates of waste polygon
+      integer  ( ip), pointer       :: nrowswaste(:)         !< length of waste polygon
       integer  ( ip), pointer       :: lgrid  (:,:)          !< grid numbering active
+      integer  ( ip), pointer       :: lgrid2(:,:)           !< total grid layout of the area
+      integer  ( ip), intent(in   ) :: nmax                  !< first dimension of the grid
+      integer  ( ip), intent(in   ) :: mmax                  !< second dimension of the grid
+      real     ( rp), pointer       :: xp     (:)            !< x of upper right corner grid point
+      real     ( rp), pointer       :: yp     (:)            !< y of upper right corner grid point
       real     ( rp), pointer       :: dx     (:)            !< dx of the grid cells
       real     ( rp), pointer       :: dy     (:)            !< dy of the grid cells
       real     ( rp), intent(in   ) :: ftime  (nocont,*)     !< time matrix for wasteloads (mass/s)
@@ -334,10 +344,16 @@ module part14_mod
                abuoy (i) = 0.0
             endif
 
-!         spreads the particles over the circle
-
-            call find ( xpart(i), ypart(i), radiuh  , npart(i), mpart(i),   &
-                        lgrid   , dx      , dy      , lcircl  )
+            if (radiuh.ne.-999.0) then
+!              spread the particles over a circle
+               call findcircle ( xpart(i), ypart(i), radiuh  , npart(i), mpart(i),  &
+                                 lgrid   , dx      , dy      , lcircl  )
+            else
+!              spread the particles over a polygon
+               call findpoly   (nmax, mmax, lgrid, lgrid2, xp, yp, nrowswaste(ie), &
+                                xpolwaste(1:nrowswaste(ie), ie), ypolwaste(1:nrowswaste(ie), ie), &
+                                xpart(i), ypart(i), npart(i), mpart(i))
+            end if
 
 !         give the particles a layer number
 
@@ -413,10 +429,10 @@ module part14_mod
 !     formats
 
  1000 format(6x,'Continuous release ',a)
- 1010 format(10x,'Total mass to be added for this run        : ',es15.7/   &
-             10x,'Mass per particle                          : ',es15.7/   &
-             10x,'Actual mass added this step                : ',es15.7/   &
-             10x,'Actual rest mass (round off)               : ',es15.7)
+ 1010 format(10x,'Total m3 of water to be added for this run : ',es15.7/   &
+             10x,'m3 of water per particle                   : ',es15.7/   &
+             10x,'Actual m3 of water added this step         : ',es15.7/   &
+             10x,'Actual rest m3 of water (round off)        : ',es15.7)
  1020 format(10x,'Total number of particles to be added      : ',i12/     &
              10x,'Actual number of particles added this step : ',i12/     &
              10x,'Total number of particles added until now  : ',i12)

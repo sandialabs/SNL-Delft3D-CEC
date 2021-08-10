@@ -1,9 +1,10 @@
       subroutine dethyd(lundia,fout  ,lunadm,bndval,mcbsp ,ncbsp ,
      *                  typbnd,mnstat,wl    ,uu    ,vv    ,iwet  ,
      *                  nobnd ,notims,nostat,kmax  ,a0           )
+      implicit none
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +28,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dethyd.f 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/nesthd2/packages/nesthd2/src/dethyd.f $
+!  $Id: dethyd.f 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/nesthd2/packages/nesthd2/src/dethyd.f $
 !***********************************************************************
 ! Deltares                         marine and coastal management
 !
@@ -43,24 +44,41 @@
 ! subroutines called : getwgh, check
 !***********************************************************************
 
-      integer       iwet  (nostat), mnes  (  4   )  , nnes (  4   )
+      integer lundia
+      integer notims
+      integer nostat
+      integer iwet  (nostat), mnes  (  4   )  , nnes (  4   )
+      integer mnstat(2,nostat),
+     *        mcbsp (nobnd ,2), ncbsp(nobnd ,2)
 
-      integer       mnstat(2,nostat),
-     *              mcbsp (nobnd ,2), ncbsp(nobnd ,2)
+      double precision weight(  4   )
 
-      real          weight(  4   )
+      double precision a0
+      double precision wl    (nostat,notims)
 
-      real          wl    (nostat,notims)
+      double precision uu    (nostat,kmax  ,notims),
+     *                 vv    (nostat,kmax  ,notims)
 
-      real          uu    (nostat,kmax  ,notims),
-     *              vv    (nostat,kmax  ,notims)
-
-      real          bndval(nobnd ,notims,kmax  ,1     ,2)
+      double precision bndval(nobnd ,notims,kmax  ,1     ,2)
 
       character*  1 type
       character*  1 typbnd(nobnd )
 
-      logical       fout
+      double precision angle
+      
+      integer ibnd
+      integer isize
+      integer m
+      integer n
+      integer lunadm
+      integer iwght
+      integer istat
+      integer itim
+      integer k
+      integer nobnd
+      integer kmax
+      
+      logical fout
 
       write (*     ,'('' >>> Generating hydrodynamic boundary '',
      *                ''conditions <<<'')')

@@ -12,8 +12,9 @@ MYC_INCLUDES=$(top_srcdir)/include
 
 bin_PROGRAMS= delpar
 
-AM_FCFLAGS += $(OPENMP_FCFLAGS)
-AM_FFLAGS += $(OPENMP_FFLAGS)
+AM_FCFLAGS += -fopenmp $(OPENMP_FCFLAGS)
+AM_FFLAGS += -fopenmp $(OPENMP_FFLAGS)
+LDFLAGS += -fopenmp
 
 delpar_SOURCES= \
 	main.f
@@ -27,7 +28,6 @@ delpar_LDADD =\
 	$(top_srcdir)/engines_gpl/part/packages/data_f/src/libdata_f.la \
 	$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src/rd_token/libRDToken.la \
 	$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common/src/libDeltaresCommon.la \
-	$(top_srcdir)/engines_gpl/part/packages/version_number/src/libpart_version_number.la \
 	$(top_srcdir)/utils_lgpl/nefis/packages/nefis/src/libNefis.la \
 	-ldl \
 	$(FCLIBS) \

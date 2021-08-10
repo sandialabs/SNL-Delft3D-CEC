@@ -4,7 +4,7 @@
 subroutine dfrecvnb ( iptr, ilen, itype, isource, itag, gdp )
 !----- GPL ---------------------------------------------------------------------
 !
-!  Copyright (C)  Stichting Deltares, 2011-2015.
+!  Copyright (C)  Stichting Deltares, 2011-2020.
 !
 !  This program is free software: you can redistribute it and/or modify
 !  it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ subroutine dfrecvnb ( iptr, ilen, itype, isource, itag, gdp )
 !  Stichting Deltares. All rights reserved.
 !
 !-------------------------------------------------------------------------------
-!  $Id: dfrecvnb.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/parallel_mpi/dfrecvnb.F90 $
+!  $Id: dfrecvnb.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/parallel_mpi/dfrecvnb.F90 $
 !!--description-----------------------------------------------------------------
 !
 !   Data is received from a neighbour
@@ -76,7 +76,7 @@ subroutine dfrecvnb ( iptr, ilen, itype, isource, itag, gdp )
     if (.not.parll) return
     !
 #ifdef HAVE_MPI
-    call mpi_recv ( iptr, ilen, itype, isource-1, itag, MPI_COMM_WORLD, istat, ierr )
+    call mpi_recv ( iptr, ilen, itype, isource-1, itag, engine_comm_world, istat, ierr )
     if ( ierr /= MPI_SUCCESS ) then
        write (msgstr,'(a,i5,a,i3.3)') 'MPI produces some internal error - return code is ',ierr,' and node number is ',inode
        call prterr(lundia, 'U021', trim(msgstr))

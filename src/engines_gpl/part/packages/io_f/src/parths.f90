@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -491,7 +491,7 @@ contains
 !       time-step not written ??  : error
 !
         write (lun2, 99006)
-        call srstop(1)
+        call stop_exit(1)
       endif
 !
 !     end of subroutine

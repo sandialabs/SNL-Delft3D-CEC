@@ -8,7 +8,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
                 & ntruvgl   ,order_tra ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -32,8 +32,8 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrsedh.f90 5169 2015-06-04 11:54:24Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrsedh.f90 $
+!  $Id: wrsedh.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrsedh.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Writes the time varying data for sediment (4 & 5)
@@ -50,7 +50,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
     use globaldata
     use netcdf, only: nf90_unlimited
     use dfparall, only: inode, master
-    use wrtarray, only: wrtvar, wrtarray_n, station
+    use wrtarray, only: wrtvar, wrtarray_n, station, transec
     !
     implicit none
     !
@@ -59,6 +59,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
     integer                              , pointer :: celidt
+    integer                              , pointer :: io_prec
     integer       , dimension(:)         , pointer :: shlay
     real(hp)                             , pointer :: morft
     real(fp)                             , pointer :: morfac
@@ -148,6 +149,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
     celidt     => group4%celidt
     filetype = getfiletype(gdp, FILOUT_HIS)
     !
+    io_prec     => gdp%gdpostpr%io_prec
     shlay       => gdp%gdpostpr%shlay
     morft       => gdp%gdmorpar%morft
     morfac      => gdp%gdmorpar%morfac
@@ -195,7 +197,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
           call addelm(gdp, lundia, FILOUT_HIS, grnam4, 'ITHISS', ' ', IO_INT4       , 0, longname='timestep number (ITHISS*DT*TUNIT := time in sec from ITDATE)')
        endif
        if (lsedtot > 0) then
-          call addelm(gdp, lundia, FILOUT_HIS, grnam4, 'MORFAC', ' ', IO_REAL4      , 0, longname='morphological acceleration factor (MORFAC)')
+          call addelm(gdp, lundia, FILOUT_HIS, grnam4, 'MORFAC', ' ', io_prec       , 0, longname='morphological acceleration factor (MORFAC)')
           call addelm(gdp, lundia, FILOUT_HIS, grnam4, 'MORFT', ' ', IO_REAL8       , 0, longname='morphological time (days since start of simulation)', unit='days')
        endif
        !
@@ -203,25 +205,25 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
        !
        if (nostat > 0) then
          if (lsed > 0) then
-           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZWS', ' ', IO_REAL4     , 3, dimids=(/iddim_nostat, iddim_kmaxout, iddim_lsed/), longname='Settling velocity in station', unit='m/s', attribs=(/idatt_sta/) )
+           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZWS', ' ', io_prec      , 3, dimids=(/iddim_nostat, iddim_kmaxout, iddim_lsed/), longname='Settling velocity in station', unit='m/s', attribs=(/idatt_sta/) )
            if (kmax == 1) then
-             call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZRSDEQ', ' ', IO_REAL4, 3, dimids=(/iddim_nostat, iddim_kmax, iddim_lsed/), longname='Equilibrium concentration of sediment at station (2D only)', unit='kg/m3', attribs=(/idatt_sta/) )
+             call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZRSDEQ', ' ', io_prec , 3, dimids=(/iddim_nostat, iddim_kmax, iddim_lsed/), longname='Equilibrium concentration of sediment at station (2D only)', unit='kg/m3', attribs=(/idatt_sta/) )
            endif
          endif
          if (lsedtot > 0) then
-            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZBDSED', ' ', IO_REAL4    , 2, dimids=(/iddim_nostat, iddim_lsedtot/), longname='Available mass of sediment at bed at station', unit='kg/m2', attribs=(/idatt_sta/) )
-            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZDPSED', ' ', IO_REAL4    , 1, dimids=(/iddim_nostat/), longname='Sediment thickness at bed at station (zeta point)', unit='m', attribs=(/idatt_sta/) )
+            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZBDSED', ' ', io_prec     , 2, dimids=(/iddim_nostat, iddim_lsedtot/), longname='Available mass of sediment at bed at station', unit='kg/m2', attribs=(/idatt_sta/) )
+            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZDPSED', ' ', io_prec     , 1, dimids=(/iddim_nostat/), longname='Sediment thickness at bed at station (zeta point)', unit='m', attribs=(/idatt_sta/) )
          endif
-         call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZDPS', ' ', IO_REAL4      , 1, dimids=(/iddim_nostat/), longname='Morphological depth at station (zeta point)', unit='m', attribs=(/idatt_sta/) )
+         call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZDPS', ' ', io_prec       , 1, dimids=(/iddim_nostat/), longname='Morphological depth at station (zeta point)', unit='m', attribs=(/idatt_sta/) )
          if (lsedtot > 0) then
             transpunit = sedunit // '/(s m)'
-            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZSBU', ' ', IO_REAL4      , 2, dimids=(/iddim_nostat, iddim_lsedtot/), longname='Bed load transport in u-direction at station (zeta point)', unit=transpunit, attribs=(/idatt_sta/) )
-            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZSBV', ' ', IO_REAL4      , 2, dimids=(/iddim_nostat, iddim_lsedtot/), longname='Bed load transport in v-direction at station (zeta point)', unit=transpunit, attribs=(/idatt_sta/) )
+            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZSBU', ' ', io_prec       , 2, dimids=(/iddim_nostat, iddim_lsedtot/), longname='Bed load transport in u-direction at station (zeta point)', unit=transpunit, attribs=(/idatt_sta/) )
+            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZSBV', ' ', io_prec       , 2, dimids=(/iddim_nostat, iddim_lsedtot/), longname='Bed load transport in v-direction at station (zeta point)', unit=transpunit, attribs=(/idatt_sta/) )
          endif
          if (lsed > 0) then
-           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZSSU', ' ', IO_REAL4    , 2, dimids=(/iddim_nostat, iddim_lsed/), longname='Susp. load transport in u-direction at station (zeta point)', unit=transpunit, attribs=(/idatt_sta/) )
-           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZSSV', ' ', IO_REAL4    , 2, dimids=(/iddim_nostat, iddim_lsed/), longname='Susp. load transport in v-direction at station (zeta point)', unit=transpunit, attribs=(/idatt_sta/) )
-           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZRCA', ' ', IO_REAL4    , 2, dimids=(/iddim_nostat, iddim_lsed/), longname='Near-bed reference concentration of sediment at station', unit='kg/m3', attribs=(/idatt_sta/) )
+           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZSSU', ' ', io_prec     , 2, dimids=(/iddim_nostat, iddim_lsed/), longname='Susp. load transport in u-direction at station (zeta point)', unit=transpunit, attribs=(/idatt_sta/) )
+           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZSSV', ' ', io_prec     , 2, dimids=(/iddim_nostat, iddim_lsed/), longname='Susp. load transport in v-direction at station (zeta point)', unit=transpunit, attribs=(/idatt_sta/) )
+           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'ZRCA', ' ', io_prec     , 2, dimids=(/iddim_nostat, iddim_lsed/), longname='Near-bed reference concentration of sediment at station', unit='kg/m3', attribs=(/idatt_sta/) )
          endif
        endif
        !
@@ -230,17 +232,17 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
        if (ntruv > 0) then
          transpunit = sedunit // '/s'
          if (lsedtot > 0) then
-            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'SBTR', ' ', IO_REAL4      , 2, dimids=(/iddim_ntruv, iddim_lsedtot/), longname='Instantaneous bed load transport through section', unit=transpunit, attribs=(/idatt_tra/) )
+            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'SBTR', ' ', io_prec       , 2, dimids=(/iddim_ntruv, iddim_lsedtot/), longname='Instantaneous bed load transport through section', unit=transpunit, attribs=(/idatt_tra/) )
          endif
          if (lsed > 0) then         
-           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'SSTR', ' ', IO_REAL4    , 2, dimids=(/iddim_ntruv, iddim_lsed/), longname='Instantaneous susp. load transport through section', unit=transpunit, attribs=(/idatt_tra/) )
+           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'SSTR', ' ', io_prec     , 2, dimids=(/iddim_ntruv, iddim_lsed/), longname='Instantaneous susp. load transport through section', unit=transpunit, attribs=(/idatt_tra/) )
          endif
          transpunit = sedunit
          if (lsedtot > 0) then
-            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'SBTRC', ' ', IO_REAL4     , 2, dimids=(/iddim_ntruv, iddim_lsedtot/), longname='Cumulative bed load transport through section', unit=transpunit, attribs=(/idatt_tra/) )
+            call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'SBTRC', ' ', io_prec      , 2, dimids=(/iddim_ntruv, iddim_lsedtot/), longname='Cumulative bed load transport through section', unit=transpunit, attribs=(/idatt_tra/) )
          endif
          if (lsed > 0) then
-           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'SSTRC', ' ', IO_REAL4   , 2, dimids=(/iddim_ntruv, iddim_lsed/), longname='Cumulative susp. load transport through section', unit=transpunit, attribs=(/idatt_tra/) )
+           call addelm(gdp, lundia, FILOUT_HIS, grnam5, 'SSTRC', ' ', io_prec    , 2, dimids=(/iddim_ntruv, iddim_lsed/), longname='Cumulative susp. load transport through section', unit=transpunit, attribs=(/idatt_tra/) )
          endif
        endif
        !
@@ -465,7 +467,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
              call wrtarray_n(fds, filename, filetype, grnam5, &
                     & celidt, ntruv, ntruvto, ntruvgl, order_tra, gdp, &
                     & lsedtot, &
-                    & ierror, lundia, rbuff2, 'SBTR', station)
+                    & ierror, lundia, rbuff2, 'SBTR', transec)
              if (ierror/= 0) goto 9999
              !
              ! element 'SBTRC'
@@ -486,7 +488,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
              call wrtarray_n(fds, filename, filetype, grnam5, &
                     & celidt, ntruv, ntruvto, ntruvgl, order_tra, gdp, &
                     & lsedtot, &
-                    & ierror, lundia, rbuff2, 'SBTRC', station)
+                    & ierror, lundia, rbuff2, 'SBTRC', transec)
              deallocate(rbuff2)
              if (ierror/= 0) goto 9999
           endif
@@ -512,7 +514,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
              call wrtarray_n(fds, filename, filetype, grnam5, &
                     & celidt, ntruv, ntruvto, ntruvgl, order_tra, gdp, &
                     & lsed, &
-                    & ierror, lundia, rbuff2, 'SSTR', station)
+                    & ierror, lundia, rbuff2, 'SSTR', transec)
              if (ierror/= 0) goto 9999
              !
              ! element 'SSTRC'
@@ -533,7 +535,7 @@ subroutine wrsedh(lundia    ,error     ,filename  ,ithisc    , &
              call wrtarray_n(fds, filename, filetype, grnam5, &
                     & celidt, ntruv, ntruvto, ntruvgl, order_tra, gdp, &
                     & lsed, &
-                    & ierror, lundia, rbuff2, 'SSTRC', station)
+                    & ierror, lundia, rbuff2, 'SSTRC', transec)
              deallocate(rbuff2)
              if (ierror/= 0) goto 9999
           endif

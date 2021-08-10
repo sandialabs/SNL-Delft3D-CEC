@@ -7,7 +7,7 @@
      &                      horsurf, itop   , filnam )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -31,8 +31,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrwaqsrf.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrwaqsrf.F90 $
+!  $Id: wrwaqsrf.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrwaqsrf.F90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -90,7 +90,6 @@
 !! executable statements -------------------------------------------------------
 !
 
-      lunout = newunit()
       nolay  = ilaggr(kmax)
       nosegl = noseg / nolay
       nobndl = nobnd / nolay
@@ -103,7 +102,9 @@
          write(*,*) '*** ERROR: wrwaqsrf: memory allocation error'
          return
       endif
-!                   write horizontal surface area and weighted depth
+!     
+! write horizontal surface area and weighted depth
+!
       cc   = 0.0
       dd   = 0.0
       surf = 0.0
@@ -127,17 +128,29 @@
       enddo
 !
 #ifdef HAVE_FC_FORM_BINARY
-      open  ( lunout , file=trim(filnam)//'srf', form='binary' )
+      open  ( newunit = lunout , file=trim(filnam)//'srfold', form='binary' )
 #else
-      open  ( lunout , file=trim(filnam)//'srf', form = 'unformatted', access='stream')
+      open  ( newunit = lunout , file=trim(filnam)//'srfold', form = 'unformatted', access='stream')
 #endif
       write ( lunout ) nmax, mmax, nosegl, nosegl, nosegl, 0.0
       write ( lunout ) cc  (1:nosegl)
       close ( lunout )
+      
 #ifdef HAVE_FC_FORM_BINARY
-      open  ( lunout , file=trim(filnam)//'dps', form='binary' )
+      open  ( newunit = lunout , file=trim(filnam)//'srf', form='binary' )
 #else
-      open  ( lunout , file=trim(filnam)//'dps', form = 'unformatted', access='stream')
+      open  ( newunit = lunout , file=trim(filnam)//'srf', form = 'unformatted', access='stream')
+#endif
+      write ( lunout ) 0.0
+      write ( lunout ) (cc  (1:nosegl), i=1, nolay)
+      close ( lunout )
+!
+! write depth at cell centra (depth at zeta point (dps))
+!      
+#ifdef HAVE_FC_FORM_BINARY
+      open  ( newunit = lunout , file=trim(filnam)//'dps', form='binary' )
+#else
+      open  ( newunit = lunout , file=trim(filnam)//'dps', form = 'unformatted', access='stream')
 #endif
       write ( lunout ) nmax, mmax, nosegl, nosegl, nosegl, 0.0
       write ( lunout ) dd  (1:nosegl)
@@ -158,9 +171,9 @@
             dd(k) = dd(k) / surf(k)
          enddo
 #ifdef HAVE_FC_FORM_BINARY
-      open  ( lunout , file=trim(filnam)//'chz', form='binary' )
+      open  ( newunit = lunout , file=trim(filnam)//'chz', form='binary' )
 #else
-      open  ( lunout , file=trim(filnam)//'chz', form = 'unformatted', access='stream')
+      open  ( newunit = lunout , file=trim(filnam)//'chz', form = 'unformatted', access='stream')
 #endif
          write ( lunout ) kmax, nmax, mmax, noseg, noq1, noq2, noq3
          write ( lunout ) cc(1:nosegl), dd(1:nosegl)
@@ -177,9 +190,9 @@
          enddo
       enddo
 #ifdef HAVE_FC_FORM_BINARY
-      open  ( lunout , file=trim(filnam)//'wdt', form='binary' )
+      open  ( newunit = lunout , file=trim(filnam)//'wdt', form='binary' )
 #else
-      open  ( lunout , file=trim(filnam)//'wdt', form = 'unformatted', access='stream')
+      open  ( newunit = lunout , file=trim(filnam)//'wdt', form = 'unformatted', access='stream')
 #endif
       write ( lunout ) nmax, mmax, nosegl, noq1, noq2, nolay
       write ( lunout ) cc  (1:noq1/nolay), dd(1:noq2/nolay)
@@ -189,9 +202,9 @@
 
 !           Open file
 #ifdef HAVE_FC_FORM_BINARY
-      open  ( lunout , file=trim(filnam)//'len', form='binary' )
+      open  ( newunit = lunout , file=trim(filnam)//'len', form='binary' )
 #else
-      open  ( lunout , file=trim(filnam)//'len', form = 'unformatted', access='stream')
+      open  ( newunit = lunout , file=trim(filnam)//'len', form = 'unformatted', access='stream')
 #endif
       write ( lunout ) noq1+noq2+noq3        ! number of exchanges
 !

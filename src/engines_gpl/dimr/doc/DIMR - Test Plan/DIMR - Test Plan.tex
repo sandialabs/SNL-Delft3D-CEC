@@ -1,0 +1,122 @@
+\documentclass[signature]{deltares_report}
+\usepackage{listings}
+\usepackage[titletoc]{appendix}
+%-----------------------------------------------
+\lstset{ %
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code listings
+}
+
+\definecolor{Gray}{gray}{0.9}
+
+\begin{document}
+\pagestyle{empty}
+\cleardoublepage
+%
+
+\newcommand{\ProgramName}{PROJECT_NAME\xspace}
+
+\title{\ProgramName}
+\subtitle{Test Plan}
+\projectnumber{PROJECT_NUMBER}
+\client{Deltares}
+\reference{PROJECT_NUMBER-PROJECT_NAME-005}
+\classification{-}
+
+\date{PROJECT_DATE}
+\version{1.0}
+
+\keywords{software}
+
+\references{Refer to \autoref{chapterLiterature}}
+
+\summary{}
+
+\versioni{1.0}
+\datei{PROJECT_DATE}
+\authori{Carles Salvador Soriano Perez}
+\revieweri{}
+\approvali{}
+
+\status{draft}
+\disclaimer{}
+
+%\deltarestitle
+
+
+%------------------------------------------------------------------------------
+\chapter{Introduction} 
+\label{chapterIntroduction}
+
+\section{Purpose and scope of this document} \label{sec:PurposeAndScope}
+
+\section{Related Documents}
+\label{sec:RelatedDocuments}
+\bigskip
+\begin{longtable}{|p{0.28\textwidth}|p{0.72\textwidth}|}
+\caption{Overview of related documents for the \ProgramName \label{tab:RelatedDocuments}}\\	\hline
+		\hline 
+		\textbf{Document} & \textbf{Reference} \\
+		\hline 
+		\hline 
+		Functional Design & \citep{PROJECT_NAME_FunctionalDesignPROJECT_YEAR} \\
+		Technical Design & \citep{PROJECT_NAME_TechnicalDesignPROJECT_YEAR} \\
+		Technical Documentation & \citep{PROJECT_NAME_TechnicalDocumentationPROJECT_YEAR} \\
+		Test Report & \citep{PROJECT_NAME_TestReportPROJECT_YEAR}  \\
+    \hline			
+\end{longtable}
+
+\section{Versions}
+\label{sec:Versions}
+
+\subsection{Version 0.1}
+\label{sec:Version}
+This is the draft version of this document
+
+\section{Requirements}
+\label{sec:requirements}
+To do.
+
+
+\section{Test levels}
+\label{sec:testLevels}
+Based on the V-model approach we will be testing the following levels:
+\begin{enumerate}
+\item Component testing (\autoref{unitTest}).
+\item Integration testing (\autoref{integrationTest}).
+\item System testing (\autoref{systemTest}).
+\item Acceptance level (\autoref{acceptanceTest}).
+\end{enumerate}
+
+\section{Code coverage}
+\label{sec:codeCoverage}
+To-do
+%------------------------------------------------------------------------------
+\chapter{Component Testing (Unit tests)}
+\label{unitTest}
+To-do
+
+%------------------------------------------------------------------------------
+\chapter{Integration Testing (Integration tests)}
+\label{integrationTest}
+To-do
+
+%------------------------------------------------------------------------------
+\chapter{System Testing}
+\label{systemTest}
+To-do
+
+%------------------------------------------------------------------------------
+\chapter{Acceptation level (Acceptance tests)}
+\label{acceptanceTest}
+To-do
+
+%------------------------------------------------------------------------------
+\chapter{Literature}  \label{chapterLiterature}
+
+\bibliography{../PROJECT_NAME_references/PROJECT_NAME_references}
+
+\pagestyle{empty}
+\mbox{}
+
+%------------------------------------------------------------------------------
+\end{document}

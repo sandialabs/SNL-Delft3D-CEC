@@ -4,7 +4,7 @@ subroutine wapar(hrm       ,dir       ,deph      ,tp        ,fxhis     , &
                & corht     ,swdis     ,grav      ,wsbodyu   ,wsbodyv   )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +28,8 @@ subroutine wapar(hrm       ,dir       ,deph      ,tp        ,fxhis     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wapar.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/kernel/src/wapar.f90 $
+!  $Id: wapar.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/kernel/src/wapar.f90 $
 !!--description-----------------------------------------------------------------
 !
 !     Input:
@@ -51,10 +51,6 @@ subroutine wapar(hrm       ,dir       ,deph      ,tp        ,fxhis     , &
 ! NONE
 !!--declarations----------------------------------------------------------------
     implicit none
-    !
-! Common variables
-    real            ::  pi, twopi, wort2, gamma
-    common /const /     pi, twopi, wort2, gamma
 !
 ! Global variables
 !

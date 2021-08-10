@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -22,7 +22,8 @@
 !!  rights reserved.
 
       subroutine write_version(lun)
-      use precision_part    ! single/double precision
+
+      use part_version_module
       use timers
 !
       implicit none    ! force explicit typing
@@ -119,22 +120,16 @@
       character*3   os
       integer (4)   i, j
 
-      character*75  opkom(13)
+      character*75  opkom(7)
       
       data   opkom  / &
-        'ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»', &
-        'ºÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛº', &
-        'ºÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛ   D e l f t 3 D - P A R T   ÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛº', &
-        'ºÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛº', &
-        'ºÛÛ  D-Particle Tracking    Water quality simulation in 2D/3D models  ÛÛº', &
-        'ºÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛÛº', &
-        'º Version xx.xxxx  xx-xx-xxxx                                           º', &
-        'º Deltares, P.O. Box 177, 2600 MH Delft, The Netherlands                º', &
-        'º Sales          : sales@deltaressystems.nl     tel: +31 (0)88 335 8188 º', &
-        'º Support options: support@deltaressystems.nl   tel: +31 (0)88 335 8100 º', &
-        'º Open source website and forum: http://oss.delft3d.nl/                 º', &
-        'º Copyright (c) 1993-2015 Deltares                                      º', &
-        'ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼'/
+        '+-----------------------------------------------------------------------+', &
+        '|                        D e l f t 3 D - P A R T                        |', &
+        '|                                                                       |', &
+        '| D-Particle Tracking     Water quality simulation in 2D/3D models      |', &
+        '|                                                                       |', &
+        '| Version xx.xxxx  xx-xx-xxxx                                           |', &
+        '+-----------------------------------------------------------------------+'/
       
       integer(4) ithndl              ! handle to time this subroutine
       data       ithndl / 0 /
@@ -145,31 +140,23 @@
 !
       call getfullversionstring_PART(cident)
 !
-      call getenv('OS',os)
-      
       if (lun==0) then
 !        scherm uitvoer
          do i = 1 , size(opkom)
             if ( opkom(i)(3:15) .eq. 'Version xx.xx' ) then
-               write(opkom(i)(3:72),'(a)') cident(5:74)
+               write(opkom(i)(3:72),'(a)') cident(1:70)
             end if
-            if ( os .ne. 'WIN' .and. os .ne. 'Win' .and. os .ne. 'win' ) then
-               do j = 1,len(opkom(i))
-                  if ( ichar(opkom(i)(j:j)) > 127 ) opkom(i)(j:j) = '-'
-               enddo
-            endif
             write( * , * ) opkom(i)
          enddo
       else
 !        print uitvoer
          write(lun,'(//13x,a)')   'PART - Particle tracking'
          write(lun,'(   6x,a)')   ' Water quality simulation in 2D/3D models      '
-         write(lun,'(    a//)')   cident(5:)
+         write(lun,'(    a//)')   trim(cident)
       end if
 !
 !     end of routine
 !
       if ( timon ) call timstop ( ithndl )
       return
-      stop ' Part aborted'
       end subroutine

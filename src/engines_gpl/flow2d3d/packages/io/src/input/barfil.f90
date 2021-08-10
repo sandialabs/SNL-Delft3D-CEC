@@ -3,7 +3,7 @@ subroutine barfil(lundia    ,filbar    ,error     ,mmax      ,nmax      , &
                 & mnbar     ,nambar    ,cbuv      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine barfil(lundia    ,filbar    ,error     ,mmax      ,nmax      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: barfil.f90 5518 2015-10-23 14:14:36Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/barfil.f90 $
+!  $Id: barfil.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/barfil.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Reads the barrier location definitions and
@@ -194,6 +194,7 @@ subroutine barfil(lundia    ,filbar    ,error     ,mmax      ,nmax      , &
        if (nrflds<7 .or. itype(1)/=3) then
           error = .true.
           call prterr(lundia    ,'G007'    ,filbar(1:lfile)      )
+          call prterr(lundia    ,'P004'    ,'Invalid number of parameters specified for barrier "'//rec132(1:20)//'": '//trim(rec132(21:)) )
           goto 300
        endif
        !
@@ -203,6 +204,7 @@ subroutine barfil(lundia    ,filbar    ,error     ,mmax      ,nmax      , &
        if (itype(2)/=1 .or. itype(3)/=1 .or. itype(4)/=1 .or. itype(5)/=1) then
           error = .true.
           call prterr(lundia    ,'G007'    ,filbar(1:lfile)      )
+          call prterr(lundia    ,'P004'    ,'Non-integer data specified for M,N coordinates of barrier "'//rec132(1:20)//'": '//trim(rec132(21:)) )
           goto 300
        endif
        !
@@ -268,12 +270,13 @@ subroutine barfil(lundia    ,filbar    ,error     ,mmax      ,nmax      , &
        !
        call small(nambar(ibar), 20)
        !
-       ! there must be a name defined !!
+       ! There must be a name defined! Would be more logical to move this to top,
+       ! but leave it here for the time being (backward consistent).
        !
        if (nambar(ibar) == '') then
-          errmsg(12:) = ': no name defined'
           error = .true.
-          call prterr(lundia    ,'U021'    ,errmsg    )
+          call prterr(lundia    ,'G007'    ,filbar(1:lfile)      )
+          call prterr(lundia    ,'P004'    ,'Empty barrier name specified on line: '//trim(rec132) )
           goto 300
        endif
        !

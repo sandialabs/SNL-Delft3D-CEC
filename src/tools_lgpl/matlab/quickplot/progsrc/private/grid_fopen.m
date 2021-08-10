@@ -3,7 +3,7 @@ function [DataFI,FileName,Tp,Otherargs] = grid_fopen(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function [DataFI,FileName,Tp,Otherargs] = grid_fopen(cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/grid_fopen.m $
-%   $Id: grid_fopen.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/grid_fopen.m $
+%   $Id: grid_fopen.m 65778 2020-01-14 14:07:42Z mourits $
 
 DataFI   = [];
 FileName = '';
@@ -53,6 +53,7 @@ filterspec={...
     '*.crs'       'Delft3D-FLOW cross-section file'      'attrib'    'attrib cross-sections'
     '*.src'       'Delft3D-FLOW discharge station file'  'attrib'    'attrib discharge stations'
     '*.2dw;*.wr'  'Delft3D-FLOW weir file'               'attrib'    'attrib weir'
+    '*.bar'       'Delft3D-FLOW barrier file'            'attrib'    'attrib barriers'
     '*.*'         'SIMONA weir file'                     'attrib'    'attrib weir-waqua'
     'bag*.*'      'Delft3D-MOR dredge map output file'   'bagmap'    'bagmap'
     '*.inc'       'Incremental file'                     'fls'       'fls'};
@@ -94,7 +95,7 @@ else
             try_next='wldep';
         case {'.inc'}
             try_next='fls';
-        case {'.bnd','.thd','.wr','.obs','.crs','.src','.dry'}
+        case {'.bnd','.thd','.wr','.obs','.crs','.src','.dry','.ppl','.rgs'}
             try_next='attrib';
         case '.enc'
             try_next='enclosure';
@@ -192,38 +193,29 @@ while isempty(DataFI)
                     if ~isempty(DataFI) && strcmp(DataFI.Check,'OK');
                         try_next=DataFI.Type;
                         if isfield(DataFI,'MNu')
-                            if (max(max(DataFI.MNu(:,[1 3])))>gridsize(1)) || (max(max(DataFI.MNv(:,[1 3])))>gridsize(1)) || ...
-                                    (max(max(DataFI.MNu(:,[2 4])))>gridsize(2)) || (max(max(DataFI.MNv(:,[2 4])))>gridsize(2))
-                                error('Weirs/dams outside grid encountered.')
-                            end
+                            M = [DataFI.MNu(:,[1 3]);DataFI.MNv(:,[1 3])];
+                            N = [DataFI.MNu(:,[2 4]);DataFI.MNv(:,[2 4])];
                         elseif isfield(DataFI,'MNKu')
-                            if (max(max(DataFI.MNKu(:,[1 3])))>gridsize(1)) || (max(max(DataFI.MNKv(:,[1 3])))>gridsize(1)) || ...
-                                    (max(max(DataFI.MNKu(:,[2 4])))>gridsize(2)) || (max(max(DataFI.MNKv(:,[2 4])))>gridsize(2))
-                                error('Gates/sheets outside grid encountered.')
-                            end
-                        elseif isequal(DataFI.Type,'drypoint')
-                            if (max(max(DataFI.MN(:,[1 3])))>gridsize(1)) || (max(max(DataFI.MN(:,[2 4])))>gridsize(2))
-                                error('Dry points outside grid encountered.')
-                            end
-                        elseif isequal(DataFI.Type,'observation points')
-                            if (max(DataFI.MN(:,1))>gridsize(1)) || (max(DataFI.MN(:,2))>gridsize(2))
-                                error('Observation points outside grid encountered.')
-                            end
-                        elseif isequal(DataFI.Type,'openboundary')
-                            if (max(DataFI.MN(:,1))>gridsize(1)) || (max(DataFI.MN(:,2))>gridsize(2))
-                                error('Boundary locations outside grid encountered.')
-                            end
-                        elseif isequal(DataFI.Type,'discharge stations')
-                            if (max(DataFI.MNK(:,1))>gridsize(1)) || (max(DataFI.MNK(:,2))>gridsize(2))
-                                error('Discharge stations outside grid encountered.')
-                            end
-                        elseif isequal(DataFI.Type,'cross-sections')
-                            if (max(max(DataFI.MNMN(:,[1 3])))>gridsize(1)) || ...
-                                    (max(max(DataFI.MNMN(:,[2 4])))>gridsize(2))
-                                error('Cross-sections outside grid encountered.')
-                            end
+                            M = [DataFI.MNKu(:,[1 3]);DataFI.MNKv(:,[1 3])];
+                            N = [DataFI.MNKu(:,[2 4]);DataFI.MNKv(:,[2 4])];
+                        elseif isfield(DataFI,'MN') && size(DataFI.MN,2)==4
+                            M = DataFI.MN(:,[1 3]);
+                            N = DataFI.MN(:,[2 4]);
+                        elseif isfield(DataFI,'MN') && size(DataFI.MN,2)==2
+                            M = DataFI.MN(:,1);
+                            N = DataFI.MN(:,2);
+                        elseif isfield(DataFI,'MNK')
+                            M = DataFI.MNK(:,1);
+                            N = DataFI.MNK(:,2);
+                        elseif isfield(DataFI,'MNMN')
+                            M = DataFI.MNMN(:,[1 3]);
+                            N = DataFI.MNMN(:,[2 4]);
                         else
                             error('%s not yet supported.',DataFI.Type)
+                        end
+                        if (max(M(:))>gridsize(1)) || (max(N(:))>gridsize(2)) || ...
+                                (min(M(:))<1) || (min(N(:))<1)
+                            error('Structures outside grid encountered.')
                         end
                     else
                         DataFI=[];

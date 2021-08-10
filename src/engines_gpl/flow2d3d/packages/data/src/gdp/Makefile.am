@@ -40,7 +40,6 @@ libDataGDP_la_SOURCES = \
          gdp_alloc.f90 \
          gdp_alloc_arrays.f90 \
          gdp_dealloc.f90 \
-         gdp_dump.f90 \
          initadv2d.f90 \
          initarrays.f90 \
          initbcdat.f90 \

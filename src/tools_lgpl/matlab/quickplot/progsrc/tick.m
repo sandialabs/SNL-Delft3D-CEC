@@ -84,6 +84,14 @@ function tick(varargin)
 %     * Language Select the language used for names of months and
 %                days: English, Dutch, German, French, Italian, or
 %                Spanish (default: English)
+%     * SkipNLabels
+%                Specifies the number of ticks without labels in between
+%                ticks with labels: integer (default: 0). The default
+%                settings generates a label for every tick. If you specify
+%                N then non-blank labels will be generated for ticks
+%                1:(N+1):end.
+%     * FirstLabel
+%                Special format specification for the first tick.
 %
 %   Examples:
 %     ax=subplot(2,2,1);
@@ -100,11 +108,11 @@ function tick(varargin)
 %
 %     ax=subplot(2,2,4);
 %     set(ax,'xlim',now+[0 7]);
-%     tick(gca,'x','date','%2w %D')
+%     tick(gca,'x','date','%2w %D','firstlabel','%D %3O %Y')
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -129,11 +137,13 @@ function tick(varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/tick.m $
-%   $Id: tick.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/tick.m $
+%   $Id: tick.m 65778 2020-01-14 14:07:42Z mourits $
 
 DecSep='.';
 Language='English';
+SkipNLabels=0;
+FirstLabel=0;
 
 INP=varargin;
 i=1;
@@ -145,6 +155,12 @@ while i<length(INP)
                 INP([i i+1])=[];
             case 'language'
                 Language=INP{i+1};
+                INP([i i+1])=[];
+            case 'skipnlabels'
+                SkipNLabels=INP{i+1};
+                INP([i i+1])=[];
+            case 'firstlabel'
+                FirstLabel=INP{i+1};
                 INP([i i+1])=[];
             otherwise
                 i=i+1;
@@ -251,15 +267,16 @@ for i=1:length(ax)
     if strcmp(frmt,'autodate')
         [dummytck,frmt]=Local_datetick(handle,ax(i));
     end
-    Local_tick(handle,ax(i),tck,frmt,scaling,DecSep,Language)
+    Local_tick(handle,ax(i),tck,frmt,scaling,DecSep,Language,SkipNLabels,FirstLabel)
 end
 
 
-function Local_tick(handle,ax,tck,Frmt,scaling,DecSep,Language)
+function Local_tick(handle,ax,tck,Frmt,scaling,DecSep,Language,SkipNLabels,FirstLabel)
 frmt=lower(Frmt);
 switch frmt
     case 'none'
         set(handle,[ax 'tick'],[],[ax 'ticklabel'],[]);
+        return
     case 'auto'
         set(handle,[ax 'tickmode'],'auto',[ax 'ticklabelmode'],'auto');
     case 'autolabel'
@@ -272,29 +289,47 @@ switch frmt
     otherwise
         if strncmp(frmt,'date:',5)
             % Set axis tick labels
-            labels = Local_datestr(tck,Frmt(6:end),Language);
+            labels = Local_datestr(tck,Frmt(6:end),Language,FirstLabel);
             set(handle,[ax,'tick'],tck,[ax,'ticklabel'],labels)
         else
             tckL=cell(1,length(tck));
             if ~strcmp(DecSep,'.')
-                Frmt=strrep(Frmt,'.','..?'); % This may also change %3.4f into %3..?4f, which is invalid
-                % Why the question mark in the above expression?
-                % Answer: to make the new string separable for otherwise .. would result in ....
-                %         and strfind('....','..') returns [1 2 3]
-                iperc=strfind(Frmt,'%');
-                iperc=setdiff(setdiff(iperc,iperc+1),iperc-1); % double %% means just %
-                for i=fliplr(iperc) % I expect just one, but let's generalize
-                    k=i+1;
-                    while k<length(Frmt) && ismember(Frmt(k),'-0123456789')
-                        k=k+1;
-                    end
-                    if k<length(Frmt) && isequal(Frmt(k),'.')
-                        Frmt(k+1:k+2)=[]; % remove following .?
-                    end
+                if ischar(FirstLabel)
+                    Frmts = {Frmt FirstLabel};
+                else
+                    Frmts = {Frmt};
                 end
+                for l = 1:length(Frmts)
+                    Frmt = Frmts{l};
+                    Frmt=strrep(Frmt,'.','..?'); % This may also change %3.4f into %3..?4f, which is invalid
+                    % Why the question mark in the above expression?
+                    % Answer: to make the new string separable for otherwise .. would result in ....
+                    %         and strfind('....','..') returns [1 2 3]
+                    iperc=strfind(Frmt,'%');
+                    iperc=setdiff(setdiff(iperc,iperc+1),iperc-1); % double %% means just %
+                    for i=fliplr(iperc) % I expect just one, but let's generalize
+                        k=i+1;
+                        while k<length(Frmt) && ismember(Frmt(k),'-0123456789')
+                            k=k+1;
+                        end
+                        if k<length(Frmt) && isequal(Frmt(k),'.')
+                            Frmt(k+1:k+2)=[]; % remove following .?
+                        end
+                    end
+                    %
+                    Frmts{l} = Frmt;
+                end
+                if ischar(FirstLabel)
+                    FirstLabel = Frmts{2};
+                end
+                Frmt = Frmts{1};
             end
             for i=1:length(tck)
-                tckL{i}=sprintf(Frmt,tck(i)*scaling);
+                if i==1 && ischar(FirstLabel)
+                    tckL{i}=sprintf(FirstLabel,tck(i)*scaling);
+                else
+                    tckL{i}=sprintf(Frmt,tck(i)*scaling);
+                end
                 if ~strcmp(DecSep,'.')
                     k=strfind(tckL{i},'..?');
                     tckL{i}=strrep(tckL{i},'.',DecSep);
@@ -305,9 +340,19 @@ switch frmt
             set(handle,[ax 'tick'],tck,[ax 'ticklabel'],tckL);
         end
 end
+if strcmp(get(handle,[ax 'ticklabelmode']),'manual')
+    tckL = get(handle,[ax 'ticklabel']);
+    if ischar(tckL)
+        tckL = cellstr(tckL);
+    end
+    noLabel = true(1,length(tckL));
+    noLabel(1:(SkipNLabels+1):end) = false;
+    tckL(noLabel)={''};
+    set(handle,[ax 'ticklabel'],tckL)
+end
 
 
-function Strs = Local_datestr(ticks,frmt,Language)
+function Strs = Local_datestr(ticks,frmt,Language,FirstLabel)
 ticks=ticks(:);
 
 perc=strfind(frmt,'%');
@@ -427,6 +472,9 @@ Len(Len==0)=[];     % remove zeros
 
 if isempty(Frmt)
     [Strs{1:length(ticks)}]=deal(frmt);
+    if nargin>3 && ischar(FirstLabel)
+        Strs(1) = Local_datestr(ticks(1),FirstLabel,Language);
+    end
     return
 end
 
@@ -538,6 +586,9 @@ Strs=cell(length(TickSep),1);
 for k=1:length(TickSep)
     Strs{k}=TmpStr(Start(k):End(k));
 end
+if nargin>3 && ischar(FirstLabel)
+    Strs(1) = Local_datestr(ticks(1),FirstLabel,Language);
+end
 
 
 function [ticks,format]=Local_datetick(handle,ax)
@@ -547,10 +598,15 @@ if limmanual
     lim = get(handle,[ax 'lim']);
 else
     lim = limits(handle,ax);
+    if any(~isfinite(lim)) % no data !?
+        lim = get(handle,[ax 'lim']);
+    end
 end
 [ticks,format] = bestscale(lim);
 if ~limmanual && length(ticks)>1
     set(handle,[ax 'lim'],[min(lim(1),min(ticks)) max(lim(2),max(ticks))]);
+else
+    ticks = ticks(ticks>=lim(1) & ticks<=lim(2));
 end
 
 

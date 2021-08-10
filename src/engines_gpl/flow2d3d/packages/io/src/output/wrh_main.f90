@@ -2,7 +2,7 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
                   & ithisc    ,runtxt    ,trifil    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrh_main.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrh_main.f90 $
+!  $Id: wrh_main.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrh_main.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Main routine for writing the FLOW HIS file.
@@ -57,8 +57,6 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
     integer(pntrsize)                    , pointer :: wrka3 ! zdir
     integer(pntrsize)                    , pointer :: wrka4 ! zrlabd
     integer(pntrsize)                    , pointer :: wrka5 ! zuwb
-    integer                              , pointer :: nmax
-    integer                              , pointer :: mmax
     integer                              , pointer :: kmax
     integer                              , pointer :: lmax
     integer                              , pointer :: lstsci
@@ -67,6 +65,9 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
     integer                              , pointer :: lsedtot
     integer                              , pointer :: ltem
     integer                              , pointer :: ltur
+    integer                              , pointer :: mmax
+    integer                              , pointer :: nmax
+    integer                              , pointer :: nsluv
     integer                              , pointer :: nsrc
     integer                              , pointer :: nostat
     integer                              , pointer :: ntruv
@@ -81,6 +82,7 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
     integer(pntrsize)                    , pointer :: kcs
     integer(pntrsize)                    , pointer :: alfas
     integer(pntrsize)                    , pointer :: atr
+    integer(pntrsize)                    , pointer :: cbuv
     integer(pntrsize)                    , pointer :: ctr
     integer(pntrsize)                    , pointer :: disch
     integer(pntrsize)                    , pointer :: dps
@@ -127,12 +129,14 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
     integer(pntrsize)                    , pointer :: zwl
     integer(pntrsize)                    , pointer :: zws
     integer(pntrsize)                    , pointer :: zwndsp
+    integer(pntrsize)                    , pointer :: zwndcd
     integer(pntrsize)                    , pointer :: zwnddr
     integer(pntrsize)                    , pointer :: zairp
     integer(pntrsize)                    , pointer :: zprecp
     integer(pntrsize)                    , pointer :: zevap
     integer(pntrsize)                    , pointer :: hydprs
     integer(pntrsize)                    , pointer :: mnksrc
+    integer(pntrsize)                    , pointer :: nambar
     integer(pntrsize)                    , pointer :: namcon
     integer(pntrsize)                    , pointer :: namsrc
     integer                              , pointer :: itdate
@@ -195,8 +199,6 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
     wrka3               => gdp%gdaddress%wrka3
     wrka4               => gdp%gdaddress%wrka4
     wrka5               => gdp%gdaddress%wrka5
-    nmax                => gdp%d%nmax
-    mmax                => gdp%d%mmax
     kmax                => gdp%d%kmax
     lmax                => gdp%d%lmax
     lstsci              => gdp%d%lstsci
@@ -205,6 +207,9 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
     lsedtot             => gdp%d%lsedtot
     ltem                => gdp%d%ltem
     ltur                => gdp%d%ltur
+    mmax                => gdp%d%mmax
+    nmax                => gdp%d%nmax
+    nsluv               => gdp%d%nsluv
     nsrc                => gdp%d%nsrc
     nostat              => gdp%d%nostat
     ntruv               => gdp%d%ntruv
@@ -218,6 +223,7 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
     kcs                 => gdp%gdr_i_ch%kcs
     alfas               => gdp%gdr_i_ch%alfas
     atr                 => gdp%gdr_i_ch%atr
+    cbuv                => gdp%gdr_i_ch%cbuv
     ctr                 => gdp%gdr_i_ch%ctr
     disch               => gdp%gdr_i_ch%disch
     dps                 => gdp%gdr_i_ch%dps
@@ -264,12 +270,14 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
     zwl                 => gdp%gdr_i_ch%zwl
     zws                 => gdp%gdr_i_ch%zws
     zwndsp              => gdp%gdr_i_ch%zwndsp
+    zwndcd              => gdp%gdr_i_ch%zwndcd
     zwnddr              => gdp%gdr_i_ch%zwnddr
     zairp               => gdp%gdr_i_ch%zairp
     zprecp              => gdp%gdr_i_ch%zprecp
     zevap               => gdp%gdr_i_ch%zevap
     hydprs              => gdp%gdr_i_ch%hydprs
     mnksrc              => gdp%gdr_i_ch%mnksrc
+    nambar              => gdp%gdr_i_ch%nambar
     namcon              => gdp%gdr_i_ch%namcon
     namsrc              => gdp%gdr_i_ch%namsrc
     itdate              => gdp%gdexttim%itdate
@@ -365,7 +373,7 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
        elseif (filetype == FTYPE_NETCDF) then
           if (first .and. irequest == REQUESTTYPE_DEFINE) then              
              write(lundia,*) 'Creating new '//trim(filename)
-             ierror = nf90_create(filename, 0, fds); call nc_check_err(lundia, ierror, "creating file", filename)
+             ierror = nf90_create(filename, gdp%gdpostpr%nc_mode, fds); call nc_check_err(lundia, ierror, "creating file", filename)
              !
              ! global attributes
              !
@@ -393,10 +401,10 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
                     & r(yz)     ,r(alfas)  ,d(dps)    ,r(thick)  ,r(sig)    , &
                     & r(sig)    ,irequest  ,fds       ,nostatto  ,nostatgl  , &
                     & order_sta ,ntruvto   ,ntruvgl   ,order_tra ,r(xcor)   , &
-                    & r(ycor)   ,i(kcs)    ,gdp       )
+                    & r(ycor)   ,i(kcs)    ,nsluv     ,ch(nambar),gdp       )
           if (error) goto 9999
           !
-          if (culvert) then
+          if (nsrc>0 .and. gdp%gdflwpar%flwoutput%hisdis) then
              call wrihisdis(lundia    ,error     ,filename  ,itdate    ,tunit     , &
                           & dt        ,nsrc      ,ch(namsrc),irequest  ,fds       , &
                           & gdp       )
@@ -428,10 +436,10 @@ subroutine wrh_main(lundia    ,error     ,selhis    ,grdang    ,dtsec     , &
                     & r(zwndsp) ,r(zwnddr) ,r(zairp)  ,wind      ,sferic    , &
                     & r(zprecp) ,r(zevap)  ,itdate    ,dtsec     ,irequest  , &
                     & fds       ,nostatto  ,nostatgl  ,order_sta ,ntruvto   , &
-                    & ntruvgl   ,order_tra ,gdp       )
+                    & ntruvgl   ,order_tra ,nsluv     ,r(cbuv)   ,r(zwndcd) ,gdp       )
           if (error) goto 9999
           !
-          if (culvert) then
+          if (nsrc>0 .and. gdp%gdflwpar%flwoutput%hisdis) then
              call wrthisdis(lundia    ,error     ,filename  ,ithisc    , &
                           & zmodel    ,kmax      ,lstsci    ,nsrc      , &
                           & i(mnksrc) ,r(disch)  ,d(dps)    ,r(rint)   , &

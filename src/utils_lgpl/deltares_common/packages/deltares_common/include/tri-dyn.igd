@@ -25,7 +25,7 @@
 !                                                                               
 !-------------------------------------------------------------------------------
 !  $Id: tri-dyn.igd 2392 2013-03-28 14:27:50Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common/include/tri-dyn.igd $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common/include/tri-dyn.igd $
 real(prec) , dimension(0:0) :: d
 real(fp)   , dimension(0:0) :: r
 real(sp)   , dimension(0:0) :: s

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -21,7 +21,7 @@
 !!  of Stichting Deltares remain the property of Stichting Deltares. All
 !!  rights reserved.
 
-      subroutine read_grid ( lun    , aGrid  , GridPs , oldproc, ierr   )
+      subroutine read_grid ( lun    , aGrid  , GridPs , oldproc, nosegl_bottom, ierr   )
 
 !       Deltares Software Centre
 
@@ -61,11 +61,12 @@
 
 !     declaration of arguments
 
-      integer               , intent(in   ) :: lun(*)    !< unit numbers used
-      type(GridPointer)     , intent(inout) :: aGrid     !< collection off all grid definitions
-      type(GridPointerColl) , intent(in   ) :: GridPs    !< collection off all grid definitions
-      logical               , intent(in   ) :: oldproc   !< true if old processing
-      integer               , intent(inout) :: ierr      !< cummulative error count
+      integer               , intent(in   ) :: lun(*)        !< unit numbers used
+      type(GridPointer)     , intent(inout) :: aGrid         !< collection off all grid definitions
+      type(GridPointerColl) , intent(in   ) :: GridPs        !< collection off all grid definitions
+      logical               , intent(in   ) :: oldproc       !< true if old processing
+      integer               , intent(in   ) :: nosegl_bottom !< number of segments expected for bottom
+      integer               , intent(inout) :: ierr          !< cummulative error count
 
 !     local declarations
 
@@ -132,7 +133,7 @@
                      aGrid%iarray(iseg) = iseg
                   end do
                   exit                                         ! input for the grid is ready
-                  
+
                case ( 'AGGREGATIONFILE' )                      ! it is the filename keyword
                   if ( gettoken( ctoken, ierr2 ) .gt. 0 ) goto 1000
                   call dhopnf ( lun(33), ctoken, 33, 1, ierr2 )
@@ -147,6 +148,11 @@
                   read  ( lun(33) , * ) ( aGrid%iarray(iseg),iseg=1,noseg_fil )
                   close ( lun(33) )
                   exit                                         ! input for the grid is ready
+
+               case ( 'BOTTOMGRID_FROM_ATTRIBUTES' )       ! it is the filename keyword
+                  allocate ( aGrid%iarray(noseg) )
+                  call read_attributes_for_bottomgrid( aGrid%iarray, nosegl_bottom, ierr )
+                  exit
 
                case ( 'REFERENCEGRID' )
                   if ( gettoken( ctoken, ierr2 ) .gt. 0 ) goto 1000
@@ -223,5 +229,123 @@
  2070 format (/' ERROR, segment in sub-grid out of range:',I15 )
  2080 format (/' ERROR, segment in sub-grid not defined:',I15 )
  2090 format (/' ERROR, reading GRID information.')
+
+      contains
+
+      subroutine read_attributes_for_bottomgrid( iarray, nosegl, ierr )
+      integer :: nosegl, ierr
+      integer, dimension(:) :: iarray
+
+      integer :: i, j, nkopt, ikopt1, ikopt2, ierr2, lunbin, iover, ikdef, idummy
+      integer :: nopt, nover, attrib, active
+      integer, allocatable, dimension(:) :: ikenm
+      character(len=255) :: filename
+
+      if ( gettoken( nkopt, ierr2 ) .gt. 0 ) goto 900
+
+      do i = 1 , nkopt                                      !   read those blocks
+
+         if ( gettoken( nopt, ierr2 ) .gt. 0 ) goto 900
+         allocate ( ikenm(nopt) )
+         do j = 1, nopt                                        !   get the attribute numbers
+            if ( gettoken( ikenm(j), ierr2 ) .gt. 0 ) goto 900
+         enddo
+
+         if ( gettoken( ikopt1, ierr2 ) .gt. 0 ) goto 900      !   the file option for this info
+         if ( ikopt1 .eq. 0 ) then                             !   binary file
+            if ( gettoken( filename, ierr2 ) .gt. 0 ) goto 910    !   the name of the binary file
+            open( newunit = lunbin, file = filename, status = 'old', access = 'stream', iostat = ierr2 )
+            if ( ierr2 == 0 ) then
+               read  ( lunbin, iostat = ierr2 ) ( iarray(j), j=1, noseg )
+               close ( lunbin )
+               if ( ierr2 /= 0 ) then
+                  write ( lunut , 2010 ) trim(filename)
+               endif
+            else
+                write ( lunut , 2020 ) trim(filename)
+            endif
+         else
+            if ( gettoken( ikopt2, ierr2 ) .gt. 0 ) goto 900   !   second option
+
+            select case ( ikopt2 )
+
+               case ( 1 )                                      !   no defaults
+                  do j = 1, noseg
+                     if ( gettoken( iarray(j), ierr2 ) .gt. 0 ) goto 900
+                  enddo
+
+               case ( 2 )                                      !   default with overridings
+                  if ( gettoken( ikdef, ierr2 ) .gt. 0 ) goto 900
+                  if ( gettoken( nover, ierr2 ) .gt. 0 ) goto 900
+                  do iseg = 1 , noseg
+                     iarray(iseg) = ikdef
+                  enddo
+                  if ( nover .gt. 0 ) then
+                     do j = 1, nover
+                        if ( gettoken( iover , ierr2 ) .gt. 0 ) goto 900
+                        if ( gettoken( idummy, ierr2 ) .gt. 0 ) goto 900
+                        if ( iover .lt. 1 .or. iover .gt. noseg ) then
+                           write ( lunut , 2030 ) j, iover
+                           ierr = ierr + 1
+                        else
+                           iarray(iover) = idummy
+                        endif
+                     enddo
+                  endif
+
+               case default
+                  write ( lunut , 2040 ) ikopt2
+                  ierr = ierr + 1
+
+            end select
+         endif
+      enddo
+
+      ! Extract the information we need
+      do i = 1,noseg
+          call dhkmrk( 1, iarray(i), active )
+          call dhkmrk( 2, iarray(i), attrib )
+          if ( active == 1 .and. (attrib == 0 .or. attrib == 3) ) then
+             iarray(i) = 1 + mod(i-1,nosegl)
+          else
+             iarray(i) = 0
+          endif
+      enddo
+
+      ! We read the number of time-dependent attributes - there should be none
+      !
+      if ( gettoken( nopt, ierr2 ) .gt. 0 ) goto 900   !   second option
+      if ( nopt /= 0 ) then
+          write( lunut, 2050 )
+          goto 900
+      endif
+
+      return
+
+      ! Handle errors
+  900 continue
+      if ( ierr2 .gt. 0 ) ierr = ierr + 1
+      if ( ierr2 .eq. 3 ) call srstop(1)
+      write( lunut, 2000 )
+      return
+
+  910 continue
+      if ( ierr2 .gt. 0 ) ierr = ierr + 1
+      if ( ierr2 .eq. 3 ) call srstop(1)
+      write( lunut, 2001 )
+
+      return
+
+      ! Formats
+ 2000 format(/, ' ERROR. Unexpected value in attributes file - should be an integer')
+ 2001 format(/, ' ERROR. Reading name of binary attributes file')
+ 2010 format(/, ' ERROR. Reading binary attributes file - too few data?',/,'File: ', a)
+ 2020 format(/, ' ERROR. Opening binary attributes file - incorrect name?',/,'File: ', a)
+ 2030 format(/, ' ERROR. Overriding out of bounds - overriding: ', i0, ' - segment: ', i0)
+ 2040 format(/, ' ERROR. Unknown option for attributes: ', i0)
+ 2050 format(/, ' ERROR. The number of time-dependent attributes should be zero - ',
+     &          'limitation in the implementation')
+
+      end subroutine read_attributes_for_bottomgrid
 
       end

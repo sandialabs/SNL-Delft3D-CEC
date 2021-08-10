@@ -5,7 +5,7 @@ subroutine checku(hu        ,s1        ,dpu       ,umean     , &
                 & gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +29,8 @@ subroutine checku(hu        ,s1        ,dpu       ,umean     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: checku.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/checku.f90 $
+!  $Id: checku.f90 65845 2020-01-23 21:00:34Z platzek $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/checku.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: This routine checks the drying and flooding at ve-
@@ -125,7 +125,7 @@ subroutine checku(hu        ,s1        ,dpu       ,umean     , &
        !
        ! check for flooding
        !
-       if (  flood .and. kfu(nm)==0 .and. kcu(nm)==1 &
+       if (  flood .and. kfu(nm)==0 .and. (kcu(nm)==1 .or. kcu(nm)==3) &
            & .and. max(s1(nm),s1(nm+icx)) - max(-real(dps(nm),fp),-real(dps(nm+icx),fp)) >= floodtrsh) then
           if (min(hu(nm), hucres)>floodtrsh) then
             kfu(nm) = 1

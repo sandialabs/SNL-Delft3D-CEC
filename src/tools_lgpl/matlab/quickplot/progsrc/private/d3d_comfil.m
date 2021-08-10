@@ -18,7 +18,7 @@ function varargout=d3d_comfil(FI,domain,field,cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -43,12 +43,10 @@ function varargout=d3d_comfil(FI,domain,field,cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/d3d_comfil.m $
-%   $Id: d3d_comfil.m 5582 2015-11-11 10:49:40Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/d3d_comfil.m $
+%   $Id: d3d_comfil.m 65778 2020-01-14 14:07:42Z mourits $
 
 %========================= GENERAL CODE =======================================
-T_=1; ST_=2; M_=3; N_=4; K_=5;
-
 if nargin<2
     error('Not enough input arguments')
 elseif nargin==2
@@ -96,6 +94,34 @@ switch cmd
     otherwise
         [XYRead,DataRead,DataInCell]=gridcelldata(cmd);
 end
+%
+if strcmp(Props.Name,'grid')
+    DataInCell = 1;
+end
+if isfield(FI,'Partitions')
+    if domain<=FI.Partitions{1}
+        [Ans,FI.NEFIS(domain)] = get_single_partition(FI.NEFIS(domain),1,Props,XYRead,DataRead,DataInCell,varargin);
+    else
+        for d = FI.Partitions{1}:-1:1
+            [Ans(d),FI.NEFIS(d)] = get_single_partition(FI.NEFIS(d),1,Props,XYRead,DataRead,DataInCell,varargin);
+        end
+    end
+else
+    [Ans,FI] = get_single_partition(FI,domain,Props,XYRead,DataRead,DataInCell,varargin);
+end
+varargout{2} = FI;
+varargout{1} = Ans;
+
+function Domains = domains(FI)
+if isfield(FI,'Partitions')
+    Domains = multiline(sprintf('partition %3.3d-',1:FI.Partitions{1}),'-','cell');
+    Domains{end} = 'all partitions';
+else
+    Domains = {};
+end
+
+function [Ans,FI] = get_single_partition(FI,domain,Props,XYRead,DataRead,DataInCell,var_arg_in)
+T_=1; ST_=2; M_=3; N_=4; K_=5;
 
 DimFlag=Props.DimFlag;
 idx={[] [] 0 0 0};
@@ -104,11 +130,11 @@ fidx=find(DimFlag);
 subf=getsubfields(FI,Props);
 if isempty(subf)
     % initialize and read indices ...
-    idx(fidx(1:length(varargin)))=varargin;
+    idx(fidx(1:length(var_arg_in)))=var_arg_in;
 else
     % initialize and read indices ...
-    Props.SubFld=cat(2,varargin{1},Props.SubFld);
-    idx(fidx(1:(length(varargin)-1)))=varargin(2:end);
+    Props.SubFld=cat(2,var_arg_in{1},Props.SubFld);
+    idx(fidx(1:(length(var_arg_in)-1)))=var_arg_in(2:end);
 end
 
 % select appropriate timestep ...
@@ -772,8 +798,6 @@ end
 [T,Tsc]=readtim(FI,Props,idx{T_});
 Ans.Time=T;
 Ans.XInfo.Tscale=Tsc;
-
-varargout={Ans FI};
 % -----------------------------------------------------------------------------
 
 
@@ -785,6 +809,7 @@ T_=1; ST_=2; M_=3; N_=4; K_=5;
 PropNames={'Name'                   'Units'   'DimFlag' 'DataInCell' 'NVal' 'VecType' 'Loc' 'ReqLoc'  'Loc3D' 'Group'          'Val1'    'Val2'  'SubFld' 'MNK'};
 DataProps={'morphologic grid'          ''       [0 0 1 1 0]  0         0     ''       'd'   'd'       ''      'GRID'           'XCOR'    ''       []       0
     'hydrodynamic grid'         ''       [1 0 1 1 1]  0         0     ''       'z'   'z'       'i'     'CURTIM'         'S1'      ''       []       0
+    'grid'                      ''       [1 0 1 1 1]  0         0     ''       'z'   'z'       ''      'CURTIM'         'S1'      ''       []       0
     'inactive water level points' ...
     ''       [1 0 1 1 0]  2         1     ''       'z'   'z'       ''      'KENMCNST'       'KCS'     ''       []       0
     'thin dams'                 ''       [1 0 1 1 0]  0         0     ''       'd'   'd'       ''      'KENMCNST'       'KCU'     'KCV'    []       0
@@ -794,6 +819,7 @@ DataProps={'morphologic grid'          ''       [0 0 1 1 0]  0         0     '' 
     'wind velocity'             'm/s'    [1 0 1 1 0]  1         2     'x'      'z'   'z'       ''      'WIND'           'WINDU'   'WINDV'  []       0
     '-------'                   ''       [0 0 0 0 0]  0         0     ''       ''    ''        ''      ''               ''        ''       []       0
     'hrms wave height'          'm'      [1 0 1 1 0]  1         1     ''       'z'   'z'       ''      'WAVTIM'         'HRMS'    ''       []       0
+%   'wave direction'            'deg'    [1 0 1 1 0]  1         1     ''       'z'   'z'       ''      'WAVTIM'         'DIR'     ''       []       0
     'hrms wave vector'          'm'      [1 0 1 1 0]  1         2     'm'      'z'   'z'       ''      'WAVTIM'         'HRMS'    'DIR'    []       0
     'tp wave period'            's'      [1 0 1 1 0]  1         1     ''       'z'   'z'       ''      'WAVTIM'         'TP'      ''       []       0
     'smoothed peak wave period' 's'      [1 0 1 1 0]  1         1     ''       'z'   'z'       ''      'WAVTIM'         'TPS'     ''       []       0
@@ -912,7 +938,12 @@ for i=size(Out,1):-1:1
     if ~isempty(strmatch('---',Out(i).Name))
     elseif ~isstruct(Info)
         % remove references to non-stored data fields
-        Out(i)=[];
+        if strcmp(Out(i).Name,'grid') % S1 not available on file, so convert grid to 2D time-independent quantity.
+            Out(i).DimFlag(1) = 0;
+            Out(i).DimFlag(5) = 0;
+        else
+            Out(i)=[];
+        end
     elseif isequal(Info.SizeDim,1)
         % remove references to non-stored data fields
         Out(i)=[];
@@ -1001,11 +1032,17 @@ end
 for i=1:length(Out)
     switch Out(i).ReqLoc
         case 'd'
-            Out(i).UseGrid=1;
+            Out(i).UseGrid=3;%1;
+            Out(i).Geom='SGRID-NODE';
         case 'z'
-            Out(i).UseGrid=2;
+            Out(i).UseGrid=3;%2;
+            Out(i).Geom='SGRID-FACE';
     end
+    Out(i).Coords='xy';
 end
+
+[Out.TemperatureType] = deal('unspecified');
+[Out(strcmp({Out.Name},'temperature')).TemperatureType] = deal('absolute');
 % -----------------------------------------------------------------------------
 
 % -----------------------------------------------------------------------------
@@ -1037,10 +1074,9 @@ if Props.DimFlag(M_) & Props.DimFlag(N_)
 end
 if Props.DimFlag(K_)
     Info=vs_disp(FI,'GRID','THICK');
-    if Props.NVal==0,
-        sz(K_)=Info.SizeDim(1)+1;
-    else
-        sz(K_)=Info.SizeDim;
+    sz(K_)=Info.SizeDim(1);
+    if strcmp(Props.Loc3D,'i')
+        sz(K_)=sz(K_)+1;
     end
 end
 if Props.DimFlag(T_)

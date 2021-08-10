@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -33,7 +33,6 @@ use precision_part               ! single/double precision
 !  module procedure(s)
 !
 use grid_search_mod         ! explicit interface
-use stop_exit_mod           ! explicit interface
 !
 implicit none               ! force explicit typing
 !

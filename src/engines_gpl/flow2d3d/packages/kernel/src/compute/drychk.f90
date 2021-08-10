@@ -4,7 +4,7 @@ subroutine drychk(idry      ,s1        ,qxk       ,qyk       ,icx       , &
                 & excbed    ,kcs       ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -28,8 +28,8 @@ subroutine drychk(idry      ,s1        ,qxk       ,qyk       ,icx       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: drychk.f90 4754 2015-03-03 14:42:16Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/drychk.f90 $
+!  $Id: drychk.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/drychk.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: This subroutine checks for drying in water level
@@ -51,10 +51,11 @@ subroutine drychk(idry      ,s1        ,qxk       ,qyk       ,icx       , &
     !
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
+    real(fp)     , pointer :: drycrt
+    real(fp)     , pointer :: hdt
+    real(fp)     , pointer :: cbed
     logical      , pointer :: sedim
     logical      , pointer :: mudlay
-    real(fp)     , pointer :: cbed
-    real(fp)     , pointer :: hdt
 !
 ! Global variables
 !
@@ -85,11 +86,13 @@ subroutine drychk(idry      ,s1        ,qxk       ,qyk       ,icx       , &
     integer       :: ndm
     integer       :: nm
     integer       :: nmd
+    real(fp)      :: drytrsh
     character(18) :: tmpname
     integer       :: nm_pos  ! indicating the array to be exchanged has nm index at the 2nd place, e.g., dbodsd(lsedtot,nm)
 !
 !! executable statements -------------------------------------------------------
 !
+    drycrt     => gdp%gdnumeco%drycrt
     hdt        => gdp%gdnumeco%hdt
     cbed       => gdp%gdmudcoe%cbed
     sedim      => gdp%gdprocs%sedim
@@ -97,6 +100,14 @@ subroutine drychk(idry      ,s1        ,qxk       ,qyk       ,icx       , &
     !
     idry   = 0
     nm_pos = 1
+    !
+    ! A drying treshold to avoid very thin layers in active cells
+    ! 0.01 * dryflc (0.02*drycrt), but limited between 10^(-9) and 10^(-3)
+    ! Such thin layers cause inaccuracies in the solution of the transport equation (in conservative formulation)
+    ! This choice of limits was chosen avoid too thin layers, but to simultaneously allow thin layers when 
+    ! demanded by the user through a small dryflc, e.g. for dry dambreak problems.
+    !
+    drytrsh = max(1.0e-9_fp, min(0.02_fp*drycrt, 1.0e-3_fp))
     if (nfltyp/=0) then
        do nm = 1, nmmax
           if ( (kcs(nm)==1 .or. kcs(nm)==2) ) then
@@ -107,7 +118,7 @@ subroutine drychk(idry      ,s1        ,qxk       ,qyk       ,icx       , &
              ! was set dry in SUD, all KFU/KFV are zero and this check would not be performed
              !
              if ( kfu(nm)==1 .or. kfu(nmd)==1  .or.  kfv(nm)==1 .or. kfv(ndm)==1  .or. kfs(nm)==1 ) then
-                if ( s1(nm) <= -real(dps(nm),fp) ) then
+                if ( s1(nm) <= -real(dps(nm),fp)+drytrsh ) then
                    kfu(nm) = 0
                    kfu(nmd) = 0
                    kfv(nm) = 0

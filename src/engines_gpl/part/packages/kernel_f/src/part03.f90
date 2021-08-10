@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -163,7 +163,10 @@
 !
              i0 = lgrid(i1, i2)
              if (i0  >  0) then
-                if(area(i0)==(0.0)) stop 'Area zero in active segment'
+                if(area(i0)==(0.0)) then
+                   write (*,*) ' Area zero in active segment'
+                   call stop_exit(1)
+                endif
                 depth(i0) = depth(i0)/area(i0)
              endif
   350    continue

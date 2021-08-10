@@ -1,7 +1,7 @@
 subroutine tricom_step(olv_handle, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine tricom_step(olv_handle, gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: tricom_step.F90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/manager/src/tricom_step.F90 $
+!  $Id: tricom_step.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/manager/src/tricom_step.F90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: 
@@ -152,26 +152,13 @@ subroutine tricom_step(olv_handle, gdp)
     integer                             , pointer :: itdiag
     integer                             , pointer :: julday
     integer                             , pointer :: ntstep
-    real(fp)                            , pointer :: tmor
-    real(fp)                            , pointer :: rdc
-    integer                             , pointer :: itmor
-    type (bedbndtype) , dimension(:)    , pointer :: morbnd
-    logical                             , pointer :: densin
     logical                             , pointer :: multi
     character(256)                      , pointer :: mmsyncfilnam
     real(fp)                            , pointer :: hdt
-    character(6)                        , pointer :: momsol
     real(fp)                            , pointer :: rhow
     real(fp)                            , pointer :: ag
-    integer                             , pointer :: iro
-    logical                             , pointer :: wind
-    logical                             , pointer :: temp
-    logical                             , pointer :: const
-    logical                             , pointer :: culvert
-    logical                             , pointer :: dredge
-    logical                             , pointer :: drogue
     logical                             , pointer :: wave
-    logical                             , pointer :: waveol
+    integer                             , pointer :: waveol
     logical                             , pointer :: threed
     logical                             , pointer :: secflo
     logical                             , pointer :: struct
@@ -228,52 +215,26 @@ subroutine tricom_step(olv_handle, gdp)
     integer(pntrsize)                   , pointer :: hkrv
     integer(pntrsize)                   , pointer :: hrmcom
     integer(pntrsize)                   , pointer :: hrms
-    integer(pntrsize)                   , pointer :: hu
-    integer(pntrsize)                   , pointer :: huvw
-    integer(pntrsize)                   , pointer :: hv
     integer(pntrsize)                   , pointer :: msucom
     integer(pntrsize)                   , pointer :: msvcom
-    integer(pntrsize)                   , pointer :: ombc
-    integer(pntrsize)                   , pointer :: phibc
-    integer(pntrsize)                   , pointer :: qu
-    integer(pntrsize)                   , pointer :: qxk
     integer(pntrsize)                   , pointer :: qxkr
     integer(pntrsize)                   , pointer :: qxkw
-    integer(pntrsize)                   , pointer :: qyk
     integer(pntrsize)                   , pointer :: qykr
     integer(pntrsize)                   , pointer :: qykw
-    integer(pntrsize)                   , pointer :: r0
-    integer(pntrsize)                   , pointer :: r1
-    integer(pntrsize)                   , pointer :: rbnd
     integer(pntrsize)                   , pointer :: rbuff
     integer(pntrsize)                   , pointer :: rho
     integer(pntrsize)                   , pointer :: rlabda
-    integer(pntrsize)                   , pointer :: rob
-    integer(pntrsize)                   , pointer :: rtur1
-    integer(pntrsize)                   , pointer :: s0
     integer(pntrsize)                   , pointer :: s1
-    integer(pntrsize)                   , pointer :: sbuu
-    integer(pntrsize)                   , pointer :: sbvv
-    integer(pntrsize)                   , pointer :: sig
     integer(pntrsize)                   , pointer :: teta
-    integer(pntrsize)                   , pointer :: thetbc
-    integer(pntrsize)                   , pointer :: thick
     integer(pntrsize)                   , pointer :: tp
     integer(pntrsize)                   , pointer :: tpcom
     integer(pntrsize)                   , pointer :: u1
-    integer(pntrsize)                   , pointer :: umean
     integer(pntrsize)                   , pointer :: uorb
     integer(pntrsize)                   , pointer :: ubot
     integer(pntrsize)                   , pointer :: ubcom
-    integer(pntrsize)                   , pointer :: uvdist
     integer(pntrsize)                   , pointer :: v1
-    integer(pntrsize)                   , pointer :: vmean
-    integer(pntrsize)                   , pointer :: voldis
-    integer(pntrsize)                   , pointer :: volum1
     integer(pntrsize)                   , pointer :: wlen
     integer(pntrsize)                   , pointer :: wlcom
-    integer(pntrsize)                   , pointer :: wphy
-    integer(pntrsize)                   , pointer :: ws
     integer(pntrsize)                   , pointer :: wsu
     integer(pntrsize)                   , pointer :: wsucom
     integer(pntrsize)                   , pointer :: wsv
@@ -282,25 +243,9 @@ subroutine tricom_step(olv_handle, gdp)
     integer(pntrsize)                   , pointer :: wsbodyucom
     integer(pntrsize)                   , pointer :: wsbodyv
     integer(pntrsize)                   , pointer :: wsbodyvcom
-    integer(pntrsize)                   , pointer :: xcor
     integer(pntrsize)                   , pointer :: xz
-    integer(pntrsize)                   , pointer :: ycor
     integer(pntrsize)                   , pointer :: yz
-    integer(pntrsize)                   , pointer :: zdist
-    integer(pntrsize)                   , pointer :: dzs1
-    integer(pntrsize)                   , pointer :: res
-    integer(pntrsize)                   , pointer :: rl
-    integer(pntrsize)                   , pointer :: xj
-    integer(pntrsize)                   , pointer :: guz
-    integer(pntrsize)                   , pointer :: gvz
-    integer(pntrsize)                   , pointer :: gud
-    integer(pntrsize)                   , pointer :: gvd
-    integer(pntrsize)                   , pointer :: gsqiu
-    integer(pntrsize)                   , pointer :: gsqiv
-    integer(pntrsize)                   , pointer :: ibuff
     integer(pntrsize)                   , pointer :: irocol
-    integer(pntrsize)                   , pointer :: iroll
-    integer(pntrsize)                   , pointer :: itdro
     integer(pntrsize)                   , pointer :: kcs
     integer(pntrsize)                   , pointer :: kcu
     integer(pntrsize)                   , pointer :: kcv
@@ -323,7 +268,7 @@ subroutine tricom_step(olv_handle, gdp)
     integer(pntrsize)                   , pointer :: namsrc
     character(256)                      , pointer :: restid
     integer                             , pointer :: rtcmod
-    logical                             , pointer :: rtcact
+    integer                             , pointer :: rtcact
     integer                             , pointer :: rtc_domainnr
     character(256)                      , pointer :: sbkConfigFile
     logical                             , pointer :: tstprt
@@ -358,38 +303,34 @@ subroutine tricom_step(olv_handle, gdp)
     character(23)                       , pointer :: prshis
     character(23)                       , pointer :: selhis
     character(36)                       , pointer :: tgfcmp
-    integer                             , pointer :: itlen   !  Description and declaration in esm_alloc_int.f90
-    character(256)                      , pointer :: comfil  !!  Communication file name
-    character(256)                      , pointer :: runid   !!  Run identification code for the current simulation (used to determine the names of the in- /output files used by the system)
-    character(256)                      , pointer :: trifil  !!  File name for TRISULA NEFIS output files (tri"h/m"-"casl""labl".dat/def)
-    character(5)                        , pointer :: versio  !!  Version nr. of the current package
-    integer                             , pointer :: initi   ! Control parameter 
-    integer                             , pointer :: iphisc  ! Current time counter for printing history data 
-    integer                             , pointer :: itcomc  ! Current time counter for the communication file 
-    integer                             , pointer :: itcur   ! Current time counter for the communication file, where starting point depend on CYCLIC 
-    integer                             , pointer :: itdroc  ! Current time counter for the drogue data file 
-    integer                             , pointer :: ithisc  ! Current time counter for the history file 
-    integer                             , pointer :: itimc   ! Current time step counter for 2D system 
-    integer                             , pointer :: itiwec  ! Current time counter for the calibration of internal wave energy 
-    integer                             , pointer :: itmapc  ! Current time counter for the map file 
-    integer                             , pointer :: itp     ! Timestep for computation 2D system 
-    integer                             , pointer :: itrstc  ! Current time counter for the restart file. Start writing after first interval is passed. Last time will always be written to file for ITRSTI > 0 
-    integer                             , pointer :: itwav   ! Current time counter for executation of a wave computation (online coupling with wave)
-    integer                             , pointer :: itrw    ! Time to read the wave information in case of online wave coupling
-    integer                             , pointer :: maxmn   ! Maximum of MMAX and NMAX 
-    integer                             , pointer :: npmap   ! Current array counter for printing map data 
-    integer                             , pointer :: ntcur   ! Total number of timesteps on comm. file (to write to) 
-    integer                             , pointer :: ntwav   ! Total number of timesteps on comm. file (to read from) for waves 
-    integer              , dimension(:) , pointer :: timwav  ! Array with time steps on comm. file for wave results 
-    logical                             , pointer :: waverd  ! Flag = TRUE if wave process and communication file exist 
-    real(fp)                            , pointer :: anglat  ! Angle of latitude of the model centre (used to determine the coeff. for the coriolis force) 
-    real(fp)                            , pointer :: anglon  ! Angle of longitude of the model centre (used to determine solar radiation) 
-    real(fp)                            , pointer :: dtsec   ! DT in seconds 
-    real(fp)                            , pointer :: timnow  ! Current timestep (multiples of dt)  = number of time steps since itdate, 00:00:00 hours
-!
-! Local parameters
-!
-    integer, parameter :: maxtim = 1500
+    integer                             , pointer :: itlen           ! Description and declaration in esm_alloc_int.f90
+    character(256)                      , pointer :: comfil          ! Communication file name
+    character(256)                      , pointer :: runid           ! Run identification code for the current simulation (used to determine the names of the in- /output files used by the system)
+    character(256)                      , pointer :: trifil          ! File name for TRISULA NEFIS output files (tri"h/m"-"casl""labl".dat/def)
+    character(5)                        , pointer :: versio          ! Version nr. of the current package
+    integer                             , pointer :: iphisc          ! Current time counter for printing history data 
+    integer                             , pointer :: itcomc          ! Current time counter for the communication file 
+    integer                             , pointer :: itcur           ! Current time counter for the communication file, where starting point depend on CYCLIC 
+    integer                             , pointer :: itdroc          ! Current time counter for the drogue data file 
+    integer                             , pointer :: ithisc          ! Current time counter for the history file 
+    integer                             , pointer :: itimc           ! Current time step counter for 2D system 
+    integer                             , pointer :: itiwec          ! Current time counter for the calibration of internal wave energy 
+    integer                             , pointer :: itmapc          ! Current time counter for the map file 
+    integer                             , pointer :: itp             ! Timestep for computation 2D system 
+    integer                             , pointer :: itrstc          ! Current time counter for the restart file. Start writing after first interval is passed. Last time will always be written to file for ITRSTI > 0 
+    integer                             , pointer :: itwav           ! Current time counter for executation of a wave computation (online coupling with wave)
+    integer                             , pointer :: itrw            ! Time to read the wave information in case of online wave coupling
+    integer                             , pointer :: maxmn           ! Maximum of MMAX and NMAX 
+    integer                             , pointer :: npmap           ! Current array counter for printing map data 
+    integer                             , pointer :: ntcur           ! Total number of timesteps on comm. file (to write to) 
+    integer                             , pointer :: ntwav           ! Total number of timesteps on comm. file (to read from) for waves 
+    integer              , dimension(:) , pointer :: timwav          ! Array with time steps on comm. file for wave results
+    integer                             , pointer :: sleepduringwave ! Description and decleration in tricom.igs
+    logical                             , pointer :: waverd          ! Flag = TRUE if wave process and communication file exist 
+    real(fp)                            , pointer :: anglat          ! Angle of latitude of the model centre (used to determine the coeff. for the coriolis force) 
+    real(fp)                            , pointer :: anglon          ! Angle of longitude of the model centre (used to determine solar radiation) 
+    real(fp)                            , pointer :: dtsec           ! DT in seconds 
+    real(fp)                            , pointer :: timnow          ! Current timestep (multiples of dt)  = number of time steps since itdate, 00:00:00 hours
 !
 ! Global variables: NONE
 !
@@ -399,6 +340,7 @@ subroutine tricom_step(olv_handle, gdp)
   
     integer                                       :: ierror        ! Value is non-zero when an error is encountered
     integer                                       :: istat
+    integer                                       :: nmaxddb
     integer                                       :: iofset        ! Shift of inner part of matrix to remove strips
     integer                                       :: lunfil
     integer                            , external :: modlen
@@ -411,7 +353,7 @@ subroutine tricom_step(olv_handle, gdp)
     integer(pntrsize)                  , external :: gtipnt
     integer(pntrsize)                  , external :: gtrpnt
     logical                                       :: error         ! Flag=TRUE if an error is encountered 
-    logical                                       :: ex            ! Help flag = TRUE when file is found 
+    logical                                       :: ex            ! Help flag = TRUE when file is found
     real(fp)                                      :: zini
     character(60)                                 :: txtput        ! Text to be print
     type(olvhandle)                               :: olv_handle
@@ -503,25 +445,12 @@ subroutine tricom_step(olv_handle, gdp)
     itdiag              => gdp%gdinttim%itdiag
     julday              => gdp%gdinttim%julday
     ntstep              => gdp%gdinttim%ntstep
-    tmor                => gdp%gdmorpar%tmor
-    rdc                 => gdp%gdmorpar%rdc
-    itmor               => gdp%gdmorpar%itmor
-    morbnd              => gdp%gdmorpar%morbnd
-    densin              => gdp%gdmorpar%densin
     multi               => gdp%gdmorpar%multi
     mmsyncfilnam        => gdp%gdmorpar%mmsyncfilnam
     nh_level            => gdp%gdnonhyd%nh_level
     hdt                 => gdp%gdnumeco%hdt
-    momsol              => gdp%gdnumeco%momsol
     rhow                => gdp%gdphysco%rhow
     ag                  => gdp%gdphysco%ag
-    iro                 => gdp%gdphysco%iro
-    wind                => gdp%gdprocs%wind
-    temp                => gdp%gdprocs%temp
-    const               => gdp%gdprocs%const
-    culvert             => gdp%gdprocs%culvert
-    dredge              => gdp%gdprocs%dredge
-    drogue              => gdp%gdprocs%drogue
     wave                => gdp%gdprocs%wave
     waveol              => gdp%gdprocs%waveol
     threed              => gdp%gdprocs%threed
@@ -580,52 +509,26 @@ subroutine tricom_step(olv_handle, gdp)
     hkrv                => gdp%gdr_i_ch%hkrv
     hrmcom              => gdp%gdr_i_ch%hrmcom
     hrms                => gdp%gdr_i_ch%hrms
-    hu                  => gdp%gdr_i_ch%hu
-    huvw                => gdp%gdr_i_ch%huvw
-    hv                  => gdp%gdr_i_ch%hv
     msucom              => gdp%gdr_i_ch%msucom
     msvcom              => gdp%gdr_i_ch%msvcom
-    ombc                => gdp%gdr_i_ch%ombc
-    phibc               => gdp%gdr_i_ch%phibc
-    qu                  => gdp%gdr_i_ch%qu
-    qxk                 => gdp%gdr_i_ch%qxk
     qxkr                => gdp%gdr_i_ch%qxkr
     qxkw                => gdp%gdr_i_ch%qxkw
-    qyk                 => gdp%gdr_i_ch%qyk
     qykr                => gdp%gdr_i_ch%qykr
     qykw                => gdp%gdr_i_ch%qykw
-    r0                  => gdp%gdr_i_ch%r0
-    r1                  => gdp%gdr_i_ch%r1
-    rbnd                => gdp%gdr_i_ch%rbnd
     rbuff               => gdp%gdr_i_ch%rbuff
     rho                 => gdp%gdr_i_ch%rho
     rlabda              => gdp%gdr_i_ch%rlabda
-    rob                 => gdp%gdr_i_ch%rob
-    rtur1               => gdp%gdr_i_ch%rtur1
-    s0                  => gdp%gdr_i_ch%s0
     s1                  => gdp%gdr_i_ch%s1
-    sbuu                => gdp%gdr_i_ch%sbuu
-    sbvv                => gdp%gdr_i_ch%sbvv
-    sig                 => gdp%gdr_i_ch%sig
     teta                => gdp%gdr_i_ch%teta
-    thetbc              => gdp%gdr_i_ch%thetbc
-    thick               => gdp%gdr_i_ch%thick
     tp                  => gdp%gdr_i_ch%tp
     tpcom               => gdp%gdr_i_ch%tpcom
     u1                  => gdp%gdr_i_ch%u1
-    umean               => gdp%gdr_i_ch%umean
     uorb                => gdp%gdr_i_ch%uorb
     ubot                => gdp%gdr_i_ch%ubot
     ubcom               => gdp%gdr_i_ch%ubcom
-    uvdist              => gdp%gdr_i_ch%uvdist
     v1                  => gdp%gdr_i_ch%v1
-    vmean               => gdp%gdr_i_ch%vmean
-    voldis              => gdp%gdr_i_ch%voldis
-    volum1              => gdp%gdr_i_ch%volum1
     wlen                => gdp%gdr_i_ch%wlen
     wlcom               => gdp%gdr_i_ch%wlcom
-    wphy                => gdp%gdr_i_ch%wphy
-    ws                  => gdp%gdr_i_ch%ws
     wsu                 => gdp%gdr_i_ch%wsu
     wsucom              => gdp%gdr_i_ch%wsucom
     wsv                 => gdp%gdr_i_ch%wsv
@@ -634,25 +537,9 @@ subroutine tricom_step(olv_handle, gdp)
     wsbodyucom          => gdp%gdr_i_ch%wsbodyucom
     wsbodyv             => gdp%gdr_i_ch%wsbodyv
     wsbodyvcom          => gdp%gdr_i_ch%wsbodyvcom
-    xcor                => gdp%gdr_i_ch%xcor
     xz                  => gdp%gdr_i_ch%xz
-    ycor                => gdp%gdr_i_ch%ycor
     yz                  => gdp%gdr_i_ch%yz
-    zdist               => gdp%gdr_i_ch%zdist
-    dzs1                => gdp%gdr_i_ch%dzs1
-    res                 => gdp%gdr_i_ch%res
-    rl                  => gdp%gdr_i_ch%rl
-    xj                  => gdp%gdr_i_ch%xj
-    guz                 => gdp%gdr_i_ch%guz
-    gvz                 => gdp%gdr_i_ch%gvz
-    gud                 => gdp%gdr_i_ch%gud
-    gvd                 => gdp%gdr_i_ch%gvd
-    gsqiu               => gdp%gdr_i_ch%gsqiu
-    gsqiv               => gdp%gdr_i_ch%gsqiv
-    ibuff               => gdp%gdr_i_ch%ibuff
     irocol              => gdp%gdr_i_ch%irocol
-    iroll               => gdp%gdr_i_ch%iroll
-    itdro               => gdp%gdr_i_ch%itdro
     kcs                 => gdp%gdr_i_ch%kcs
     kcu                 => gdp%gdr_i_ch%kcu
     kcv                 => gdp%gdr_i_ch%kcv
@@ -714,7 +601,6 @@ subroutine tricom_step(olv_handle, gdp)
     runid               => gdp%runid
     trifil              => gdp%gdtricom%trifil
     versio              => gdp%gdtricom%versio
-    initi               => gdp%gdtricom%initi
     iphisc              => gdp%gdtricom%iphisc
     itcomc              => gdp%gdtricom%itcomc
     itcur               => gdp%gdtricom%itcur
@@ -736,8 +622,12 @@ subroutine tricom_step(olv_handle, gdp)
     anglat              => gdp%gdtricom%anglat
     anglon              => gdp%gdtricom%anglon
     dtsec               => gdp%gdtricom%dtsec
+    sleepduringwave     => gdp%gdtricom%sleepduringwave
     !  
     call timer_start(timer_simulation, gdp)
+    !
+    nmaxddb = nmax + 2*gdp%d%ddbound
+    iofset  = 2*nmaxddb
     !
     error = .false.
     ifcore(1) = 0
@@ -799,7 +689,7 @@ subroutine tricom_step(olv_handle, gdp)
        call timer_start(timer_postpr, gdp)
        call postpr(lundia    ,lunprt    ,error     ,versio    ,comfil    , &
                  & trifil    ,runid     ,prsmap    ,prshis    ,selmap    , &
-                 & selhis    ,rhow      ,grdang    ,initi     ,dtsec     , &
+                 & selhis    ,rhow      ,grdang    ,dtsec     , &
                  & nst       ,iphisc    ,npmap     ,itcomc    ,itimc     , &
                  & itcur     ,ntcur     ,ithisc    ,itmapc    ,itdroc    , &
                  & itrstc    ,ktemp     ,.false.   ,gdp       )
@@ -820,19 +710,19 @@ subroutine tricom_step(olv_handle, gdp)
           !                   r(hrms+iofset),r(rlabda+iofset),                            &
           !                    mmax,nmax,nmaxus,2*timnow*hdt)
        endif
-       if (wave .and. waveol .and. (.not.xbeach)) then
+       if (wave .and. waveol>0 .and. (.not.xbeach)) then
           !
           ! Command to wave module to execute wave computation on
           ! times for writing to com file
           !
-          if (nst == itwav) then
+          if (nst == itwav .and. waveol==2) then
              call timer_start(timer_tricom_rest, gdp)
              if (prec == hp) then
-                call rwbotc_double(comfil    ,lundia    ,error     ,initi     ,nst     , &
+                call rwbotc_double(comfil    ,lundia    ,error     ,nst       , &
                                  & itcomi    ,mmax      ,nmax      ,nmaxus    ,d(dps)  , &
                                  & r(rbuff)  ,gdp       )
              else
-                call rwbotc(comfil    ,lundia    ,error     ,initi     ,nst     , &
+                call rwbotc(comfil    ,lundia    ,error     ,nst       , &
                           & itcomi    ,mmax      ,nmax      ,nmaxus    ,d(dps)  , &
                           & r(rbuff)  ,gdp       )
              endif
@@ -842,14 +732,50 @@ subroutine tricom_step(olv_handle, gdp)
              ! of all sub domains.
              ! That's why flow_to_wave_command needs numdomains.
              !
+             ! When the master partition is communicating with WAVE, the other partitions are
+             ! doing nothing. In the clean/default way, the other partitions are waiting on the
+             ! "dfreduce_gdp" statement below.
+             ! Unfortunately, they are consuming CPU and thus hamper the WAVE computation.
+             ! MPI synchronisation without CPU usage is difficult. Therefore sleepduringwave is
+             ! introduced:
+             ! The partitions doing nothing are waiting in the "do sleep" loop below (not consuming CPU).
+             ! The master partition writes a TMP-file when it is ready with the WAVE communication.
+             ! All partitions proceed with dfreduce_gdp
+             ! Finally, the master partition can remove the TMP-file again.
+             ! Default: When not running parallel, sleepduringwave=  0
+             !          When     running paralell, sleepduringwave=100 (= millisec to wait in each CUTIL_SLEEP call)
+             ! sleepduringwave can be overwritten in the mdf-file
+             ! sleepduringwave is (on purpose) not in the manual: the user should not bother about it.
+             ! ASSUMPTION: all partitions are running in the same working directory
+             !
              call timer_start(timer_wait, gdp)
              if (.not.parll .or. (parll .and. inode == master)) then
                 ierror = flow_to_wave_command(flow_wave_comm_perform_step, &
                                              & numdomains, mudlay, nst)
+                if (sleepduringwave > 0) then
+                   lunfil = newlun(gdp)
+                   open (lunfil, file = "TMP_sleepduringwave.txt", status = 'new')
+                   write(lunfil,*) 1
+                   close(lunfil)
+                endif
              else
+                if (sleepduringwave > 0) then
+                   do
+                      inquire (file = "TMP_sleepduringwave.txt", exist = ex, iostat=istat)
+                      if (ex) then
+                         exit
+                      else
+                         call CUTIL_SLEEP(sleepduringwave)
+                      endif
+                   enddo
+                endif
                 ierror = 0
              endif
              call dfreduce_gdp( ierror, 1, dfint, dfmax, gdp )
+             if (inode==master .and. sleepduringwave > 0) then
+                open (lunfil, file = "TMP_sleepduringwave.txt", status = 'old')
+                close(lunfil, status='delete')
+             endif
              call timer_stop(timer_wait, gdp)
              if (ierror /= 0) then
                 txtput = 'Delftio command to waves failed'
@@ -858,10 +784,14 @@ subroutine tricom_step(olv_handle, gdp)
                 call d3stop(1, gdp)
              endif
              itrw = nst + 1
+          elseif (nst == itwav .and. waveol==1) then
+             itrw = nst + 1
           endif
           if (nst == itrw) then
-             call rdtimw(comfil    ,lundia    ,error     ,ntwav     ,timwav    , &
-                       & maxtim    ,waverd    ,nmaxus    ,mmax      ,gdp       )
+             if (waveol==2) then ! wave times can only be updated in online coupled mode
+                call rdtimw(comfil    ,lundia    ,error     ,ntwav     , &
+                          & waverd    ,nmaxus    ,mmax      ,gdp       )
+             endif
              waverd = .true.
              ifcore(1) = 0
              ifcore(2) = 0
@@ -910,7 +840,7 @@ subroutine tricom_step(olv_handle, gdp)
                     & r(msvcom) ,r(ubcom)   ,r(wlcom)   ,r(rlabda)     , &
                     & r(dircos) ,r(dirsin)  ,r(ewave1)  ,roller        ,wavcmp        , &
                     & r(ewabr1) ,r(wsbodyu) ,r(wsbodyv) ,r(wsbodyucom) ,r(wsbodyvcom) , &
-                    & gdp       )
+                    & waveol    ,gdp       )
           call timer_stop(timer_tricom_rest, gdp)
           if (error) goto 9998
        endif
@@ -955,7 +885,7 @@ subroutine tricom_step(olv_handle, gdp)
                     & error     ,gdp       )
        else
           if (nh_level == nh_full) then
-             call z_trisol_nhfull(dischy    ,solver    ,icreep    , &
+             call z_trisol_nhfull(dischy    ,solver    ,icreep    ,ithisc    , &
                                 & timnow    ,nst       ,itiwec    ,trasol    ,forfuv    , &
                                 & forfww    ,nfltyp    , &
                                 & saleqs    ,temeqs    , &
@@ -963,7 +893,7 @@ subroutine tricom_step(olv_handle, gdp)
                                 & evaint    ,anglat    ,anglon    ,rouflo    ,rouwav    , &
                                 & betac     ,tkemod    ,gdp       )
           else
-             call z_trisol(dischy    ,solver    ,icreep    , &
+             call z_trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                          & timnow    ,nst       ,itiwec    ,trasol    ,forfuv    , &
                          & forfww    ,nfltyp    , &
                          & saleqs    ,temeqs    , &

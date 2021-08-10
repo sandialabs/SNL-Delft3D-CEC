@@ -8,7 +8,7 @@ subroutine cucbp(kmax      ,norow     ,icx       , &
                & ddk       ,crbc      ,wavcmp    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -32,8 +32,8 @@ subroutine cucbp(kmax      ,norow     ,icx       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: cucbp.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/cucbp.f90 $
+!  $Id: cucbp.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/cucbp.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Coefficients at boundary points MF, MFU, ML, and
@@ -347,21 +347,37 @@ subroutine cucbp(kmax      ,norow     ,icx       , &
              ! WEAKLY REFLECTIVE BOUNDARY
              !
              alfas   = sqrt(ag/(dep + sepu))
-             aa(nmf) = alfas*tetau(nmf)
-             bb(nmf) = 1.0
-             cc(nmf) = alfas*(1.0 - tetau(nmf))
-             dd(nmf) = circ2d(1, ic) + alfas*sepu - 2.*sqrt(ag*(dep + sepu))    &
+             if (dep<0) then
+                aa(nmf) = 0.0
+                bb(nmf) = 1.0
+                cc(nmf) = 0.0
+                dd(nmf) = 0.0
+                !
+                ! LAYER VELOCITIES ( VELOCITY PROFILE )
+                !
+                do k = k0f, k1f
+                   aak(nmf, k) = 0.0
+                   bbk(nmf, k) = 1.0
+                   cck(nmf, k) = 0.0
+                   ddk(nmf, k) = 0.0
+                enddo               
+             else
+                aa(nmf) = alfas*tetau(nmf)
+                bb(nmf) = 1.0
+                cc(nmf) = alfas*(1.0 - tetau(nmf))
+                dd(nmf) = circ2d(1, ic) + alfas*sepu - 2.*sqrt(ag*(dep + sepu))    &
                      & + 2.*sqrt(ag*dep)
-             !
-             ! LAYER VELOCITIES ( VELOCITY PROFILE )
-             !
-             do k = k0f, k1f
-                aak(nmf, k) = aa(nmf)
-                bbk(nmf, k) = 1.0
-                cck(nmf, k) = cc(nmf)
-                ddk(nmf, k) = circ3d(k, 1, ic) + alfas*sepu -                   &
-                            & 2.*sqrt(ag*(dep + sepu)) + 2.*sqrt(ag*dep)
-             enddo
+                !
+                ! LAYER VELOCITIES ( VELOCITY PROFILE )
+                !
+                do k = k0f, k1f
+                   aak(nmf, k) = aa(nmf)
+                   bbk(nmf, k) = 1.0
+                   cck(nmf, k) = cc(nmf)
+                   ddk(nmf, k) = circ3d(k, 1, ic) + alfas*sepu -                   &
+                               & 2.*sqrt(ag*(dep + sepu)) + 2.*sqrt(ag*dep)
+                enddo
+             endif
              !
              a(nmf) =  0.0
              b(nmf) =  1.0
@@ -545,21 +561,37 @@ subroutine cucbp(kmax      ,norow     ,icx       , &
              ! WEAKLY REFLECTIVE BOUNDARY
              !
              alfas = sqrt(ag/(dep + sepu))
-             aa(nml) = -alfas*tetau(nml)
-             bb(nml) = 1.0
-             cc(nml) = -alfas*(1.0 - tetau(nml))
-             dd(nml) = circ2d(2, ic) - alfas*sepu + 2.*sqrt(ag*(dep + sepu))    &
-                     & - 2.*sqrt(ag*dep)
-             !
-             ! LAYER VELOCITIES ( VELOCITY PROFILE )
-             !
-             do k = k0l, k1l
-                aak(nml, k) = aa(nml)
-                bbk(nml, k) = 1.0
-                cck(nml, k) = cc(nml)
-                ddk(nml, k) = circ3d(k, 2, ic) - alfas*sepu +                   &
-                            & 2.*sqrt(ag*(dep + sepu)) - 2.*sqrt(ag*dep)
-             enddo
+             if (dep < 0) then
+                aa(nml) = 0.0
+                bb(nml) = 1.0
+                cc(nml) = 0.0
+                dd(nml) = 0.0
+                !
+                ! LAYER VELOCITIES ( VELOCITY PROFILE )
+                !
+                do k = k0l, k1l
+                   aak(nml, k) = 0.0
+                   bbk(nml, k) = 1.0
+                   cck(nml, k) = 0.0
+                   ddk(nml, k) = 0.0
+                enddo
+             else
+                aa(nml) = -alfas*tetau(nml)
+                bb(nml) = 1.0
+                cc(nml) = -alfas*(1.0 - tetau(nml))
+                dd(nml) = circ2d(2, ic) - alfas*sepu + 2.*sqrt(ag*(dep + sepu))    &
+                        & - 2.*sqrt(ag*dep)
+                !
+                ! LAYER VELOCITIES ( VELOCITY PROFILE )
+                !
+                do k = k0l, k1l
+                   aak(nml, k) = aa(nml)
+                   bbk(nml, k) = 1.0
+                   cck(nml, k) = cc(nml)
+                   ddk(nml, k) = circ3d(k, 2, ic) - alfas*sepu +                   &
+                               & 2.*sqrt(ag*(dep + sepu)) - 2.*sqrt(ag*dep)
+                enddo
+             endif
              a(nmlu) = -1.0
              b(nmlu) =  1.0
              c(nmlu) =  0.0

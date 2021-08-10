@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -47,17 +47,25 @@
 !     IRNAM   INTEGER  1    pointer to RANAM , raaien names
 !     ICBUF   INTEGER  1    pointer to CBUFF , character array buffer
 !     ILUNT   INTEGER  1    pointer to LUNTX2, names of binary files
+!     IOSNM   INTEGER  1    pointer to OUSNM , output variables standard names
+!     IOUNI   INTEGER  1    pointer to OUUNI , output variables units
+!     IODSC   INTEGER  1    pointer to OUDSC , output variables descriptions
+!     ISSNM   INTEGER  1    pointer to OSSNM , substance standard names
+!     ISUNI   INTEGER  1    pointer to OSUNI , substance units
+!     ISDSC   INTEGER  1    pointer to OSDSC , substance descriptions
 !
       INTEGER         ICSIZE
       INTEGER         IANAM  , IMNAM  , ISNAM  , IDNAM  , IBNID  ,
      &                IBNAM  , IBTYP  , IWSID  , IWNAM  , IWTYP  ,
      &                ICNAM  , IPNAM  , IFNAM  , ISFNA  , IEDIT  ,
      &                IPRNA  , IONAM  , IDINA  , IVNAM  , IDANA  ,
-     &                IRNAM  , ICBUF  , ILUNT
+     &                IRNAM  , ICBUF  , ILUNT  , IOSNM  , IOUNI  ,
+     &                IODSC  , ISSNM  , ISUNI  , ISDSC
       COMMON / SYSC / IANAM  , IMNAM  , ISNAM  , IDNAM  , IBNID  ,
      &                IBNAM  , IBTYP  , IWSID  , IWNAM  , IWTYP  ,
      &                ICNAM  , IPNAM  , IFNAM  , ISFNA  , IEDIT  ,
      &                IPRNA  , IONAM  , IDINA  , IVNAM  , IDANA  ,
-     &                IRNAM  , ICBUF  , ILUNT
+     &                IRNAM  , ICBUF  , ILUNT  , IOSNM  , IOUNI  ,
+     &                IODSC  , ISSNM  , ISUNI  , ISDSC
 !
-      PARAMETER ( ICSIZE  = 23 )
+      PARAMETER ( ICSIZE  = 29 )

@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2013.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -23,15 +23,17 @@
 !  are registered trademarks of Stichting Deltares, and remain the property of  
 !  Stichting Deltares. All rights reserved.                                     
 
-!  $Id: ec_item.f90 5640 2015-12-10 09:24:34Z hummel $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/ec_module/packages/ec_module/src/ec_item.f90 $
+!  $Id: ec_item.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/ec_module/packages/ec_module/src/ec_item.f90 $
 
 !> This module contains all the methods for the datatype tEcItem.
 !! @author arjen.markus@deltares.nl
 !! @author adri.mourits@deltares.nl
 !! @author stef.hummel@deltares.nl
-!! @author edwin.bos@deltares.nl
+!! @author edwin.spee@deltares.nl
+!! @author Edwin Bos
 module m_ec_item
+   use string_module
    use m_ec_typedefs
    use m_ec_parameters
    use m_ec_message
@@ -39,23 +41,35 @@ module m_ec_item
    use m_ec_alloc
    use m_ec_converter
    use m_ec_filereader
-   
+   use m_alloc
+   use time_class
+
    implicit none
    
    private
    
    public :: ecItemCreate
+   public :: ecItemInitialize
    public :: ecItemFree1dArray
+   public :: ecItemGetValuesMJD
    public :: ecItemGetValues
    public :: ecItemSetRole
    public :: ecItemSetType
    public :: ecItemSetQuantity
    public :: ecItemSetProperty
+   public :: ecItemCopyProperty
    public :: ecItemSetElementSet
    public :: ecItemSetSourceT0Field
    public :: ecItemSetSourceT1Field
    public :: ecItemSetTargetField
    public :: ecItemAddConnection
+   public :: ecItemGetProvider
+   public :: ecItemGetArr1dPtr
+   public :: ecItemGetQHtable
+   public :: ecItemEstimateResultSize
+   public :: ecItemToTimeseries
+   public :: ecItemFinalizeTimeseries
+   public :: ecItemFromTimeseries
    
    contains
       
@@ -86,6 +100,7 @@ module m_ec_item
          itemPtr%id = itemId
          itemPtr%role = itemType_undefined
          itemPtr%accessType = accessType_undefined
+         itemPtr%providerId = ec_undef_int
          itemPtr%nConnections = 0
       end function ecItemCreate
       
@@ -113,6 +128,20 @@ module m_ec_item
          do i=1, item%nConnections
             item%connectionsPtr(i)%ptr => null()
          end do
+
+         if (allocated(item%timeseries)) then
+            if (allocated(item%timeseries%times)) then
+                deallocate(item%timeseries%times, stat = istat)
+                if (istat /= 0) success = .false.
+            end if
+            if (allocated(item%timeseries%values)) then
+                deallocate(item%timeseries%values, stat = istat)
+                if (istat /= 0) success = .false.
+            end if
+            deallocate(item%timeseries, stat = istat)
+            if (istat /= 0) success = .false.
+         end if
+
          ! Finally deallocate the array of tEcConnection pointers.
          deallocate(item%connectionsPtr, STAT = istat)
          if (istat /= 0) success = .false.
@@ -124,7 +153,7 @@ module m_ec_item
       function ecItemFree1dArray(itemPtr, nItems) result(success)
          logical                                 :: success !< function status
          type(tEcItemPtr), dimension(:), pointer :: itemPtr !< intent(inout)
-         integer                                 :: nItems  !< number of Items
+         integer, intent(inout)                  :: nItems  !< number of Items
          !
          integer :: i     !< loop counter
          integer :: istat !< deallocate() status
@@ -149,7 +178,24 @@ module m_ec_item
                if (istat /= 0) success = .false.
             end if
          end if
+         nItems = 0
       end function ecItemFree1dArray
+      
+      ! =======================================================================
+      
+      !> Retrieve the data of an Item for timestep specified as MJD
+      function ecItemGetValuesMJD(instancePtr, itemId, timeAsMJD, target_array) result(success)
+         logical                                                 :: success      !< function status
+         type(tEcInstance),      pointer                         :: instancePtr  !< intent(in)
+         integer,                                  intent(in)    :: itemID       !< unique Item id
+         double precision,                         intent(in)    :: timeAsMJD    !< time stamp as Modified Julian Day
+         real(hp), dimension(:), target, optional, intent(inout) :: target_array !< kernel's data array for the requested values
+         ! 
+         type(c_time)  :: ecTime
+         call ecTime%set(timeAsMJD)
+         success = ecItemGetValues(instancePtr, itemId, ecTime, target_array)
+         !
+      end function ecItemGetValuesMJD
       
       ! =======================================================================
       
@@ -160,7 +206,8 @@ module m_ec_item
          logical                                                 :: success      !< function status
          type(tEcInstance),      pointer                         :: instancePtr  !< intent(in)
          integer,                                  intent(in)    :: itemID       !< unique Item id
-         real(hp),                                 intent(in)    :: timesteps    !< get data corresponding to this number of timesteps since k_refdate
+         type(c_time),                             intent(in)    :: timesteps    !< get data corresponding to this number of timesteps since k_refdate
+         character(len=1000)                                     :: message
          real(hp), dimension(:), target, optional, intent(inout) :: target_array !< kernel's data array for the requested values
          !
          integer                :: i       !< loop counter
@@ -184,15 +231,132 @@ module m_ec_item
               ! else
                   success = ecItemUpdateTargetItem(instancePtr, itemPtr, timesteps)
                   if (.not.success) then
-                     call setECMessage("Updating target failed, quantity='"//trim(itemPtr%QUANTITYPTR%NAME)//"', item=",itemId)
+                     write(message,'(a,i8,a)') "Updating target failed, quantity='" &
+                                     //trim(itemPtr%quantityPtr%name)   &
+                                     //"', item=",itemPtr%id
+                     call setECMessage(trim(message))
+                     success = .false.
                   endif 
               ! end if
                exit
             end if
          end do
       end function ecItemGetValues
+
+! =======================================================================
+      !> Retrieve the id of the provider (filereader) that supplies this item
+      function ecItemEstimateResultSize(instancePtr, itemId) result(ressize)
+         implicit none
+         integer                    :: ressize
+         type(tEcInstance), pointer :: instancePtr  !< intent(in)
+         integer, intent(in)        :: itemId
+         type(tEcItem), pointer     :: itemPtr !< Item under consideration
+         integer :: i
+
+         ressize = -1
+         ! Find the Item.
+         do i=1, instancePtr%nItems ! TODO: This lookup loop of items may be expensive for large models, use a lookup table with ids.
+            itemPtr => instancePtr%ecItemsPtr(i)%ptr
+            if ((itemPtr%id == itemId) .and. (itemPtr%role == itemType_target)) then
+               ressize = itemPtr%quantityPtr%vectormax &
+                       * max(itemPtr%elementsetPtr%nCoordinates,1) &
+                       * max(1,itemPtr%elementsetPtr%n_layers)
+               exit
+            end if
+         end do
+      end function ecItemEstimateResultSize
       
-      ! =======================================================================
+! =======================================================================
+      !> Retrieve the id of the provider (filereader) that supplies this item
+      function ecItemGetProvider(instancePtr, itemId) result(providerID)
+      implicit none
+      integer                               :: providerID
+      type(tEcInstance),      pointer       :: instancePtr  !< intent(in)
+      integer,                intent(in)    :: itemID       !< unique Item id
+
+      integer  :: i
+      type(tEcItem), pointer :: itemPtr            !< Item under consideration
+
+      providerID = ec_undef_int
+
+      do i=1, instancePtr%nItems ! TODO: This lookup loop of items may be expensive for large models, use a lookup table with ids.
+         itemPtr => instancePtr%ecItemsPtr(i)%ptr
+         if ((itemPtr%id == itemId) .and. (itemPtr%role == itemType_source)) then
+            providerID = itemPtr%providerID
+         end if
+      enddo
+      end function ecItemGetProvider
+! =======================================================================
+      !> Retrieve pointers to the Q and H arrays of a QH-table associated with this item
+      !> Returns true if this source item is associated with a QH-table
+      function ecItemGetQHtable(instancePtr, itemId, h_values, q_values, success) result(is_QH)
+      implicit none 
+      logical                             :: is_QH
+      type(tEcInstance),      pointer     :: instancePtr  !< intent(in)
+      integer, intent(in)                 :: itemId
+      real(hp), dimension(:),     pointer :: q_values, h_values
+      logical, intent(out)                :: success
+
+      integer  ::    ec_qh_provider_id
+      integer  ::    item_H, item_Q
+
+      success = .False. 
+      is_QH = .False.
+      h_values => null()
+      q_values => null()
+      ec_qh_provider_id = ecItemGetProvider(instancePtr, itemId)                              ! request the provider for this item
+      if (ec_qh_provider_id<1) then 
+         return
+         ! TODO: something went wrong, issue an error message
+      end if
+      if (ecFileReaderProvidesQHtable(instancePtr, ec_qh_provider_id, item_H, item_Q)) then   ! Infer if this provider is of type QH, if so ...
+                                                                                              ! NB: either item_H == itemId or item_Q == itemId
+         h_values => ecItemGetArr1DPtr(instancePtr, item_H, 0)                                !    obtain a pointer to the waterlevels
+         q_values => ecItemGetArr1DPtr(instancePtr, item_Q, 0)                                !    obtain a pointer to the discharges 
+         is_QH = .True.
+      end if       
+      success = .True.
+      end function ecItemGetQHtable
+
+! =======================================================================
+      !> Retrieve a pointer to the item's field's arr1d
+      function ecItemGetArr1DPtr(instancePtr, itemId, selector) result(Arr1DPtr)
+      implicit none
+      type(tEcInstance),      pointer       :: instancePtr  !< intent(in)
+      integer,                intent(in)    :: itemID       !< unique Item id
+      integer,                intent(in)    :: selector     !< selects field, 0:source0, 1:source1, 2:target
+      real(hp), dimension(:), pointer       :: Arr1DPtr     !< points to a 1-dim array field, stored in arr1d OR in a kernel
+
+      integer  :: i
+      type(tEcItem) , pointer :: itemPtr
+      type(tEcField), pointer :: fieldptr
+
+      arr1dPtr => null()
+
+      do i=1, instancePtr%nItems ! TODO: This lookup loop of items may be expensive for large models, use a lookup table with ids.
+         itemPtr => instancePtr%ecItemsPtr(i)%ptr
+         if ((itemPtr%id == itemId) .and. (itemPtr%role == itemType_source)) then
+            fieldptr => null()
+            select case (selector)
+            case(0)
+               fieldptr => itemPtr%sourceT0FieldPtr
+            case(1)
+               fieldptr => itemPtr%sourceT1FieldPtr
+            case(2)
+               fieldptr => itemPtr%targetFieldPtr
+            end select
+            if (associated(fieldptr)) then
+               if (allocated(fieldptr%arr1d)) then
+                  Arr1DPtr => fieldptr%arr1d
+               else
+                  Arr1DPtr => fieldptr%arr1dPtr
+               endif
+            end if 
+         end if
+      enddo
+      end function ecItemGetArr1DPtr
+! =======================================================================
+      
       
       !> Retrieve data for a specific number of timesteps since the kernel's reference date by first updating the source Items.
       !! Their data is processed through a Converter, which updates the Field of each of the Connection's target Items.
@@ -200,54 +364,110 @@ module m_ec_item
          logical                          :: success     !< function status
          type(tEcInstance), pointer       :: instancePtr !< intent(inout)
          type(tEcItem),     intent(inout) :: item        !< the target item
-         real(hp),          intent(in)    :: timesteps   !< get data corresponding to this number of timesteps since k_refdate
+         type(c_time),      intent(in)    :: timesteps   !< get data corresponding to this number of timesteps since k_refdate
          !
-         integer :: i, j !< loop variables
-         character(len=1000)              :: message
+         integer                            :: istat        !< return value of stat
+         integer                            :: i            !< loop variable
+         integer                            :: j            !< loop variable
+         character(len=1000)                :: message
+         logical, dimension(:), allocatable :: skipWeights  !< Flags for each connection if weight computation can be skipped
+         integer                            :: ntimes
+         logical                            :: first_item_is_periodic
+         type(tEcItem), pointer             :: source_item  !< the source item
          !
          success = .true.
+         first_item_is_periodic = .false.
+
+         allocate(skipWeights(item%nConnections), stat = istat)
+         if (istat /= 0) then
+            call setECMessage("ERROR: ec_item::ecItemUpdateTargetItem: Unable to allocate additional memory")
+            success = .false.
+         end if
          !
-         ! update the source Items
-         do i=1, item%nConnections
-            do j=1, item%connectionsPtr(i)%ptr%nSourceItems
-               if (.not. (ecItemUpdateSourceItem(instancePtr, item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr, timesteps, &
-                          item%connectionsPtr(i)%ptr%converterPtr%interpolationType))) then
-                  !
-                  ! No interpolation in time possible.
-                  ! Check whether extrapolation is allowed
-                  if (item%connectionsPtr(i)%ptr%converterPtr%interpolationType /= interpolate_time_extrapolation_ok) then
-                     write(message,'(a,i5.5)') "Updating source failed, quantity='"//trim(item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr%QUANTITYPTR%NAME)   &
-                              &       //"', item=",item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr%id
-                     call setECMessage(trim(message))
+         ! Initialize skipWeights array to true
+         ! When updating source items:
+         ! For each connection i:
+         ! If there is one (or more) sourceItem(s) that needs weights then skipWeights(i)=false
+         if (success) then
+            skipWeights = .true.
+            !
+            ! update the source Items
+            UpdateSrc: do i=1, item%nConnections
+               do j=1, item%connectionsPtr(i)%ptr%nSourceItems
+                  source_item => item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr
+                  if (first_item_is_periodic .and. j > 1) then
+                     write(message,'(A)') 'Multiple periodic source items not yet supported'
                      success = .false.
                      return
+                  endif
+                  if (associated(item%connectionsPtr(i)%ptr%converterPtr)) then
+                     if (.not. (ecItemUpdateSourceItem(instancePtr, item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr, timesteps, &
+                                item%connectionsPtr(i)%ptr%converterPtr%interpolationType))) then
+                        ! If updating source item failed .....
+                        ! No interpolation in time possible. => skipWeights(i) is allowed to stay true
+                        if(source_item%quantityPtr%timeint == timeint_bfrom) then
+                           ! We came beyond the last line in a non-periodic block function
+                           ! Adjust the value in T0 field (the converter will only use the T0-field)s
+                           source_item%sourceT0FieldPtr%arr1d = source_item%sourceT1FieldPtr%arr1d
+                        endif
+                        ! Check whether extrapolation is allowed
+                        if (item%connectionsPtr(i)%ptr%converterPtr%interpolationType /= interpolate_time_extrapolation_ok) then
+                           write(message,'(a,i8,a)') "Updating source failed, quantity='" &
+                                           //trim(item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr%quantityPtr%name)   &
+                                           //"', item=",item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr%id,   &
+                                             ", location="//trim(item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr%elementsetPtr%name)
+                           call setECMessage(trim(message))
+                           success = .false.
+                           exit UpdateSrc
+                        end if
+                     else
+                        skipWeights(i) = .false.
+                     end if
+                  else
+                     if (.not. (ecItemUpdateSourceItem(instancePtr, item%connectionsPtr(i)%ptr%sourceItemsPtr(j)%ptr,  &
+                                                       timesteps, interpolate_time_extrapolation_ok))) then 
+                        ! Note: time interp. does not apply here, so we use the most forgiving type
+                        ! 'interpolate_time_extrapolation_ok' to avoid duplicate time exceeded errors.
+                        success = .false.
+                        return
+                     end if
                   end if
-               end if
-            end do
-         end do
+               end do
+            end do UpdateSrc
+         endif
          ! update the weight factors
          if (success) then
-            do i=1, item%nConnections
-               if (.not. (ecConverterUpdateWeightFactors(instancePtr, item%connectionsPtr(i)%ptr))) then
+            UpdateWeight: do i=1, item%nConnections
+               if (.not. skipWeights(i)) then
+                  if (.not. (ecConverterUpdateWeightFactors(instancePtr, item%connectionsPtr(i)%ptr))) then
                      write(message,'(a,i5.5)') "Updating weights failed, connection='",item%connectionsPtr(i)%ptr%id
                      call setECMessage(trim(message))
                      success = .false.
-                  success = .false.
-                  return
+                     exit UpdateWeight
+                  end if
                end if
-            end do
+            end do UpdateWeight
          end if
          ! Always try to perform the conversions, which update the target Items
          if (success) then
             do i=1, item%nConnections
                if (.not. (ecConverterPerformConversions(item%connectionsPtr(i)%ptr, timesteps))) then
-                     write(message,'(a,i5.5)') "Converter operation failed, connection='",item%connectionsPtr(i)%ptr%id
-                     call setECMessage(trim(message))
+                  write(message,'(a,i5.5)') "Converter operation failed, connection='",item%connectionsPtr(i)%ptr%id
+                  call setECMessage(trim(message))
                   success = .false.
-                  return
+                  exit
                end if
             end do
          end if
+
+         ! clean up
+         if (allocated(skipWeights)) then
+            deallocate(skipWeights, stat = istat)
+            if (istat /= 0) then
+               call setECMessage("Warning: deallocate skipWeights failed. Will continue.")
+               success = .false.
+            endif
+         endif
       end function ecItemUpdateTargetItem
       
       ! =======================================================================
@@ -257,13 +477,16 @@ module m_ec_item
          logical                                  :: success       !< function status
          type(tEcInstance), pointer               :: instancePtr   !< intent(inout)
          type(tEcItem),             intent(inout) :: item          !< the source item
-         real(hp),                  intent(in)    :: timesteps     !< objective: t0<=timesteps<=t1
+         type(c_time),              intent(in)    :: timesteps     !< objective: t0<=timesteps<=t1
          integer ,                  intent(in)    :: interpol_type !< interpolation
          !
-         integer                        :: i                       !< loop counter
-         integer                        :: j                       !< loop counter
-         type(tEcFileReader), pointer   :: fileReaderPtr           !< helper pointer for a file reader 
-         character(len=300) :: str
+         integer                                  :: i                     !< loop counter
+         integer                                  :: j                     !< loop counter
+         type(tEcFileReader), pointer             :: fileReaderPtr         !< helper pointer for a file reader
+         character(len=22)                        :: strnum1               !< 1st number converted to string for error message
+         character(len=22)                        :: strnum2               !< 2nd number converted to string for error message
+         character(len=*), parameter              :: fmtBignum = '(f22.3)' !< format string also suitable for very big numbers
+         character(len=maxFileNameLen), pointer   :: filename              !< file name in error message
          !
          success = .false.
          fileReaderPtr => null()
@@ -287,48 +510,105 @@ module m_ec_item
                   end if
                end do
             end do frs
-         endif 
+         endif
          !
-         
-         ! timesteps < t0 : not supported 
-         if (comparereal(timesteps, item%sourceT0FieldPtr%timesteps) == -1) then
+
+         ! timesteps < t0 : not supported
+         if (item%quantityPtr%constant) then
+               success = .true.
+               return
+         else if (comparereal(item%sourceT1FieldPtr%timesteps, timesteps%mjd(), 1.0D-10) == 0) then
+            ! requested time equals to T1.
+            ! no read action needed, UNLESS 'block-from'
+            if (item%quantityPtr%timeint /= timeint_bfrom) then
+               success = .true.
+               return
+            endif
+         else if (comparereal(timesteps%mjd(), item%sourceT0FieldPtr%timesteps) == -1) then
             if (interpol_type /= interpolate_time_extrapolation_ok) then
-               write(str, '(a,f13.3,a,f8.1,a,a)') "             Requested: t=", timesteps, ' seconds'
-               call setECMessage(str)
-               write(str, '(a,f13.3,a,f8.1,a,a)') "       Current EC-time: t=", item%sourceT0FieldPtr%timesteps,' seconds'
-               call setECMessage(str)
-               write(str, '(a,i0,a,f10.3,a,a)')    "Requested time preceeds current forcing EC-timelevel by ", &
-                   &        int(item%sourceT0FieldPtr%timesteps-timesteps)," seconds = ", (item%sourceT0FieldPtr%timesteps-timesteps)/86400.," days."
-               call setECMessage(str)
+               if (associated (fileReaderPtr)) then
+                  if (associated (fileReaderPtr%bc)) then
+                     filename => fileReaderPtr%bc%fname
+                  else
+                     filename => fileReaderPtr%fileName
+                  endif
+                  call setECMessage("       in file: '"//trim(filename)//"'.")
+               endif
+               call real2stringLeft(strnum1, '(f22.3)', timesteps%mjd())
+               call setECMessage("             Requested: t= " // trim(strnum1) // ' seconds')
+               call real2stringLeft(strnum1, '(f22.3)', item%sourceT0FieldPtr%timesteps)
+               call setECMessage("       Current EC-time: t= " // trim(strnum1) // ' seconds')
+               call real2stringLeft(strnum1, '(f22.3)', item%sourceT0FieldPtr%timesteps-timesteps%mjd())
+               call real2stringLeft(strnum2, '(f22.3)', (item%sourceT0FieldPtr%timesteps-timesteps%mjd())*86400)
+               call setECMessage("Requested time preceeds current forcing EC-timelevel by " // trim(strnum1) // " days = " // trim(strnum2) // " seconds.")
             else
                success = .true.
             endif
-         ! t0<=timesteps<=t1 : no update required
-         else if (comparereal(item%sourceT1FieldPtr%timesteps, timesteps) /= -1) then
+            return
+         else if (comparereal(timesteps%mjd(), item%sourceT1FieldPtr%timesteps) == -1) then
+            ! requested time is before T1
             success = .true.
+            return
+         endif
+
          ! timesteps > t1: update untill t0<=timesteps<=t1
-         else
-            ! Update all source Items which belong to the found FileReader, if associated .
-            if (associated(fileReaderPtr)) then
-               if (.not. fileReaderPtr%end_of_data) then
-                  do ! read next record untill t0<=timesteps<=t1
-                     if (ecFileReaderReadNextRecord(fileReaderPtr, timesteps)) then
-                        write(6,*) 'Read OK: ', timesteps
-                        if (comparereal(item%sourceT1FieldPtr%timesteps, timesteps) /= -1) then
-                           write(6,*) 'Read OK: ', timesteps, ' success = .true., exit'
-                           success = .true.
-                           exit
-                        end if
-                     else
-                        write(6,*) 'Read NOT OK: ', timesteps
-                        if (interpol_type == interpolate_time_extrapolation_ok) then
-                           write(6,*) 'Read NOT OK: interpolate_time_extrapolation_ok, exit'
-                           exit
+
+         ! Store the zeroth value into the timeseries
+         if (item%quantityPtr%periodic) then
+            if (.not.allocated(item%timeseries)) then       ! This must be the first time we are getting here, store value
+               if (.not.ecItemToTimeseries(item,item%sourceT0FieldPtr%timesteps,item%sourceT0FieldPtr%arr1dptr)) then
+                  ! TODO: handle exception, report error 
+                  success = .false.
+                  return
+               end if
+               if (.not.ecItemToTimeseries(item,item%sourceT1FieldPtr%timesteps,item%sourceT1FieldPtr%arr1dptr)) then
+                  ! TODO: handle exception, report error 
+                  success = .false.
+                  return
+               end if
+            end if
+         endif
+
+
+         ! Update all source Items which belong to the found FileReader, if associated .
+         if (associated(fileReaderPtr)) then
+            if (.not. fileReaderPtr%end_of_data) then
+               do ! read next record untill t0<=timesteps<=t1
+                  if (ecFileReaderReadNextRecord(fileReaderPtr, timesteps%mjd())) then
+                     if (item%quantityPtr%periodic) then                      ! Store saved to item's timeseries
+                        if (.not.ecItemToTimeseries(item,item%sourceT1FieldPtr%timesteps,item%sourceT1FieldPtr%arr1dptr)) then
+                           success = .false.
+                           return
                         end if
                      end if
-                  end do
+                     if (comparereal(item%sourceT1FieldPtr%timesteps, timesteps%mjd()) /= -1) then
+                        if(item%quantityPtr%timeint == timeint_bfrom) then
+                           if (comparereal(item%sourceT1FieldPtr%timesteps, timesteps%mjd(), 1.0D-7) == 0) then
+                              ! Adjust the value in T0 field (the converter will only use the T0-field)s
+                              item%sourceT0FieldPtr%arr1d = item%sourceT1FieldPtr%arr1d
+                           endif
+                        endif
+                        success = .true.
+                        exit
+                     end if
+                  else
+                     if (item%quantityPtr%periodic) then
+                        success = ecItemFinalizeTimeseries(item)
+                        success = ecItemFromTimeseries(item, timesteps%mjd())
+                        return
+                     end if
+                     if (interpol_type == interpolate_time_extrapolation_ok) then
+                        exit
+                     else
+                        return         ! failed to update item AND no extrapolation allowed !!
+                     end if
+                  end if
+               end do
+            else
+               if (item%quantityPtr%periodic) then
+                  success = ecItemFromTimeseries(item, timesteps%mjd())
                endif
-            end if
+            endif
          end if
       end function ecItemUpdateSourceItem
       
@@ -360,6 +640,44 @@ module m_ec_item
          end if
       end function ecItemSetProperty
       
+      ! =======================================================================
+      ! Copy methods
+      ! =======================================================================
+      !> Copies known properties from one EC item to the other.
+      !!
+      !! Example use is when a parent provider's item should reflect the same
+      !! properties as its child providers item(s).
+      function ecItemCopyProperty(instancePtr, itemId_tgt, itemId_src, proplist) result(success)
+         logical                                 :: success     !< function status
+         type(tEcInstance), pointer              :: instancePtr !< intent(in)
+         integer,           intent(in)           :: itemId_src  !< unique Item id source
+         integer,           intent(in)           :: itemId_tgt  !< unique Item id target
+         character(len=*),  intent(in)           :: proplist    !< name of properties to be copied. Currently supported: "vectorMax", "quantityPtr".
+
+         type(tEcItem), pointer :: itemPtr_src                  !< Item corresponding to itemId, source side
+         type(tEcItem), pointer :: itemPtr_tgt                  !< Item corresponding to itemId, target side
+         !
+         success = .false.
+         itemPtr_src => null()
+         itemPtr_tgt => null()
+         !
+         itemPtr_src => ecSupportFindItem(instancePtr, itemId_src)
+         itemPtr_tgt => ecSupportFindItem(instancePtr, itemId_tgt)
+         if (.not.associated(itemPtr_src)) then
+            call setECMessage("ERROR: ec_item::ecItemCopyProperty: Cannot find a source Item with the supplied id.")
+         else if (.not.associated(itemPtr_tgt)) then
+            call setECMessage("ERROR: ec_item::ecItemCopyProperty: Cannot find a target Item with the supplied id.")
+         else
+            if (index(proplist,'quantityPtr')>0) then 
+               itemPtr_tgt%quantityPtr => itemPtr_src%quantityPtr
+            endif 
+            if (index(proplist,'vectorMax')>0) then 
+               itemPtr_tgt%quantityPtr%vectorMax = itemPtr_src%quantityPtr%vectorMax
+            endif 
+            success = .true.
+         end if
+      end function ecItemCopyProperty
+
       !> Change the role of the Item corresponding to itemId.
       function ecItemSetRole(instancePtr, itemId, newRole) result(success)
          logical                               :: success     !< function status
@@ -582,4 +900,132 @@ module m_ec_item
             call setECMessage("ERROR: ec_item::ecItemAddConnection: Cannot find an Item or Connection with the supplied id.")
          end if
       end function ecItemAddConnection
+      
+      ! =======================================================================
+      !> Append the field1%timesteps and field1%arr1d value(s) of the FIRST item of the connection to an array of stored values within the converter.
+      !> This serves future reuse of these values.
+      function ecItemToTimeseries(item,timestep,values) result (success)
+         implicit none
+         logical                            :: success    !< function status
+         real(hp)                           :: timestep   !< source item t0 and t1
+         real(hp), dimension(:), pointer    :: values     !< values at time t0
+         type(tEcItem)                      :: item
+
+         type(tEcConverter), pointer        :: cnvrt => null()
+         integer, parameter                 :: array_increment = 100
+         integer                            :: vectormax, newsize
+         logical                            :: do_add
+
+         success = .false.
+         vectormax = size(values)
+         if (.not.allocated(item%timeseries))  then
+            allocate(item%timeseries)
+         end if
+         
+         do_add = .false.
+         if (item%timeseries%ntimes == 0) then         
+            allocate (item%timeseries%times(array_increment))
+            allocate (item%timeseries%values(vectormax,array_increment))
+            do_add = .true.
+         else
+            do_add = timestep > item%timeseries%times(item%timeseries%ntimes)
+         end if
+
+         if (do_add) then
+            item%timeseries%ntimes = item%timeseries%ntimes + 1 
+            if (size(item%timeseries%times) < item%timeseries%ntimes) then
+               newsize = size(item%timeseries%times) + array_increment
+               call realloc(item%timeseries%times,newsize)
+               call realloc(item%timeseries%values,vectormax,newsize) 
+            end if
+            item%timeseries%times(item%timeseries%ntimes) = timestep
+            item%timeseries%values(1:vectormax,item%timeseries%ntimes) = values(1:vectormax) 
+         endif
+         success = .true.
+      end function ecItemToTimeseries
+      
+      ! =======================================================================
+      !> Stop recording an items timeseries
+      function ecItemFinalizeTimeseries(item) result (success)
+         implicit none
+         logical                             :: success    !< function status
+         real(hp)                            :: t0, t1     !< source item t0 and t1
+         type(tEcItem), intent(inout)        :: item
+         integer, parameter                  :: array_increment = 100
+         integer                             :: vectormax, ntimes
+
+         success = .false.
+         if (.not.item%timeseries%finalized) then
+            ntimes = item%timeseries%ntimes
+            item%timeseries%tmin = item%timeseries%times(1)
+            item%timeseries%tmax = item%timeseries%times(ntimes)
+            vectormax = size(item%timeseries%values,dim=1)
+            call realloc(item%timeseries%times,ntimes)
+            call realloc(item%timeseries%values,vectormax,ntimes) 
+            item%timeseries%finalized = .true.
+         end if
+         success = .true.
+      end function ecItemFinalizeTimeseries
+
+      ! =======================================================================
+      !> Update the first source item in a periodical sence with values from a stored timeseries
+      function ecItemFromTimeseries(item,timesteps) result (success)
+         implicit none
+         logical                            :: success    !< function status
+         real(hp), intent(in)               :: timesteps  !< convert to this number of timesteps past the kernel's reference date
+         real(hp)                           :: tmin, tmax        !< source item t0 and t1
+         real(hp), dimension(:), pointer    :: valuesT0      !< values at time t0
+         real(hp), dimension(:), pointer    :: valuesT1      !< values at time t1
+         type(tEcItem), intent(inout)       :: item
+         integer, parameter                 :: array_increment = 100
+         integer                            :: vectormax, newsize
+         real(hp)                           :: tmod
+         integer                            :: it
+         real(hp)                           :: periodic_shift
+
+         success = .false.
+
+         tmin = item%timeseries%tmin
+         tmax = item%timeseries%tmax
+         tmod = mod(mod(timesteps-tmin,tmax-tmin)+(tmax-tmin),tmax-tmin)    ! time between (t0-t1) and (t1-t0)
+         if (tmod<0.d0) then 
+            tmod = mod(tmod+(tmax-tmin),tmax-tmin)                          ! time between 0 and t1-t0
+         end if
+         do it = 1,item%timeseries%ntimes - 1
+            if (item%timeseries%times(it)-tmin>tmod) exit
+         end do                                                             ! index of the first time in the series exceeding requested time 
+
+         periodic_shift = (tmax - tmin) * floor((timesteps - tmin) / (tmax - tmin)) 
+
+         ! Restore times and values in the T0 and T1 fields of the first item
+         item%sourceT0FieldPtr%timesteps = item%timeseries%times(it-1) + periodic_shift
+         item%sourceT1FieldPtr%timesteps = item%timeseries%times(it) + periodic_shift
+         valuesT0 => item%sourceT0FieldPtr%arr1dPtr
+         valuesT1 => item%sourceT1FieldPtr%arr1dPtr
+         vectormax = size(item%timeseries%values,dim=1)
+         valuesT0(1:vectormax) = item%timeseries%values(1:vectormax,it-1)
+         valuesT1(1:vectormax) = item%timeseries%values(1:vectormax,it)
+         success = .true.
+      end function ecItemFromTimeseries
+
+      ! =======================================================================
+      !> Update the first source item in a periodical sence with values from a stored timeseries
+      function ecItemInitialize(instancePtr, itemId, itemRole, quantityId, elementSetId, fieldId) result(success)
+         logical                          :: success      !< function status
+         type(tEcInstance), pointer       :: instancePtr  !< 
+         integer,           intent(in)    :: itemId       !< Unique Item id.
+         integer,           intent(in)    :: itemRole     !< Item role.
+         integer,           intent(in)    :: quantityId   !< Unique Quantity id.
+         integer,           intent(in)    :: elementSetId !< Unique ElementSet id.
+         integer,           intent(in)    :: fieldId      !< Unique Field id.
+         !
+         success = .true.
+         if (itemId /= ec_undef_int) then                ! if Target Item already exists, do NOT create a new one ... 
+            success              = ecItemSetRole(instancePtr, itemId, itemType_target)
+            if (success) success = ecItemSetQuantity(instancePtr, itemId, quantityId)
+            if (success) success = ecItemSetElementSet(instancePtr, itemId, elementSetId)
+            if (success) success = ecItemSetTargetField(instancePtr, itemId, fieldId)    
+        endif
+     end function ecItemInitialize
+      
 end module m_ec_item

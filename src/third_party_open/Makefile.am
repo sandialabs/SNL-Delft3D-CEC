@@ -11,5 +11,21 @@
 #-------------------------------------------------------------------------------
 
 include $(top_srcdir)/common.am
+
+# Descending into FortranGIS is optional, since its prerequisites
+# --with-shapelib and --with-proj are optional.
+if USEFORTRANGIS
+  MAYBE_FORTRANGIS = fortrangis
+endif
+
 SUBDIRS = \
-	version_number
+    esmf \
+    triangle \
+    version_number \
+    libsigwatch \
+    FLAP \
+    polypack \
+    kdtree2 \
+    swan \
+    md5 \
+    $(MAYBE_FORTRANGIS)

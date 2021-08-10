@@ -1,9 +1,9 @@
 subroutine rdbcq(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                & runid     ,filbcq    ,eol       ,nambnd    ,nto       , &
-               & ntof      ,ntoq      ,bubble    ,gdp       )
+               & ntof      ,ntoq      ,bubble    ,kmax      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine rdbcq(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdbcq.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/preprocessor/rdbcq.f90 $
+!  $Id: rdbcq.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/preprocessor/rdbcq.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads the QH boundary condition records from the
@@ -62,6 +62,7 @@ subroutine rdbcq(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     integer                              :: nto    !  Description and declaration in esm_alloc_int.f90
     integer                              :: ntof   !  Description and declaration in dimens.igs
     integer                              :: ntoq   !  Description and declaration in dimens.igs
+    integer                , intent(in)  :: kmax   !  Description and declaration in esm_alloc_int.f90
     logical                , intent(in)  :: bubble !  Description and declaration in procs.igs    
     logical                              :: error  !!  Flag=TRUE if an error is encountered
     character(*)                         :: filbcq !!  File name for the QH-rel.
@@ -204,7 +205,7 @@ subroutine rdbcq(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
              call prterr(lundia, 'G051', trim(message))
              call rdqh(lundia    ,lunout    ,lunrd     ,error     ,filout    , &
                      & filbcq    ,runid     ,eol       ,nto       ,ntof      , &
-                     & ntoq      ,nambnd    ,bubble    ,gdp       )
+                     & ntoq      ,nambnd    ,bubble    ,kmax      ,gdp       )
              !
              close (lunrd)
           else

@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -606,7 +606,7 @@ contains
                    write(lun2,*) ' i1, ilay '
                    write(lun2,*) i1, ilay
                    write(lun2,*) 'Error: ilay out of range in PART13'
-                   call srstop(1)
+                   call stop_exit(1)
                 endif
 !
                 if (modtyp==2) then

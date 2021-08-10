@@ -3,7 +3,7 @@ subroutine findnm_kcs (xp    , yp    , x     , y     , mlb   , mub   , &
                      & rmp   , rnp   , kcs   , inside, spher ,dearthrad)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine findnm_kcs (xp    , yp    , x     , y     , mlb   , mub   , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: findnm_kcs.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/findnm_kcs.f90 $
+!  $Id: findnm_kcs.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/findnm_kcs.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Locate a point in a curvilinear mesh
@@ -64,7 +64,6 @@ subroutine findnm_kcs (xp    , yp    , x     , y     , mlb   , mub   , &
 !
 ! Local variables
 !
-    integer                :: inout
     integer                :: loop
     integer                :: mb    ! Begin M index
     integer                :: me    ! End M index
@@ -126,9 +125,7 @@ subroutine findnm_kcs (xp    , yp    , x     , y     , mlb   , mub   , &
                 !
                 ! specified location in grid cell ?
                 !
-                !call pinpol (xp    , yp    , 4    , xx   , yy   , inside)
-                call ipon   (xx    , yy    , 4    , xp   , yp   , inout )
-                inside = inout>=0 ! inside polygon or on boundary
+                call pinpol (xp    , yp    , 4    , xx   , yy   , inside)
                 !
                 ! if inside set M,N co-ordinates and compute relative M,N
                 !

@@ -8,7 +8,7 @@
 #-------------------------------------------------------------------------------
 
 include $(top_srcdir)/common.am
-lib_LTLIBRARIES = libNefisSO.la
+lib_LTLIBRARIES = libnefis.la
 
 #-------------------------------------------------------------------------------
 #Includes
@@ -23,7 +23,7 @@ AM_CXXFLAGS += \
 
 #-------------------------------------------------------------------------------
 #Sources
-libNefisSO_la_SOURCES = \
+libnefis_la_SOURCES = \
 	../src/c2c.c \
 	../src/df.c \
 	../src/er.c \
@@ -42,9 +42,6 @@ EXTRA_DIST = \
 
 #-------------------------------------------------------------------------------
 #Libraries
-
-#libNefisSO_la_LIBADD = \
-#	-lltdl
 
 BUILT_SOURCES = ./always \
 	../include/nefis_version.h

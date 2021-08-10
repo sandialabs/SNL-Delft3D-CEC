@@ -3,7 +3,7 @@ subroutine soursin_2d(umod      ,ustarc    ,h0        ,h1        , &
                     & sour_ex   ,sour_im   ,sink      )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine soursin_2d(umod      ,ustarc    ,h0        ,h1        , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: soursin_2d.f90 5238 2015-06-27 06:38:11Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/soursin_2d.f90 $
+!  $Id: soursin_2d.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/soursin_2d.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Computes the sour and sink terms for the 2D case

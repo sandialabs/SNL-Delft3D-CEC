@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: nef-xdr.c 5266 2015-07-10 21:14:41Z mooiman $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/nefis/packages/nefis/src/nef-xdr.c $
+// $Id: nef-xdr.c 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/nefis/packages/nefis/src/nef-xdr.c $
 /*
  *   <wl-xdr.c> - Conversion from machine code and IEEE by calling XDR routines
  *
@@ -43,7 +43,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined(WIN32) || defined(WIN64)
+#if defined(_WIN32)
 #  include <rpc\types.h>
 #  include <rpc\xdr.h>
 #endif

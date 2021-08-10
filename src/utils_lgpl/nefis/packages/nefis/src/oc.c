@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: oc.c 5481 2015-10-08 08:03:19Z mooiman $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/nefis/packages/nefis/src/oc.c $
+// $Id: oc.c 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/nefis/packages/nefis/src/oc.c $
 /*
  *   <oc.c> - Functions related to open en close of NEFIS file set
  *
@@ -49,7 +49,7 @@
 #include <limits.h>
 #include <ctype.h>
 
-#if defined(WIN32) || defined(WIN64) || defined(salford32)
+#if defined(_WIN32) || defined(salford32)
 #  include <io.h>
 #  include <sys\stat.h>
 #elif defined(HAVE_CONFIG_H)
@@ -66,7 +66,7 @@
 #  include <unistd.h>
 #endif
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #  define FILE_OPEN        _open
 #  define FILE_CLOSE       _close
 #  define FILE_READ_WRITE (_O_RDWR   | _O_BINARY)
@@ -87,13 +87,6 @@
 #  define FILE_READ_ONLY   O_RDONLY
 #  define FILE_CREATE     (O_CREAT  | O_TRUNC  | O_LARGEFILE | O_RDWR )
 #  define FILE_MODE       (S_IRUSR  | S_IWUSR  | S_IRGRP     | S_IROTH)
-#elif defined(WIN64)
-#  define FILE_OPEN        _open
-#  define FILE_CLOSE       _close
-#  define FILE_READ_WRITE (_O_RDWR   | _O_BINARY)
-#  define FILE_READ_ONLY  (_O_RDONLY | _O_BINARY)
-#  define FILE_CREATE     (_O_CREAT  | _O_TRUNC | _O_RDWR     | _O_BINARY)
-#  define FILE_MODE       (_S_IREAD  | _S_IWRITE)
 #else
 #  define FILE_OPEN        this_file_open_not_supported
 #endif
@@ -154,13 +147,7 @@ BInt4 create_nefis_files ( BInt4 * fd_nefis   ,
     return 1;
   }
 
-  /* Make sure we can read/write LONG_MAX bytes at once */
-  if (ULONG_MAX != (size_t)ULONG_MAX) {
-      fprintf(stderr, "Incompatible ULONG_MAX:\n\tSize : %d /= %d\n", sizeof(ULONG_MAX), sizeof((size_t)ULONG_MAX));
-      exit(1);
-  }
-
-#if !defined(WIN32)
+#if !defined(_WIN32)
     assert( sizeof( off_t ) >= sizeof( long ) );
 #endif
 
@@ -322,7 +309,7 @@ BInt4 create_nefis_files ( BInt4 * fd_nefis   ,
         for ( j=0; j<MAX_VAR_GROUPS ; j++ )
         {
           retrieve_var[i][j]    = (BUInt8 *) malloc ( 1 * sizeof(BUInt8) );
-          retrieve_var[i][j][0] = (BUInt8) ULONG_MAX;
+          retrieve_var[i][j][0] = (BUInt8) BUINT8_MAX;
         }
       }
     }
@@ -788,7 +775,7 @@ BInt4 create_nefis_files ( BInt4 * fd_nefis   ,
                 for ( j=0; j<MAX_VAR_GROUPS ; j++ )
                 {
                     retrieve_var[i][j]    = (BUInt8 *) malloc ( 1 * sizeof(BUInt8) );
-                    retrieve_var[i][j][0] = (BUInt8) ULONG_MAX;
+                    retrieve_var[i][j][0] = (BUInt8) BUINT8_MAX;
                 }
             }
         }
@@ -1117,7 +1104,7 @@ BInt4 close_nefis_files ( BInt4 * fd_nefis )
         /* invalidate the pointers for this file set */
         for ( j=0; j<MAX_VAR_GROUPS ; j++ )
         {
-          retrieve_var[i][j][0] = (BUInt8) ULONG_MAX;
+          retrieve_var[i][j][0] = (BUInt8) BUINT8_MAX;
         }
     }
   }
@@ -1552,7 +1539,7 @@ BUInt8 *** new_capacity_retrieve_var( BUInt8 *** retrieve, BInt4 length, BInt4 n
     for (j=0; j<MAX_VAR_GROUPS; j++)  {
         for (i=length; i<new_length; i++)  {
             retrieve[i][j] = (BUInt8 *) malloc(1 * sizeof(BUInt8) );
-            retrieve[i][j][0] = (BUInt8) ULONG_MAX;
+            retrieve[i][j][0] = (BUInt8) BUINT8_MAX;
         }
     }
 

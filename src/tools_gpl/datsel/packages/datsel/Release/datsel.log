@@ -1,9 +1,0 @@
-﻿  Generating code
-  Finished generating code
-  datsel.vcxproj -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\datsel\packages\datsel\..\..\bin\Release\datsel.exe
-  oss-install...
-  Target directory: ..\bin
-  Source          : package/engine datsel
-  "installing datsel . . ."
-  C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\src\tools_gpl\datsel\bin\Release\datsel.exe -> C:\Users\ccchart\Desktop\20160119_tidal_turbines-new\bin\win32\flow2d3d\bin\datsel.exe
-  1 File(s) copied

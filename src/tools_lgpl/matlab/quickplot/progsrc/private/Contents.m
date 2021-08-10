@@ -38,6 +38,7 @@
 %   shapewrite                  - Write ESRI shape files.
 %   shipma                      - Read Shipma project (and embedded) files.
 %   shyfemmesh                  - Read a SHYFEM mesh topology file.
+%   smsmesh                     - Read a Surface-water Modeling System mesh topology file.
 %   sobek                       - Read and plot SOBEK topology.
 %   swan                        - Read/write SWAN files.
 %   tecplot                     - Read/write for Tecplot files.
@@ -67,7 +68,6 @@
 %   asciiload                   - A compiler compatible version of LOAD -ASCII.
 %   avi                         - MATLAB AVI interface.
 %   clockwise                   - Determines polygon orientation.
-%   deblank2                    - Remove leading and trailing blanks.
 %   exepath                     - MEX file to determine path of deployed mode.
 %   filesequal                  - Determines whether the contents of two files is the same.
 %   findseries                  - Find series of nonzero elements.
@@ -87,7 +87,6 @@
 %   setProperty                 - Generic routine to set values in PropertyName-PropertyValue pairs
 %   stdbeep                     - Produce beep sound.
 %   trim2rst                    - Extract Delft3D-FLOW restart file from TRIM-file.
-%   ui_getdir                   - Compileable platform independent open directory dialog box.
 %   ui_type                     - Simple selection dialog.
 %   ui_typeandname              - Selection dialog with name specification.
 %   uigetfolder                 - Standard Windows browse for folder dialog box.
@@ -263,7 +262,7 @@
 %
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -288,5 +287,5 @@
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/Contents.m $
-%   $Id: Contents.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/Contents.m $
+%   $Id: Contents.m 65778 2020-01-14 14:07:42Z mourits $

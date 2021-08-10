@@ -1,7 +1,7 @@
 subroutine dam_cod(xz      ,yz      ,kcs      ,mmax      ,nmax )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine dam_cod(xz      ,yz      ,kcs      ,mmax      ,nmax )
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dam_cod.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/io/src/dam_cod.f90 $
+!  $Id: dam_cod.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/io/src/dam_cod.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -54,7 +54,6 @@ subroutine dam_cod(xz      ,yz      ,kcs      ,mmax      ,nmax )
     integer                             :: ncol
     integer                             :: np
     integer                             :: umsk
-    integer, external                   :: new_lun
     real(hp), dimension(:), allocatable :: xdam      ! hp, because it is a parameter for subroutine ipon
     real(hp), dimension(:), allocatable :: ydam      ! idem
     character(4)                        :: blname
@@ -66,8 +65,7 @@ subroutine dam_cod(xz      ,yz      ,kcs      ,mmax      ,nmax )
     !
     inquire(file='wavemask.ldb',exist=exists)
     if (.not.exists) goto 1000
-    umsk = new_lun()
-    open (umsk, file = 'wavemask.ldb')
+    open (newunit = umsk, file = 'wavemask.ldb')
   100 continue
     read (umsk, '(A)', err = 999) blname
     if (blname(1:1)=='*') goto 100

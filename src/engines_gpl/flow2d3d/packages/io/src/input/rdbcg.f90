@@ -1,11 +1,12 @@
 subroutine rdbcg(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
                & itlfsm    ,tlfsmo    ,dt        ,tunit     ,nto       , &
                & lstsc     ,bndneu    ,cstbnd    ,nambnd    ,typbnd    , &
-               & rettim    ,ntoq      ,thetqh    ,restid    ,filic     , &
-               & paver     ,pcorr     ,tstart    ,tstop     ,gdp       )
+               & rettim    ,ntoq      ,thetqh    ,thetqt    ,restid    , &
+               & filic     ,paver     ,pcorr     ,tstart    ,tstop     , &
+               & gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -29,8 +30,8 @@ subroutine rdbcg(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdbcg.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdbcg.f90 $
+!  $Id: rdbcg.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdbcg.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads TLFSMO-rec. from the MD-file
@@ -75,6 +76,7 @@ subroutine rdbcg(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     real(fp)                                   :: dt     !  Description and declaration in esm_alloc_real.f90
     real(fp)                                   :: paver  !  Description and declaration in numeco.igs
     real(fp)                                   :: thetqh !  Description and declaration in numeco.igs
+    real(fp)                                   :: thetqt !  Description and declaration in numeco.igs
     real(fp)                                   :: tlfsmo !  Timespan for smoothing (in minutes)
     real(fp)                     , intent(in)  :: tstart !  Flow start time in minutes
     real(fp)                     , intent(in)  :: tstop  !  Flow stop time in minutes
@@ -259,9 +261,11 @@ subroutine rdbcg(lunmd     ,lundia    ,error     ,nrrec     ,mdfrec    , &
     ! Relaxation parameter for QH boundaries; by default 0 (no relaxation)
     !
     thetqh = 0.0
+    thetqt = 0.0
     if (ntoq > 0) then
        call prop_get(gdp%mdfile_ptr, '*', 'ThetQH', thetqh)
     endif
+    call prop_get(gdp%mdfile_ptr, '*', 'ThetQT', thetqt)
     !
     ! Flag for discharge distribution at Qtot boundaries; by default now based on average waterlevel
     !

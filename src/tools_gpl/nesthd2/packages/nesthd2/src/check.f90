@@ -1,8 +1,9 @@
 subroutine check  (lundia,fout  ,mnstat,mnes ,nnes   ,weight , &
                    mcbsp ,ncbsp ,iwet  ,nostat               )
+    implicit none
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +27,8 @@ subroutine check  (lundia,fout  ,mnstat,mnes ,nnes   ,weight , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: check.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/nesthd2/packages/nesthd2/src/check.f90 $
+!  $Id: check.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/nesthd2/packages/nesthd2/src/check.f90 $
 !***********************************************************************
 ! Deltares                         marine and coastal management
 !
@@ -41,10 +42,12 @@ subroutine check  (lundia,fout  ,mnstat,mnes ,nnes   ,weight , &
 ! limitations        :
 ! subroutines called :
 !***********************************************************************
+    integer :: nones, iwght, istat, lundia, mcbsp, ncbsp, nostat
+    double precision :: wghtot
     integer :: iwet  (nostat), mnes   (  4  ), nnes  (  4  )
     integer :: mnstat(2,nostat)
 
-    real    :: weight (  4  )
+    double precision :: weight (  4  )
 
     logical :: fout  ,found
 !

@@ -5,27 +5,20 @@
 #
 #   There are command-line options to select Fortran compiler and debug or not.
 #
-#   ToDo:  Remove stripping of executables when the debug flag is set.
-#   It's even debatable whether stripping belongs in the build.  I think not.
-#
-#   ToDo: Don't preintialize the compiler, the user should do this himself
-#   so that he's aware exactly which version he's using.  Besides, we can't
-#   keep up with every new compiler update.  This script should be ultra-low
-#   maintanence.
-#
-#   irv.elshoff@deltares.nl
 #   adri.mourits@deltares.nl
-#   04 Feb 2015
+#   02 Sep 2016
 #
-#   Copyright (C)  Stichting Deltares, 2011-2013.
+#   Copyright (C)  Stichting Deltares, 2011-2019.
 #-------------------------------------------------------------------------------
 #
-#   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+#   WARNINGS WARNINGS WARNINGS WARNINGS WARNINGS WARNINGS WARNINGS WARNINGS
 #
 #   This script contains references to Deltares specific systems.
 #   Use this script as an example and modify it to fit to your system.
 #   See file README for compiling without using this script.
 #
+#   This script does not work on Mac
+#   
 #-------------------------------------------------------------------------------
 
 # This script must be executed in the directory where it resides
@@ -40,7 +33,7 @@ compiler=''
 configureArgs=''
 debug=0
 noMake=0
-platform='ia32'
+platform='intel64'
 useSp=0
 
 #-------------------------------------------------------------------------------
@@ -53,6 +46,7 @@ function usage {
     echo "    -intel11.1"
     echo "    -intel12"
     echo "    -intel14 (-intel14.0.3)"
+    echo "    -intel16 (-intel16.0.3)"
     }
 
 
@@ -122,6 +116,9 @@ while [ $# -gt 0 ]; do
         -intel14|-intel14.0.3)
             compiler='intel14'
             ;;
+        -intel16|-intel16.0.3)
+            compiler='intel16'
+            ;;
         -m|-make)
             noMake=1
             ;;
@@ -167,6 +164,12 @@ case $compiler in
         addpath PATH /opt/gcc/bin
         addpath LD_LIBRARY_PATH /opt/gcc/lib /opt/gcc/lib64
         echo "Using GNU compilers in `witch gfortran`"
+        ;;
+
+    intel16)
+        ifortInit=". /opt/intel/parallel_studio_cluster_2016_up3/bin/compilervars.sh $platform"
+        iccInit=""
+        echo "Using Intel 16.0.3 Fortran ($platform) compiler"
         ;;
 
     intel14)
@@ -226,7 +229,7 @@ esac
 if [ "$ifortInit" != '' ]; then
     eval $ifortInit
     if [ $? -ne 0 ]; then
-        echo 'Initialization of the Fortran compiler fails!'
+        echo 'ERROR: Initialization of the Fortran compiler fails!'
         cd $orgdir
         exit 1
     fi
@@ -235,7 +238,7 @@ fi
 if [ "$iccInit" != '' ]; then
     eval $iccInit
     if [ $? -ne 0 ]; then
-        echo 'Initialization of the C compiler fails!'
+        echo 'ERROR: Initialization of the C compiler fails!'
         cd $orgdir
         exit 1
     fi
@@ -300,7 +303,6 @@ fi
  export PKG_CONFIG_PATH=$NETCDFROOT/lib/pkgconfig:$PKG_CONFIG_PATH
  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NETCDFROOT/lib
 
-
 #===============================================================================
 echo "Current settings:"
 echo "export ACLOCAL=\"$ACLOCAL\""
@@ -341,18 +343,20 @@ fi
 #===============================================================================
 # autogen: sanity checks, libtoolize and autoreconf
 
-log='logs/autogen.log'
+log="`pwd`/logs/autogen.log"
 command="./autogen.sh --verbose &> $log"
-
-log "Running $command"
+log "Running $command in `pwd`"
 eval $command
+cd third_party_open/kdtree2
+log "Running $command in `pwd`"
+eval $command
+cd ../..
 
 if [ $? -ne 0 ]; then
-    log "Autogen fails!"
+    log "ERROR: Autogen fails!"
     cd $orgdir
     exit 1
 fi
-
 
 #===============================================================================
 # configure: Create makefiles
@@ -386,7 +390,7 @@ log "Running `echo $command | sed 's/ +/ /g'`"
 eval $command
 
 if [ $? -ne 0 ]; then
-    log "Configure fails!"
+    log "ERROR: Configure fails!"
     cd $orgdir
     exit 1
 fi
@@ -408,8 +412,17 @@ command="make ds-install &> $log"
 log "Running $command"
 eval $command
 
+# Build D-Flow FM, only when not in singlePrecision mode
+if [ $useSp -eq 0 ]; then
+    log='logs/make_dflowfm.log'
+    command="make ds-install -C engines_gpl/dflowfm &> $log"
+
+    log "Running $command"
+    eval $command
+fi
+
 if [ $? -ne 0 ]; then
-    log "Make fails!"
+    log "ERROR: Make fails!"
     cd $orgdir
     exit 1
 fi

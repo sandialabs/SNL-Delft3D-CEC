@@ -1,8 +1,8 @@
       subroutine detang (x     , y     , angle , m     , n     ,
-     *                   icom  , mmax  , nmax  , maxbnd, nobnd )
+     *                   mmax  , nmax  , maxbnd, nobnd         )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: detang.f 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/nesthd1/packages/nesthd1/src/detang.f $
+!  $Id: detang.f 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/nesthd1/packages/nesthd1/src/detang.f $
 !***********************************************************************
 ! Deltares                         marine and coastal management
 !
@@ -40,9 +40,8 @@
 ! notes              :
 !***********************************************************************
 
-      integer m     ( nobnd ,   2   ), n     ( nobnd ,   2   ),
-     *        icom  ( mmax  ,  *  )
-
+      integer m     ( nobnd ,   2   ), n     ( nobnd ,   2   )
+    
       real    pi
 
       real    angle ( maxbnd)
@@ -74,13 +73,8 @@
 !
 ! -------add 180 degr. for upper or lower boundary (n direction)
 !
-         if (n(ibnd,1) .eq. 1) then
-            angle (ibnd) = angle (ibnd) + 180
-            goto 10
-         endif
 
-         if ((icom (m(ibnd,1),n(ibnd,1) + 1) .eq. 1) .or.
-     *       (icom (m(ibnd,1),n(ibnd,1) - 1) .eq. 1) ) then
+         if (n(ibnd,1) .eq. n(ibnd,2)) then
             angle (ibnd) = angle (ibnd) + 180
          endif
 

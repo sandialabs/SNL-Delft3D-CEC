@@ -32,8 +32,8 @@ cd $srcdir
 
 # Set dest_main
 if [ "$prefix" == "$srcdir" ]; then
-    # This was the default. Changing this to "dest_main=$prefix" will cause too much confusion.
-    dest_main=$prefix/../bin
+    # Create the lnx64 tree inside $srcdir/bin
+    dest_main=$prefix/bin
 else
     # Also a bit awkward: we are going to copy binaries from $prefix/bin and $prefix/lib to $prefix/lnx.
     dest_main=$prefix

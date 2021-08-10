@@ -1,7 +1,7 @@
       module wrwaq
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrwaq.F90 5201 2015-06-17 10:37:44Z jeuke_ml $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_waq/src/wrwaq.F90 $
+!  $Id: wrwaq.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_waq/src/wrwaq.F90 $
 !-------------------------------------------------------------------------------
 
 !include preprocessing flags from autotools
@@ -180,7 +180,7 @@
 !
 !! executable statements -------------------------------------------------------
 !
-      call newfil(lunatr, trim(filename))
+      open(newunit=lunatr, file=trim(filename))
       write ( lunatr , '(a)' )  '         ; DELWAQ_COMPLETE_ATTRIBUTES'
       write ( lunatr , '(a)' )  '    2    ; two blocks with input     '
       write ( lunatr , '(a)' )  '    1    ; number of attributes, they are :'

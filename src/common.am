@@ -1,38 +1,39 @@
 #-------------------------------------------------------------------------------
-#   d_hydro top-level automake configutation
+#   dimr top-level automake configutation
 #   common.am (see also configure.ac)
 #
-#   Fedor.Baart@Deltares.NL
-#   Adri.MouritsDeltares.NL
-#   Irv.ElshoffDeltares.NL
-#   25 may 12
 #-------------------------------------------------------------------------------
 
 
 # Remove .exe extension (defaults to .exe on cygwin).
-# .exe is already done by hand and if you don't specify this you get .exe.exe files.
-# TODO: remove .exe from executables in makefiles and use the .exe which is set
-# automatically on windows builds (cygwin)
 EXEEXT=
 
 #-------------------------------------------------------------------------------
 # C/C++ flags
 
 AM_CFLAGS = \
-    -D_GNU_SOURCE \
+     -D_GNU_SOURCE \
     -DSTR_LEN_AT_END \
-    -DWITH_DELFTONLINE
+    -DWITH_DELFTONLINE 
+
+## For future reference for D-Flow FM
+##    -std=c99 
+
 
 AM_CXXFLAGS = \
     -D_GNU_SOURCE \
     -DSTR_LEN_AT_END \
     -DWITH_DELFTONLINE
 
+## For future reference for D-Flow FM
+##    -std=c++98 
+
 STANDARD_C_INCLUDES = \
-    -I$(top_builddir)/engines_gpl/d_hydro/include \
+    -I$(top_builddir)/engines_gpl/dimr/packages/dimr/include \
+    -I$(top_builddir)/engines_gpl/dimr/packages/dimr_lib/include \
     -I$(top_builddir)/engines_gpl/flow2d3d/packages/flow2d3d/include \
-    -I$(top_builddir)/utils_lgpl/d_hydro_lib/include \
     -I$(top_builddir)/utils_lgpl/delftonline/include \
+    -I$(top_builddir)/utils_lgpl/d_hydro_lib/include \
     -I$(top_builddir)/utils_lgpl/esmfsm/include \
     -I$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common_c/include
 
@@ -40,6 +41,7 @@ STANDARD_C_INCLUDES = \
 #-------------------------------------------------------------------------------
 #   Fortran flags
 
+# Set FINCLUDES and FMODULES to empty here, so they can be expanded with += later.
 FINCLUDES =
 
 FMODULES =
@@ -54,13 +56,19 @@ AM_FCFLAGS = \
     $(FMODULES) \
     -DWITH_DELFTONLINE
 
+# For future references D-Flow FM
+#FOPTFLAGS = -O2
+#LDOPTFLAGS = -O2
+
+AM_FCFLAGS+=$(FOPTFLAGS)
+
 # Do not use the openmp libraries by default: 
 # When using the Intel compiler, this will cause the multi-threaded version to be
 # used, even if no OpenMP is used. And the multi-threaded version is known
 # to have a very high latency.
 # AM_FCFLAGS += $(OPENMP_FCFLAGS)
 
-
+# TODO does D-Flow FM still has OMP despite the line above?
 #-------------------------------------------------------------------------------
 #   Fortran 77 flags
 
@@ -74,6 +82,7 @@ AM_FFLAGS = \
 # used, even if no OpenMP is used. And the multi-threaded version is known
 # to have a very high latency.
 # AM_FFLAGS += $(OPENMP_FFLAGS)
+# TODO does D-Flow FM still has OMP despite the line above?
 
 
 #-------------------------------------------------------------------------------
@@ -117,7 +126,7 @@ delftflow-dist: ds-install
 	( \
 	    export DEST=$(top_builddir)/dist/delftflow-linux ; \
 	    mkdir -p $$DEST ; \
-	    cp -p $(top_builddir)/bin/d_hydro.exe $$DEST ; \
+	    cp -p $(top_builddir)/bin/dimr $$DEST ; \
 	    cd $$DEST/.. ; \
 	    tar czf delftflow-linux.tgz delftflow-linux ; \
 	    rm -rf delftflow-linux \

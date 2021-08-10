@@ -3,7 +3,7 @@ subroutine wrsedd(lundia    ,error     ,mmax      ,nmaxus    ,irequest  , &
                 & mf        ,ml        ,nf        ,nl        ,iarrc     )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine wrsedd(lundia    ,error     ,mmax      ,nmaxus    ,irequest  , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: wrsedd.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/wrsedd.f90 $
+!  $Id: wrsedd.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/wrsedd.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Writes the time varying data for the bedforms to the sediment
@@ -62,6 +62,7 @@ subroutine wrsedd(lundia    ,error     ,mmax      ,nmaxus    ,irequest  , &
     logical                              , pointer :: lfbedfrmrou
     integer                              , pointer :: nmaxgl
     integer                              , pointer :: mmaxgl
+    integer                              , pointer :: io_prec
 !
 ! Global variables
 !
@@ -103,16 +104,17 @@ subroutine wrsedd(lundia    ,error     ,mmax      ,nmaxus    ,irequest  , &
 !! executable statements -------------------------------------------------------
 !
     call getdatagroup(gdp, FILOUT_MAP, grpnam, group)
-    celidt         => group%celidt
-    duneheight     => gdp%gdbedformpar%duneheight
-    dunelength     => gdp%gdbedformpar%dunelength
-    rksr           => gdp%gdbedformpar%rksr
-    rksmr          => gdp%gdbedformpar%rksmr
-    rksd           => gdp%gdbedformpar%rksd
-    lfbedfrm       => gdp%gdbedformpar%lfbedfrm
-    lfbedfrmrou    => gdp%gdbedformpar%lfbedfrmrou
-    mmaxgl         => gdp%gdparall%mmaxgl
-    nmaxgl         => gdp%gdparall%nmaxgl
+    celidt              => group%celidt
+    duneheight          => gdp%gdbedformpar%duneheight
+    dunelength          => gdp%gdbedformpar%dunelength
+    rksr                => gdp%gdbedformpar%rksr
+    rksmr               => gdp%gdbedformpar%rksmr
+    rksd                => gdp%gdbedformpar%rksd
+    lfbedfrm            => gdp%gdbedformpar%lfbedfrm
+    lfbedfrmrou         => gdp%gdbedformpar%lfbedfrmrou
+    mmaxgl              => gdp%gdparall%mmaxgl
+    nmaxgl              => gdp%gdparall%nmaxgl
+    io_prec             => gdp%gdpostpr%io_prec
     !
     ierror = 0
     select case (irequest)
@@ -126,14 +128,14 @@ subroutine wrsedd(lundia    ,error     ,mmax      ,nmaxus    ,irequest  , &
        ! Define elements
        !
        if (lfbedfrm) then
-          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'DUNEHEIGHT', ' ', IO_REAL4, 2, dimids=(/iddim_n, iddim_m/), longname='Dune height (zeta point)', unit='m', acl='z')
-          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'DUNELENGTH', ' ', IO_REAL4, 2, dimids=(/iddim_n, iddim_m/), longname='Dune length (zeta point)', unit='m', acl='z')
+          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'DUNEHEIGHT', ' ', io_prec , 2, dimids=(/iddim_n, iddim_m/), longname='Dune height (zeta point)', unit='m', acl='z')
+          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'DUNELENGTH', ' ', io_prec , 2, dimids=(/iddim_n, iddim_m/), longname='Dune length (zeta point)', unit='m', acl='z')
        endif
        if (lfbedfrmrou) then
-          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'KSR', ' ', IO_REAL4       , 2, dimids=(/iddim_n, iddim_m/), longname='Ripple roughness height', unit='m', acl='z')
-          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'KSMR', ' ', IO_REAL4      , 2, dimids=(/iddim_n, iddim_m/), longname='Mega-ripple roughness height', unit='m', acl='z')
-          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'KSD', ' ', IO_REAL4       , 2, dimids=(/iddim_n, iddim_m/), longname='Dune roughness height', unit='m', acl='z')
-          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'KS', ' ', IO_REAL4        , 2, dimids=(/iddim_n, iddim_m/), longname='Combined bedform roughness height', unit='m', acl='z')
+          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'KSR', ' ', io_prec        , 2, dimids=(/iddim_n, iddim_m/), longname='Ripple roughness height', unit='m', acl='z')
+          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'KSMR', ' ', io_prec       , 2, dimids=(/iddim_n, iddim_m/), longname='Mega-ripple roughness height', unit='m', acl='z')
+          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'KSD', ' ', io_prec        , 2, dimids=(/iddim_n, iddim_m/), longname='Dune roughness height', unit='m', acl='z')
+          call addelm(gdp, lundia, FILOUT_MAP, grpnam, 'KS', ' ', io_prec         , 2, dimids=(/iddim_n, iddim_m/), longname='Combined bedform roughness height', unit='m', acl='z')
        endif
     case (REQUESTTYPE_WRITE)
        if (lfbedfrm) then

@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dio-streams.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-streams.F90 $
+!  $Id: dio-streams.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-streams.F90 $
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!
 !!! DIO-streams: f90-version of streams for Delft-IO
@@ -56,6 +56,9 @@ integer, parameter :: DIO_HANDLE_INVALID = -1
 !
 integer, parameter :: DioDayToSec = 86400
 
+
+integer            :: maxStreamUnit = -214748300
+integer            :: minStreamUnit = 214748300
 
 !!
 !! Definition of external data types
@@ -304,11 +307,10 @@ subroutine DioStreamError(nr, text)
     character(Len=DioMaxStreamLen) :: errFile  ! name of errorFile
     integer                        :: ierr     ! open status
     if (logMsgToFile) then
-        lun = dioStartLun - 3
         call GetArg(0, exePath)
         call DioConfGetExeName(exePath, errFile)
         errFile = 'dio-' // trim(errFile) // '-errors.txt'
-        open(lun, file=errFile, position = 'append', iostat=ierr)
+        open(newunit=lun, file=errFile, position = 'append', iostat=ierr)
         if ( ierr == 0 ) then
             write(lun, '(A,I5,A,A)') 'DioError ', nr, ': ', trim(text)
             close(lun)
@@ -521,42 +523,40 @@ function DioStreamConnect(stream, alsoForAsync) result(retVal)
         ierr = -1
         retVal = .false.
         openNefis = .false.
-        stream % lun = dioNewLun()
         if ( stream % mode .eq. 'r') then
             if ( stream % streamType .eq. dio_Nefis_Stream ) then
                 openNefis = .true.
             else if ( DioStreamUsesLun(stream)) then
-                if (stream % lun .gt. 0) then
 #if (defined(WIN32))
-                    open (stream%lun, file=stream % name, action='read', &
-                              shared, status='old', form= stream % form, iostat=ierr)
+                 open (newunit=stream%lun, file=stream % name, action='read', &
+                       shared, status='old', form= stream % form, iostat=ierr)
 #elif (defined(salford32))
-                    open (stream%lun, file=stream % name, action='read', &
-          access='transparent', share='DENYWR', status='old', form= stream % form, iostat=ierr)
+                 open (newunit=stream%lun, file=stream % name, action='read', &
+                       access='transparent', share='DENYWR', status='old', form= stream % form, iostat=ierr)
 #else
-                    open (stream%lun, file=stream % name, action='read', &
-                              status='old', form= stream % form, iostat=ierr)
+                 open (newunit=stream%lun, file=stream % name, action='read', &
+                       status='old', form= stream % form, iostat=ierr)
 #endif
-                endif
             endif
         else
             if ( stream % streamType .eq. dio_Nefis_Stream ) then
                 openNefis = .true.
             else if ( DioStreamUsesLun(stream)) then
-                if (stream % lun .gt. 0) then
 #if (defined(WIN32))
-                    open (stream%lun, file=stream % name, action='write', &
-                              shared, form= stream % form, iostat=ierr)
+                 open (newunit=stream%lun, file=stream % name, action='write', &
+                       shared, form= stream % form, iostat=ierr)
 #elif (defined(salford32))
-                    open (stream%lun, file=stream % name, action='write', &
-          access='transparent', share='DENYWR', form= stream % form, iostat=ierr)
+                 open (newunit=stream%lun, file=stream % name, action='write', &
+                       access='transparent', share='DENYWR', form= stream % form, iostat=ierr)
 #else
-                    open (stream%lun, file=stream % name, action='write', &
-                              form= stream % form, iostat=ierr)
+                 open (newunit=stream%lun, file=stream % name, action='write', &
+                       form= stream % form, iostat=ierr)
 #endif
-                endif
             endif
         endif
+        
+        maxStreamUnit = max(stream%lun, maxStreamUnit)
+        minStreamUnit = min(stream%lun, minStreamUnit)
         
         if ( openNefis ) then
 
@@ -639,11 +639,12 @@ subroutine DioStreamDisconnect(stream, alsoForAsync)
     if ( stream % synched .or. alsoForAsync ) then
         if ( stream % connected ) then
             if ( DioStreamUsesLun(stream) ) then
-                if ( stream % lun .ge. 0 ) then
+                if ( stream % lun .ne. 0 ) then
                     ! call flush(stream % lun)   ! Flush before close seems senseless
                                                  ! but avoids the nfs problem: file is there,
                                                  ! content not yet.
                     close( stream%lun )
+                    stream%lun = 0
                 endif
             else if(stream % streamType .eq. dio_Nefis_stream) then
 #if (defined(DIO_NEFIS_INCLUDED))
@@ -880,6 +881,32 @@ subroutine DioStreamClose(stream)
     stream % nefFileHandle = DIO_HANDLE_INVALID
 
 end subroutine DioStreamClose
+
+
+subroutine DioStreamCloseAllUnits()
+
+   ! Used to free all connected files during finalize
+
+   integer             :: iunit
+   logical             :: isOpened
+
+   if (maxStreamUnit >= minStreamUnit) then
+   
+      do iunit = minStreamUnit, maxStreamUnit
+
+         inquire(iunit, opened=isOpened)
+         if (isOpened) then
+            close(iunit)
+         endif
+      
+      enddo
+      
+   endif
+   
+   maxStreamUnit = -214748300
+   minStreamUnit = 214748300
+
+end subroutine DioStreamCloseAllUnits
 
 
 !

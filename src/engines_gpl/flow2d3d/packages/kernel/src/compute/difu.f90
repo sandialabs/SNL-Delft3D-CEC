@@ -17,7 +17,7 @@ subroutine difu(icreep    ,timest    ,lundia    ,nst       ,icx       , &
               & rscale    ,bruvai    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -41,8 +41,8 @@ subroutine difu(icreep    ,timest    ,lundia    ,nst       ,icx       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: difu.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/compute/difu.f90 $
+!  $Id: difu.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/compute/difu.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Computes transport in the u, v and w-direction.
@@ -93,14 +93,19 @@ subroutine difu(icreep    ,timest    ,lundia    ,nst       ,icx       , &
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
     include 'flow_steps_f.inc'
+    integer                , pointer :: ad_itrmax
     integer                , pointer :: iro
     integer                , pointer :: mfg
     integer                , pointer :: nfg
     integer                , pointer :: nudge
+    real(fp)               , pointer :: ad_epsabs
+    real(fp)               , pointer :: ad_epsrel
+    real(fp)               , pointer :: dryflc
     real(fp)               , pointer :: ck
     real(fp)               , pointer :: dicoww
     real(fp)               , pointer :: eps
     real(fp)               , pointer :: hdt
+
     real(fp)               , pointer :: vicmol
     real(fp)               , pointer :: xlo
 !
@@ -266,11 +271,13 @@ real(fp)                :: difl
 real(fp)                :: difr
 real(fp)                :: diz1
 real(fp)                :: epsitr ! Maximum value of relative error and absolute error of iteration process
+real(fp)                :: fac
 real(fp)                :: flux
 real(fp)                :: h0
 real(fp)                :: h0i
 real(fp)                :: h0new
 real(fp)                :: h0old
+real(fp)                :: hmin
 real(fp), dimension(10) :: mu
 real(fp)                :: nudgefac
 real(fp)                :: qxu
@@ -298,6 +305,10 @@ integer                 :: nm_pos ! indicating the array to be exchanged has nm 
     nfg         => gdp%gdparall%nfg
     nudge       => gdp%gdnumeco%nudge
     hdt         => gdp%gdnumeco%hdt
+    ad_itrmax   => gdp%gdnumeco%ad_itrmax
+    ad_epsabs   => gdp%gdnumeco%ad_epsabs
+    ad_epsrel   => gdp%gdnumeco%ad_epsrel
+    dryflc      => gdp%gdnumeco%dryflc
     !
     ! INITIALISATION
     !
@@ -449,10 +460,11 @@ integer                 :: nm_pos ! indicating the array to be exchanged has nm 
           nmu = icx
           do nm = 1, nmmax
              nmu = nmu + 1
-             if (kfu(nm)*kadu(nm, k) /= 0) then
+             hmin = min(s1(nm) + real(dps(nm),fp), s1(nmu) + real(dps(nmu),fp))
+             if (kfu(nm)*kadu(nm, k) /= 0 .and. hmin > dryflc) then
                 difl    = dicuv(nm, k)
                 difr    = dicuv(nmu, k)
-                flux    = 0.5*(difl + difr)/(0.7*gvu(nm))
+                flux    = 0.5_fp*(difl + difr)/(0.7_fp*gvu(nm))
                 maskval = max(0, 2 - abs(kcs(nm)))
                 bbk(nm, k) = bbk(nm, k) + areau(nm, k)*flux*maskval
                 bux(nm, k) = bux(nm, k) - areau(nm, k)*flux*maskval
@@ -476,12 +488,13 @@ integer                 :: nm_pos ! indicating the array to be exchanged has nm 
              num = icy
              do nm = 1, nmmax
                 num = num + 1
-                if (kfv(nm)*kadv(nm, k) /= 0) then
+                hmin = min(s1(nm) + real(dps(nm),fp), s1(num) + real(dps(num),fp))
+                if (kfv(nm)*kadv(nm, k) /= 0 .and. hmin > dryflc) then
                    cl      = r0(nm, k, l)
                    difl    = dicuv(nm, k)
                    cr      = r0(num, k, l)
                    difr    = dicuv(num, k)
-                   flux    = 0.5_fp*(cr - cl)*(difl + difr)/(0.7*guv(nm))
+                   flux    = 0.5_fp*(cr - cl)*(difl + difr)/(0.7_fp*guv(nm))
                    maskval = max(0, 2 - abs(kcs(nm)))
                    ddkl(nm, k, l)  = ddkl(nm, k, l) + areav(nm, k)*flux*maskval
                    maskval         = max(0, 2 - abs(kcs(num)))
@@ -628,7 +641,7 @@ integer                 :: nm_pos ! indicating the array to be exchanged has nm 
     enddo
     !
     ! BOUNDARY CONDITIONS
-    !     On open boundary no seconday flow (=> loop over LSTSC)
+    !     On open boundary no secondary flow (=> loop over LSTSC)
     !
     do ic = 1, norow
        n    = irocol(1, ic)
@@ -921,7 +934,7 @@ integer                 :: nm_pos ! indicating the array to be exchanged has nm 
        do k = 1, kmax
           do nm = nmsta, nmmax, 2
              if ( (kfs(nm)==1) .and. (kcs(nm)==1) ) then
-                epsitr = max(1.e-8_fp, 0.5e-3*abs(r1(nm, k, l)))
+                epsitr = max(ad_epsabs, ad_epsrel*abs(r1(nm, k, l)))
                 if (abs(vvdwk(nm, k) - r1(nm, k, l)) > epsitr) itr = 1
                 r1(nm, k, l) = vvdwk(nm, k)
              endif
@@ -989,7 +1002,7 @@ integer                 :: nm_pos ! indicating the array to be exchanged has nm 
        do k = 1, kmax
           do nm = nmsta, nmmax, 2
              if ( (kfs(nm)==1) .and. (kcs(nm)==1) ) then
-                epsitr = max(1.e-8_fp, 0.5e-3*abs(r1(nm, k, l)))
+                epsitr = max(ad_epsabs, ad_epsrel*abs(r1(nm, k, l)))
                 if (abs(vvdwk(nm, k) - r1(nm, k, l)) > epsitr) itr = 1
                 r1(nm, k, l) = vvdwk(nm, k)
              endif
@@ -1007,12 +1020,12 @@ integer                 :: nm_pos ! indicating the array to be exchanged has nm 
        !
        call dfreduce_gdp( itr, 1, dfint, dfmax, gdp )
        !
-       if (itr>0 .and. iter<50) goto 1100
+       if (itr>0 .and. iter<ad_itrmax) goto 1100
        !
        if (gdp%gdflwpar%flwoutput%iteroutputsteps >= gdp%gdinttim%ntstep) then
           write (lundia, '(3(a,i0))') 'difu(ntstep,l,iter):',gdp%gdinttim%ntstep, ' ', l, ' ',iter
        endif
-       if (iter >= 50) then
+       if (iter >= ad_itrmax) then
           write (errtxt, '(i0,a,i0)') l, ' ', nst
           call prterr(lundia    ,'S206'    ,trim(errtxt)    )
        endif

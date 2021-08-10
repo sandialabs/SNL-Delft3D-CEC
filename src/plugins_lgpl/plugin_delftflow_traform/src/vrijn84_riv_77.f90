@@ -3,7 +3,7 @@ subroutine vrijn84_riv_77(dll_integers, max_integers, &
                           dll_strings , max_strings , &
                           sbc_total, sbc  , sbcu, sbcv, sbwu, sbwv     , &
                           equi_conc, cesus, ssus, sswu, sswv, t_relax  , &
-                          error_message   )
+                          error_message_c   )
 !DEC$ ATTRIBUTES DLLEXPORT, ALIAS: 'VRIJN84_RIV_77' :: VRIJN84_RIV_77
 !!--description-----------------------------------------------------------------
 !
@@ -13,6 +13,7 @@ subroutine vrijn84_riv_77(dll_integers, max_integers, &
 !!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
+use iso_c_binding, only: c_char
 implicit none
 !
 ! Local constants
@@ -41,7 +42,7 @@ real(hp)          , intent(out) :: ssus          ! susp load due to currents, ma
 real(hp)          , intent(out) :: sswu          ! susp load due to waves, m component [m3/m/s]
 real(hp)          , intent(out) :: sswv          ! susp load due to waves, n component [m3/m/s]
 real(hp)          , intent(out) :: t_relax       ! relaxation time in 2D mode [s]
-character(len=256), intent(out) :: error_message ! not empty: echo and stop run
+character(kind=c_char), intent(out) :: error_message_c(*) ! not empty: echo and stop run
 logical           , intent(out) :: equi_conc     ! true: contration cesus returned by formula
                                                  ! false: susp load ssus returned by formula
 logical           , intent(out) :: sbc_total     ! true: bed load magnitude returned by formula
@@ -49,9 +50,11 @@ logical           , intent(out) :: sbc_total     ! true: bed load magnitude retu
 !
 ! Local variables for input parameters
 !
+integer            :: i
 integer            :: l
 integer            :: m
 integer            :: n, nm
+integer, save      :: write_count = 0
 real(hp)           :: ag
 real(hp)           :: chezy
 real(hp)           :: d10, d50, d90, dss, dstar
@@ -66,6 +69,7 @@ real(hp)           :: ws
 real(hp)           :: zumod
 character(len=256) :: runid
 character(len=256) :: filenm
+character(len=256) :: error_message
 !
 ! Local variables: parameters
 !
@@ -110,6 +114,9 @@ logical            :: opened
 !
 if (max_integers < 4) then
    error_message = 'Insufficient integer values provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 nm      = dll_integers( 1) ! nm index of the grid cell
@@ -119,6 +126,9 @@ l       = dll_integers( 4) ! number of the sediment fraction in the computation
 !
 if (max_reals < 30) then
    error_message = 'Insufficient real values provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 timsec  = dll_reals( 1)    ! current time since reference time [s]
@@ -154,6 +164,9 @@ taub    = dll_reals(30)    ! bed shear stress [N/m2]
 !
 if (max_strings < 2) then
    error_message = 'Insufficient strings provided by delftflow'
+   do i=1,256
+      error_message_c(i) = error_message(i:i)
+   enddo
    return
 endif
 runid   = dll_strings( 1)  ! user-specified run-identification
@@ -161,6 +174,13 @@ filenm  = dll_strings( 2)  ! user-specified file name (keyword: InputFile)
 !
 !! executable statements -------------------------------------------------------
 !
+if (write_count < 100) then
+   write(*,*) 'plugin_delftflow_traform.dll : vrijn84_riv_77 : called'
+   write_count = write_count + 1
+   if (write_count == 100) then
+      write(*,*) 'plugin_delftflow_traform.dll : message suppressed'
+   endif
+endif
 ! The output argument error_message MUST have value ' ' to continue the calculation.
 !
 error_message = ' '
@@ -344,4 +364,9 @@ endif
     else
        sbc = 0.100_hp*acal_b*(delta)**0.5_hp*sqrt(ag)*d50**1.5_hp*dstar**(-0.3_hp)*t**1.5_hp
     endif
+
+    do i=1,256
+       error_message_c(i) = error_message(i:i)
+    enddo
+
 end subroutine vrijn84_riv_77

@@ -1,7 +1,7 @@
 subroutine clrdredge(istat, gddredge)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine clrdredge(istat, gddredge)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: clrdredge.f90 4783 2015-03-09 11:24:36Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/gdp/clrdredge.f90 $
+!  $Id: clrdredge.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/gdp/clrdredge.f90 $
 !!--description-----------------------------------------------------------------
 ! NONE
 !!--pseudo code and references--------------------------------------------------
@@ -77,6 +77,7 @@ subroutine clrdredge(istat, gddredge)
     if (associated(gddredge%dredge_prop)) then
        do i = 1, gddredge%nadred
           if (associated(gddredge%dredge_prop(i)%nm))             deallocate (gddredge%dredge_prop(i)%nm                  , STAT = istat)
+          if (associated(gddredge%dredge_prop(i)%nmglob))         deallocate (gddredge%dredge_prop(i)%nmglob              , STAT = istat)
           if (associated(gddredge%dredge_prop(i)%inm))            deallocate (gddredge%dredge_prop(i)%inm                 , STAT = istat)
           if (associated(gddredge%dredge_prop(i)%area))           deallocate (gddredge%dredge_prop(i)%area                , STAT = istat)
           if (associated(gddredge%dredge_prop(i)%hdune))          deallocate (gddredge%dredge_prop(i)%hdune               , STAT = istat)
@@ -96,6 +97,7 @@ subroutine clrdredge(istat, gddredge)
     if (associated(gddredge%dump_prop)) then
        do i = 1, gddredge%nadump
           if (associated(gddredge%dump_prop(i)%nm))               deallocate (gddredge%dump_prop(i)%nm                    , STAT = istat)
+          if (associated(gddredge%dump_prop(i)%nmglob))           deallocate (gddredge%dump_prop(i)%nmglob                , STAT = istat)
           if (associated(gddredge%dump_prop(i)%inm))              deallocate (gddredge%dump_prop(i)%inm                   , STAT = istat)
           if (associated(gddredge%dump_prop(i)%area))             deallocate (gddredge%dump_prop(i)%area                  , STAT = istat)
           if (associated(gddredge%dump_prop(i)%hdune))            deallocate (gddredge%dump_prop(i)%hdune                 , STAT = istat)

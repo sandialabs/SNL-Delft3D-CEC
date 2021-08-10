@@ -8,7 +8,7 @@ subroutine rdstru(lunmd     ,lundia    ,error     ,mdfrec    ,nrrec     , &
                 & cdwlsu    ,cdwlsv    , gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -32,8 +32,8 @@ subroutine rdstru(lunmd     ,lundia    ,error     ,mdfrec    ,nrrec     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdstru.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdstru.f90 $
+!  $Id: rdstru.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdstru.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Read rigid lid factor from MDF file
@@ -53,7 +53,6 @@ subroutine rdstru(lunmd     ,lundia    ,error     ,mdfrec    ,nrrec     , &
 !!--declarations----------------------------------------------------------------
     use precision
     use properties
-    use m_rdturbine, only: rdturbine, echoturbine
     !
     use globaldata
     !
@@ -135,7 +134,6 @@ subroutine rdstru(lunmd     ,lundia    ,error     ,mdfrec    ,nrrec     , &
     character(256)         :: fillwl !!  File name for Local Weirs
     character(256)         :: filppl !!  File name for Porous Plates
     character(256)         :: filrgs !!  File name for Rigid Sheets
-    character(256)         :: filtrb !!  File name for Turbines
     character(256)         :: filcdw 
 !
 !! executable statements -------------------------------------------------------
@@ -152,14 +150,6 @@ subroutine rdstru(lunmd     ,lundia    ,error     ,mdfrec    ,nrrec     , &
     !
     struct = .false.
     riglid = 1.0
-    !
-    filtrb = ' '
-    call prop_get(gdp%mdfile_ptr,'*','FilTrb',filtrb)
-    if (filtrb /= ' ') then
-       call rdturbine(filtrb, lundia, gdp%turbines, error)
-       if (error) return
-       call echoturbine(gdp%turbines, lundia)
-    endif
     !
     ! Look for Rigid lid factor
     !

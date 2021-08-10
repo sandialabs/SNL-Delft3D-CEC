@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -31,8 +31,6 @@ use precision_part               ! single/double precision
       use timers
 !
 !  module procedure(s)
-!
-use stop_exit_mod           ! explicit interface
 !
 implicit none               ! force explicit typing
 !
@@ -254,8 +252,10 @@ contains
       if (first) then
         first = .false.
         if(nolay /= 2) then
-           write(*,*) ' Nolay = ',nolay
-           stop ' Part presently works only for 2 layer model'
+          write(*,*) ' Nolay = ',nolay
+          write (*,*) ' Part presently works only for 2 layer model'
+          write( lun2,*) ' Part presently works only for 2 layer model'
+          call stop_exit(1)
         endif
 !
 !       either initialize pblay here,

@@ -10,6 +10,9 @@
 include $(top_srcdir)/common.am
 noinst_LTLIBRARIES = libdata_f.la
 
+AM_FCFLAGS += -fopenmp $(OPENMP_FCFLAGS)
+AM_FFLAGS += -fopenmp $(OPENMP_FFLAGS)
+
 #-------------------------------------------------------------------------------
 #Includes
 FMODULES += \
@@ -24,10 +27,7 @@ libdata_f_la_SOURCES = \
          file_info.f90 \
          modeldim.f90 \
          partmem.f90 \
-         global_data.f90 \
-         alloc.f90 \
-         dealloc.f90 \
-         dealloc_part.f90
+         alloc.f90
 
 #-------------------------------------------------------------------------------
 #Libraries

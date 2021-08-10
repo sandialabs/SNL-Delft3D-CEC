@@ -2,7 +2,7 @@ subroutine distance2(sferic    ,x1        ,y1        ,x2        ,y2        , &
                    & d12       )
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -26,8 +26,8 @@ subroutine distance2(sferic    ,x1        ,y1        ,x2        ,y2        , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: distance2.f90 5167 2015-06-04 11:03:01Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/ec_module/packages/ec_module/src/meteo/distance2.f90 $
+!  $Id: distance2.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/ec_module/packages/ec_module/src/meteo/distance2.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Calculates distance between two points on earth

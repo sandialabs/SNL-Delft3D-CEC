@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -75,7 +75,7 @@ contains
 !     logical unit numbers  : lun1 - unit nr delwaq - map-file
 !                             lun2 - output log file
 
-!     subroutines called    : srstop
+!     subroutines called    : stop_exit
 !                             putget
 !                             putget_chars
 
@@ -436,7 +436,7 @@ contains
             ilay = kpart(i)
             if ( ilay .gt. nolay ) then
                write ( lun2, 1000 ) subnam
-               call srstop(1)
+               call stop_exit(1)
             endif
             do isub = 1, nosubs
                if ( isfile(isub) .ne. 1 ) then

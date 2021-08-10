@@ -5,7 +5,7 @@
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="bin\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\..\..\utils_lgpl\delftio\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\ec_module\lib\$(ConfigurationName)\static" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\..\..\utils_lgpl\delftio\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\ec_module\lib\$(ConfigurationName)\static" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
@@ -15,7 +15,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="bin\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\..\..\..\utils_lgpl\delftio\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\ec_module\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\..\..\..\third_party_open\netcdf\lib\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\delftio\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\ec_module\lib\$(ConfigurationName)\static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
@@ -25,7 +25,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="bin\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\inifiles\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\inifiles\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
 				<Tool Name="VFLibrarianTool"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -34,8 +34,8 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|x64" OutputDirectory="bin\$(PlatformName)\$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\inifiles\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+		<Configuration Name="Release|x64" OutputDirectory="lib/$(PlatformName)/$(ConfigurationName)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\..\..\..\third_party_open\netcdf\lib\win32\x64\Release;..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\inifiles\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static" LocalVariableStorage="localStorageAutomatic" ModulePath="$(OutDir)/" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLibrarianTool" AdditionalOptions="/LTCG"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -50,11 +50,17 @@
 		<File RelativePath=".\src\datetime_to_string.f90"/>
 		<File RelativePath=".\src\filldm.f90"/>
 		<File RelativePath=".\src\flow_data.f90"/>
-		<File RelativePath=".\src\handles.f90"/>
 		<File RelativePath=".\src\hunt.f90"/>
 		<File RelativePath=".\src\indexx.f90"/>
 		<File RelativePath=".\src\ipon.f90"/>
 		<File RelativePath=".\src\mkmap.f90"/>
+		<File RelativePath=".\src\nc_check_err.f90"/>
+		<File RelativePath=".\src\nc_def_var.f90"/>
+		<File RelativePath=".\src\noextspaces.f90"/>
+		<File RelativePath=".\src\putgtc.f90"/>
+		<File RelativePath=".\src\putgti.f90"/>
+		<File RelativePath=".\src\putgtl.f90"/>
+		<File RelativePath=".\src\putgtr.f90"/>
 		<File RelativePath=".\src\rdsec.f90"/>
 		<File RelativePath=".\src\read_grids.f90"/>
 		<File RelativePath=".\src\skcoma.f90"/>
@@ -62,9 +68,7 @@
 		<File RelativePath=".\src\sort.f90"/>
 		<File RelativePath=".\src\swan_flow_grid_maps.f90"/>
 		<File RelativePath=".\src\swan_input.f90"/>
-		<File RelativePath=".\src\table_handles.f90"/>
-		<File RelativePath=".\src\tables.f90"/>
 		<File RelativePath=".\src\timdat.f90"/>
-		<File RelativePath=".\src\utilities.f90"/>
-		<File RelativePath=".\src\wave_data.f90"/></Filter></Files>
+		<File RelativePath=".\src\wave_data.f90"/>
+		<File RelativePath=".\src\wavestop.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

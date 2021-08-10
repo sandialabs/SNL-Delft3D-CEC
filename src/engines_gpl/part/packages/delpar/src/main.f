@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -21,47 +21,83 @@
 !!  of Stichting Deltares remain the property of Stichting Deltares. All
 !!  rights reserved.
 
-!
-! Wrapper for FORTRAN main program: PART
-!
-! Converted from C++ to fortran 17 dec 2014
-!
-
-      program delpar
+      program delpar_main
 
       implicit none
 
       integer                          :: argc
-      character(len=256)               :: filpar
+      character(len=256)               :: filepar
+      character(len=256)               :: fileerr
       character(len=256)               :: filename
       character(len=256)               :: runid
       logical                          :: exi
       integer(4)                       :: ioerr
       integer(4)                       :: i
+      integer(4)                       :: imdp
+      integer(4)                       :: iinp
 
 !     
-!     Call F90 routine dlmain (former main program)
-!     (Use a variety of methods to determine the
-!     name of the file that holds all relevant
-!     file names)
+!     Retrieve input filename, either from a file called 'runid.par' or as a command line argument
 !     
-      argc = iargc() + 1
-      if ( argc == 1 ) then
-         filpar = "runid.par"
-         inquire ( file = filpar , exist = exi )
+      fileerr = "delpar_error.log"
+      argc = command_argument_count()
+      if ( argc == 0 ) then
+         filepar = "runid.par"
+         inquire ( file = filepar , exist = exi )
          if ( exi ) then
-            open(9,file=filpar)
+            open(9,file=filepar)
             read(9,'(a)',iostat=ioerr) runid
-            if ( ioerr .ne. 0 ) runid = ' '
             close(9)
-            filename = trim(runid)//".mdp"
+            if ( ioerr .ne. 0 .or. runid.eq.' ') then
+               open(9,file=fileerr,status='replace')
+               write(*,'(a)',iostat=ioerr) 'ERROR: No commandline argument, and "runid.par" does not contain a runid'
+               write(9,'(a)',iostat=ioerr) 'ERROR: No commandline argument, and "runid.par" does not contain a runid'
+               close(9)
+               call stop_exit(1)
+            endif
+            imdp=index(runid, ".mdp") 
+            iinp=index(runid, ".inp")
+            if(imdp==0.and.iinp.eq.0) then
+               filename = trim(runid)//".mdp"
+            else if (iinp.ne.0) then
+               filename = runid(1:iinp-1)//".mdp"
+            else
+               filename = trim(runid)
+            end if
+            inquire ( file = filename , exist = exi )
+            if (.not. exi ) then
+               open(9,file=fileerr,status='replace')
+               write(*,'(3a)',iostat=ioerr) 'ERROR: Input file from "runid.par" named "', trim(filename), '" was not found'
+               write(9,'(3a)',iostat=ioerr) 'ERROR: Input file from "runid.par" named "', trim(filename), '" was not found'
+               close(9)
+               call stop_exit(1)
+            endif
          else
-            filename = "filename.dat"
+            open(9,file=fileerr,status='replace')
+            write(*,'(a)',iostat=ioerr) 'ERROR: No commandline argument, and "runid.par" not found'
+            write(9,'(a)',iostat=ioerr) 'ERROR: No commandline argument, and "runid.par" not found'
+            close(9)
+            call stop_exit(1)
          endif
       else
-          call getarg(1, filename)
+         call get_command_argument(1, filename)
+         imdp=index(filename, ".mdp") 
+         iinp=index(filename, ".inp")
+         if(imdp==0.and.iinp.eq.0) then
+            filename = trim(filename)//".mdp"
+         else if (iinp.ne.0) then
+            filename = filename(1:iinp-1)//".mdp"
+         endif
+         inquire ( file = filename , exist = exi )
+         if (.not. exi ) then
+            open(9,file=fileerr,status='replace')
+            write(*,'(3a)',iostat=ioerr) 'ERROR: Input file from commandline argument named "', trim(filename), '" was not found'
+            write(9,'(3a)',iostat=ioerr) 'ERROR: Input file from commandline argument named "', trim(filename), '" was not found'
+            close(9)
+            call stop_exit(1)
+         endif
       end if
       
-      call dlmain (filename)
+      call delpar (filename)
 
       end program

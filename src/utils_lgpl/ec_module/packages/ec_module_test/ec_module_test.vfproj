@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{0E8CD687-644C-4127-9F8C-8B0AB3B65D31}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" OutputDirectory="$(PlatformName)\$(ConfigurationName)" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)third_party_open\netcdf\netCDF 4.6.1\lib;$(UniversalCRTSdkDir)Lib\10.0.10586.0\ucrt\x86" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="netcdf.lib wsock32.lib netapi32.lib comctl32.lib kernel32.lib   user32.lib Shlwapi.lib Gdi32.lib Winspool.lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32" OutputDirectory="$(PlatformName)\$(ConfigurationName)" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)third_party_open\netcdf\netCDF 4.6.1\lib;$(UniversalCRTSdkDir)Lib\10.0.10586.0\ucrt\x86" SubSystem="subSystemConsole" AdditionalDependencies="netcdf.lib wsock32.lib netapi32.lib comctl32.lib kernel32.lib   user32.lib Shlwapi.lib Gdi32.lib Winspool.lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Debug|x64">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Diagnostics="diagnosticsShowAll" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)third_party_open\netcdf\netCDF 4.6.1\lib;$(UniversalCRTSdkDir)Lib\10.0.10586.0\ucrt\x64" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="netcdf.lib wsock32.lib netapi32.lib comctl32.lib kernel32.lib   user32.lib Shlwapi.lib Gdi32.lib Winspool.lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;xcopy.exe&quot; /D /Y /R &quot;$(SolutionDir)\third_party_open\netcdf\netCDF 4.6.1\bin\*.dll&quot; &quot;$(OutDir)&quot;\ &gt; nul"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|x64">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(SolutionDir)third_party_open\netcdf\netCDF 4.6.1\lib;$(UniversalCRTSdkDir)Lib\10.0.10586.0\ucrt\x64" SubSystem="subSystemConsole" AdditionalDependencies="netcdf.lib wsock32.lib netapi32.lib comctl32.lib kernel32.lib   user32.lib Shlwapi.lib Gdi32.lib Winspool.lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;xcopy.exe&quot; /D /Y /R &quot;$(SolutionDir)\third_party_open\netcdf\netCDF 4.6.1\bin\*.dll&quot; &quot;$(OutDir)&quot;\ &gt; nul"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath=".\src\cmdlargs.f90"/>
+		<File RelativePath=".\src\ec_module_test.F90"/>
+		<File RelativePath=".\src\m_ec_module_test.F90"/>
+		<File RelativePath=".\src\m_ec_unit_tests.f90"/></Filter>
+		<File RelativePath=".\ReadMe.txt"/></Files>
+	<Globals/></VisualStudioProject>

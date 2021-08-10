@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -30,7 +30,7 @@
 !
 !-- VERSION HISTORY ----------------------------------------------------------
 !
-!   $URL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/m_ixset.F90 $
+!   $URL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/m_ixset.F90 $
 !   $Revision: 42 $, $Date: 2007-11-26 15:20:20 +0100 (Mon, 26 Nov 2007) $
 !
 !   Programmer: Edwin Vollebregt (VORtech)
@@ -209,14 +209,14 @@ integer                 :: idebug=0
          write(LOUT,*) 'ixset_hdnl: an index-set with name "',trim(namixs),&
              '" was found but should not (yet) exist.'
       endif
-      if (iierr.eq.-IFATAL) stop
+      if (iierr.eq.-IFATAL) call srstop(1)
       ixset_hndl = iset
    else
       if (iierr.eq.IWARN .or. iierr.eq.IFATAL) then
          write(LOUT,*) 'ixset_hndl: Error: cannot find index-set with name="', &
                  trim(namixs),'"'
       endif
-      if (iierr.eq.IFATAL) stop
+      if (iierr.eq.IFATAL) call srstop(1)
       ixset_hndl = IDUNNO
    endif
    if (idebug.ge.2) write(LOUT,*) 'ixset_hndl: returning hndl=',ixset_hndl
@@ -284,7 +284,7 @@ type(t_ixset), pointer  :: set
    if (iset.le.0 .or. iset.gt.nindst) then
       write(LOUT,*) 'ixset_getprops: Error: handle to indexset',iset,&
                     ' out of range 1..',nindst
-      stop
+      call srstop(1)
    endif
 
    set => indset(iset)
@@ -407,7 +407,7 @@ integer                 :: iel, ioffs
    if (iset.le.0 .or. iset.gt.nindst) then
       write(LOUT,*) 'ixset_print: Error: handle to index-set',iset,&
                     ' out of range 1..',nindst
-      stop
+      call srstop(1)
    endif
 
    set => indset(iset)
@@ -569,7 +569,7 @@ type(t_ixset), dimension(:), pointer :: wrk_indset
    if (.not.associated(indset)) then
       write(LOUT,*) 'ixset_define: Error: CouPLib data-structures have not ', &
                  'been initialized properly!'
-      stop
+      call srstop(1)
    endif
 
 !  start timing of indexset definition
@@ -582,7 +582,7 @@ type(t_ixset), dimension(:), pointer :: wrk_indset
    if (iset.ne.IDUNNO) then
       write(LOUT,*) 'ixset_define: Error: index-set "',trim(namixs), &
                  '" already exists.'
-      stop
+      call srstop(1)
    endif
 
 !  Check the restrictions of this routine
@@ -597,18 +597,18 @@ type(t_ixset), dimension(:), pointer :: wrk_indset
          write(LOUT,*) 'ixset_define: Error: size of ownership-array is not ', &
             'correct. Should be nelem=',nelem,' elements long, actual size=', &
             size(iowner,1),' elements.'
-         stop
+         call srstop(1)
       endif
    endif
    if (present(ndimgl) .or. present(icglob)) then
       write(LOUT,*) 'ixset_define: Error: global coordinates (labels) are ', &
          'not yet supported'
-      stop
+      call srstop(1)
    endif
    if (present(ndimdt) .or. present(locsiz) .or. present(icloc)) then
       write(LOUT,*) 'ixset_define: Error: local (storage) coordinates are ', &
          'not yet supported'
-      stop
+      call srstop(1)
    endif
 
 !  Re-allocate the indset-table when needed
@@ -744,7 +744,7 @@ integer                              :: idebug=0
    if (iprd.ne.IDUNNO) then
       write(LOUT,*) 'ixset_product: Error: index-set "',trim(namprd), &
                  '" already exists.'
-      stop
+      call srstop(1)
    endif
 
 !  get handles to index-sets that are factors in the product
@@ -809,7 +809,7 @@ integer                              :: idebug=0
          write(LOUT,*) 'ixset_product: Error: in the definition of product-',&
                'set "',trim(namprd),'" factor',ifac,' is already a product of',&
                nfacsb,' factors, which is not allowed.'
-         stop
+         call srstop(1)
       endif
 
 !      - adjust properties of the product-set
@@ -823,7 +823,7 @@ integer                              :: idebug=0
             write(LOUT,*) 'ixset_product: Error: second distributed factor ',&
                'found in definition of product-set "',trim(namprd),'". ',&
                'At most one factor of a product may be a distributed index-set.'
-            stop
+            call srstop(1)
          else
             new%ifcdst = iset(ifac)
          endif

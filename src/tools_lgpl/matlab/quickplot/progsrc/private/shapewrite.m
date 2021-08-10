@@ -39,34 +39,34 @@ function shapewrite(filename,varargin)
 %   See also SHAPE, DBASE.
 
 %----- LGPL --------------------------------------------------------------------
-%                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
-%                                                                               
-%   This library is free software; you can redistribute it and/or                
-%   modify it under the terms of the GNU Lesser General Public                   
-%   License as published by the Free Software Foundation version 2.1.                         
-%                                                                               
-%   This library is distributed in the hope that it will be useful,              
-%   but WITHOUT ANY WARRANTY; without even the implied warranty of               
-%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU            
-%   Lesser General Public License for more details.                              
-%                                                                               
-%   You should have received a copy of the GNU Lesser General Public             
-%   License along with this library; if not, see <http://www.gnu.org/licenses/>. 
-%                                                                               
-%   contact: delft3d.support@deltares.nl                                         
-%   Stichting Deltares                                                           
-%   P.O. Box 177                                                                 
-%   2600 MH Delft, The Netherlands                                               
-%                                                                               
-%   All indications and logos of, and references to, "Delft3D" and "Deltares"    
-%   are registered trademarks of Stichting Deltares, and remain the property of  
-%   Stichting Deltares. All rights reserved.                                     
-%                                                                               
+%
+%   Copyright (C) 2011-2020 Stichting Deltares.
+%
+%   This library is free software; you can redistribute it and/or
+%   modify it under the terms of the GNU Lesser General Public
+%   License as published by the Free Software Foundation version 2.1.
+%
+%   This library is distributed in the hope that it will be useful,
+%   but WITHOUT ANY WARRANTY; without even the implied warranty of
+%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%   Lesser General Public License for more details.
+%
+%   You should have received a copy of the GNU Lesser General Public
+%   License along with this library; if not, see <http://www.gnu.org/licenses/>.
+%
+%   contact: delft3d.support@deltares.nl
+%   Stichting Deltares
+%   P.O. Box 177
+%   2600 MH Delft, The Netherlands
+%
+%   All indications and logos of, and references to, "Delft3D" and "Deltares"
+%   are registered trademarks of Stichting Deltares, and remain the property of
+%   Stichting Deltares. All rights reserved.
+%
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/shapewrite.m $
-%   $Id: shapewrite.m 5306 2015-07-31 08:13:59Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/shapewrite.m $
+%   $Id: shapewrite.m 65778 2020-01-14 14:07:42Z mourits $
 
 DataType=5; % polygon
 IncludeID=1;
@@ -90,7 +90,7 @@ if iscell(IN{1})
     NShp=length(XY);
     for i=1:NShp
         if size(XY{i},2)~=2
-           error('Invalid number of columns in XY')
+            error('Invalid number of columns in XY')
         end
     end
     Patch=[];
@@ -119,8 +119,8 @@ else
         nPntPerPatch = sum(~isnan(Patch),2);
         NPnt=min(nPntPerPatch);
         offset=1;
-        if NPnt<=2
-            error('Invalid number of columns in Patch, should be at least 3')
+        if DataType==5 && NPnt<=2
+            error('Number of columns of Patch array too small: for polygons the number of nodes should be at least 3')
         end
     end
     %data3d=size(XY,2)==3;
@@ -186,32 +186,26 @@ switch DataType
         NParts = ones(length(XY),1);
         Start  = zeros(length(XY),1);
         if iscell(XY)
-           for i=1:NShp
-              j = 1;
-              while ~isequal(XY{i}(end,:),XY{i}(j,:))
-                 % check if polygon consists of multiple parts
-                 Matching = all(XY{i}(j+1:end,:)-repmat(XY{i}(j,:),size(XY{i},1)-j,1)==0,2);
-                 if any(Matching)
-                    NParts(i) = NParts(i)+1;
-                    j = j+min(find(Matching))+1;
-                 else
-                    XY{i}(end+1,:)=XY{i}(j,:);
-                 end
-              end
-              XY{i}(all(abs(diff(XY{i}))<1e-8,2),:)=[]; % remove double values
-              NParts(i) = 1;
-              j = 1;
-              while ~isequal(XY{i}(end,:),XY{i}(j,:))
-                 % check if polygon consists of multiple parts
-                 Matching = all(XY{i}(j+1:end,:)-repmat(XY{i}(j,:),size(XY{i},1)-j,1)==0,2);
-                 if any(Matching)
-                    NParts(i) = NParts(i)+1;
-                    j = j+min(find(Matching))+1;
-                    Start(i,NParts(i)) = j-1;
-                 else
-                    XY{i}(end,:)=XY{i}(j,:);
-                 end
-              end
+            for i=1:NShp
+                xy = XY{i};
+                %
+                xy(all(abs(diff(xy))<1e-8,2),:)=[]; % remove double values
+                xy(all(isnan(xy),2),:)=[]; % remove NaN separators - they shouldn't end up in the Shape file
+                %
+                j = 1;
+                while ~isequal(xy(end,:),xy(j,:))
+                    % check if polygon consists of multiple parts
+                    Matching = all(xy(j+1:end,:)-repmat(xy(j,:),size(xy,1)-j,1)==0,2);
+                    if any(Matching)
+                        NParts(i) = NParts(i)+1;
+                        j = j+min(find(Matching))+1;
+                        Start(i,NParts(i)) = j-1;
+                    else
+                        xy(end+1,:)=xy(j,:);
+                    end
+                end
+                %
+                XY{i} = xy;
             end
         else
             LastPnt = Patch((1:NShp)'+NShp*(nPntPerPatch-1));
@@ -236,8 +230,8 @@ switch DataType
 end
 if length(filename)>3
     switch lower(filename(end-3:end))
-       case {'.shp','.shx','.dbf'}
-          filename=filename(1:end-4);
+        case {'.shp','.shx','.dbf'}
+            filename=filename(1:end-4);
     end
 end
 shapenm=[filename,'.shp'];
@@ -274,11 +268,19 @@ if iscell(XY)
         ranges(3)=max(ranges(3),max(XY{i}(:,1)));
         ranges(4)=max(ranges(4),max(XY{i}(:,2)));
     end
-else
+elseif DataType==1
     ranges(1)=min(XY(:,1));
     ranges(2)=min(XY(:,2));
     ranges(3)=max(XY(:,1));
     ranges(4)=max(XY(:,2));
+else
+    pMin = min(Patch(:));
+    Patch(isnan(Patch)) = pMin;
+    xy = XY(Patch,:);
+    ranges(1)=min(xy(:,1));
+    ranges(2)=min(xy(:,2));
+    ranges(3)=max(xy(:,1));
+    ranges(4)=max(xy(:,2));
 end
 fwrite(fid,ranges,'float64');
 fwrite(fidx,ranges,'float64');
@@ -287,11 +289,11 @@ fidx=fopen(shapeidxnm,'r+','b'); fseek(fidx,0,1);
 %
 FileStorage='A'; % (A - ascii or B - binary) % Shape files require dBase III file which doesn't support binary data
 switch FileStorage
-   case 'A'
-      WIDTH=19;
-      VALFORMAT='%19.8f';
-   case 'B'
-      WIDTH=8;
+    case 'A'
+        WIDTH=19;
+        VALFORMAT='%19.8f';
+    case 'B'
+        WIDTH=8;
 end
 fidb=fopen(shapedbf,'w','l');
 fwrite(fidb,3,'uint8');
@@ -322,23 +324,23 @@ for i=1:IncludeID+StoreVal
     end
     fwrite(fidb,Str,'uchar');
     if IncludeID && i==1
-       fwrite(fidb,'N','uchar');
-       fwrite(fidb,[0 0 0 0],'uint8'); % memory address, record offset, ignored in latest versions
-       fwrite(fidb,11,'uint8'); % Width
-       fwrite(fidb,0,'uint8'); % Type='C' also Width
+        fwrite(fidb,'N','uchar');
+        fwrite(fidb,[0 0 0 0],'uint8'); % memory address, record offset, ignored in latest versions
+        fwrite(fidb,11,'uint8'); % Width
+        fwrite(fidb,0,'uint8'); % Type='C' also Width
     else
-       switch FileStorage
-          case 'A'
-             fwrite(fidb,'N','uchar');
-             fwrite(fidb,[0 0 0 0],'uint8'); % memory address, record offset, ignored in latest versions
-             fwrite(fidb,WIDTH,'uint8'); % Width
-             fwrite(fidb,8,'uint8'); % Type='C' also Width
-          case 'B'
-             fwrite(fidb,'O','uchar');
-             fwrite(fidb,[0 0 0 0],'uint8'); % memory address, record offset, ignored in latest versions
-             fwrite(fidb,WIDTH,'uint8'); % Width
-             fwrite(fidb,0,'uint8'); % Type='C' also Width
-       end
+        switch FileStorage
+            case 'A'
+                fwrite(fidb,'N','uchar');
+                fwrite(fidb,[0 0 0 0],'uint8'); % memory address, record offset, ignored in latest versions
+                fwrite(fidb,WIDTH,'uint8'); % Width
+                fwrite(fidb,8,'uint8'); % Type='C' also Width
+            case 'B'
+                fwrite(fidb,'O','uchar');
+                fwrite(fidb,[0 0 0 0],'uint8'); % memory address, record offset, ignored in latest versions
+                fwrite(fidb,WIDTH,'uint8'); % Width
+                fwrite(fidb,0,'uint8'); % Type='C' also Width
+        end
     end
     fwrite(fidb,[0 0],'uint8'); % reserved
     fwrite(fidb,0,'uint8'); % dBase IV,V work area ID
@@ -349,23 +351,23 @@ for i=1:IncludeID+StoreVal
 end
 fwrite(fidb,13,'uint8'); % end of header = 13
 switch FileStorage
-   case 'A'
-       if IncludeID
-           fprintf(fidb,[' %11i' repmat(VALFORMAT,1,StoreVal)],[1:NShp;Val']);
-       else
-           fprintf(fidb,[' ' repmat(VALFORMAT,1,StoreVal)],Val');
-       end
-   case 'B'
-       off = ftell(fidb);
-       BINARY = repmat('xxxxxxxx',1,StoreVal);
-       if IncludeID
-           fprintf(fidb,[' %11i' BINARY],1:NShp);
-       else
-           fprintf(fidb,['%c' BINARY],repmat(' ',1,NShp));
-       end
-       fseek(fidb,0,-1); % search only works if we go back to beginning first
-       fseek(fidb,off,-1);
-       fwrite(fidb,Val',sprintf('%i*float64',StoreVal),1+11*IncludeID);
+    case 'A'
+        if IncludeID
+            fprintf(fidb,[' %11i' repmat(VALFORMAT,1,StoreVal)],[1:NShp;Val']);
+        else
+            fprintf(fidb,[' ' repmat(VALFORMAT,1,StoreVal)],Val');
+        end
+    case 'B'
+        off = ftell(fidb);
+        BINARY = repmat('xxxxxxxx',1,StoreVal);
+        if IncludeID
+            fprintf(fidb,[' %11i' BINARY],1:NShp);
+        else
+            fprintf(fidb,['%c' BINARY],repmat(' ',1,NShp));
+        end
+        fseek(fidb,0,-1); % search only works if we go back to beginning first
+        fseek(fidb,off,-1);
+        fwrite(fidb,Val',sprintf('%i*float64',StoreVal),1+11*IncludeID);
 end
 fclose(fidb);
 %

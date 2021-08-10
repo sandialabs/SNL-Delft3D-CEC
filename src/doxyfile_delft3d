@@ -588,6 +588,7 @@ WARN_LOGFILE           =
 
 INPUT                  = engines_gpl \
                          plugins_lgpl \
+                         utils_gpl \
                          utils_lgpl \
                          tools_gpl
 

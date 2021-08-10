@@ -38,7 +38,6 @@ unit_tests_waq_LDADD = \
     $(top_builddir)/utils_lgpl/delftio/packages/delftio_version_number/src/libdelftio_version_number.la \
     $(top_builddir)/engines_gpl/waq/packages/waq_io/src/ods/libods.la \
     $(top_builddir)/utils_lgpl/nefis/packages/nefis/src/libnefis.la \
-    $(top_builddir)/engines_gpl/waq/packages/waq_utils_f/src/interact/libinteract.la \
     $(top_builddir)/engines_gpl/waq/packages/waq_utils_c/src/libwaq_utils_c.la \
     $(top_builddir)/engines_gpl/waq/packages/delwaq2_version_number/src/libdelwaq2_version_number.la \
     $(top_builddir)/utils_lgpl/nefis/packages/nefis_version_number/src/libnefis_version_number.la \

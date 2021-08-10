@@ -13,5 +13,6 @@ INCLUDES = \
 #Libraries
 
 esm_info_LDADD = \
-	$(top_builddir)/utils_lgpl/esmfsm/packages/esmfsm/src/fsm/libESMFSM.la
+	$(top_builddir)/utils_lgpl/esmfsm/packages/esmfsm/src/fsm/libESMFSM.la \
+	-lpthread
 

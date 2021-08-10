@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -34,7 +34,7 @@
 !
 !-- VERSION HISTORY ----------------------------------------------------------
 !
-!   $URL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/m_prcgrp.F90 $
+!   $URL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/waq/packages/waq_utils_f/src/mod_couplib/m_prcgrp.F90 $
 !   $Revision: 42 $, $Date: 2007-11-26 15:20:20 +0100 (Mon, 26 Nov 2007) $
 !
 !   Programmer: Edwin Vollebregt (VORtech)
@@ -154,7 +154,7 @@ integer           :: supported_level
       call mpi_init_thread(mpi_thread_funneled, supported_level, ierr)
       if ( supported_level < mpi_thread_funneled ) then
           write(*,*) 'MPI and OpenMP do not mix! Sorry!'
-          stop
+          call srstop(1)
       endif
 
 !     Determine total number of processes

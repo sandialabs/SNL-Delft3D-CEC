@@ -1,25 +1,36 @@
 function varargout=ai_ungen(cmd,varargin)
 %AI_UNGEN Read/write ArcInfo (un)generate files.
-%   INFO=AI_UNGEN('open',FILENAME) opens the specified file and reads its
-%   contents. It returns a structure to be used in AI_UNGEN('read',...)
+%   FILEINFO = AI_UNGEN('open',FILENAME) opens the specified file and reads
+%   its contents. It returns a structure to be used in AI_UNGEN('read',...)
 %   calls.
 %
-%   [X,Y]=AI_UNGEN('read',INFO) returns the X and Y data in the file. If
-%   instead of the INFO structure a file name is provided then the
+%   XY = AI_UNGEN('readc',FILEINFO,IDX) reads the objects listed by IDX
+%   from the file given by FILEINFO. It returns a cell array XY in which
+%   every entry XY{I} is an Nx2 matrix containing N pairs of X,Y
+%   coordinates representing object I. If instead of the FILEINFO structure
+%   -- as obtained from a AI_UNGEN('open',...) call -- a file name is
+%   provided then the indicated file is first opened. If IDX isn't
+%   specified or equal to ':' then the coordinates of all objects are
+%   returned.
+%
+%   [X,Y] = AI_UNGEN('read',FILEINFO) returns the X and Y data in the file.
+%   If instead of the INFO structure a file name is provided then the
 %   indicated file is opened and the data is returned. If only one output
 %   argument is requested then both X and Y coordinates are returned in the
-%   same array: XY=AI_UNGEN('read',INFO)
+%   same array: XY = AI_UNGEN('read',FILEINFO)
 %
 %   AI_UNGEN('write',FILENAME,X,Y) writes the line segments to file. X,Y
 %   should either contain NaN separated line segments or X,Y cell arrays
 %   containing the line segments. Alternatively, one may provide X and Y
 %   coordinates in one array: AI_UNGEN('write',FILENAME,XY)
 %
-%   AI_UNGEN(...,'-1') doesn't write line segments of length 1.
+%   AI_UNGEN('write',...,'-1') doesn't write line segments of length 1.
+%
+%   See Also: BNA, LANDBOUNDARY, DXF.
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -44,8 +55,8 @@ function varargout=ai_ungen(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/ai_ungen.m $
-%   $Id: ai_ungen.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/ai_ungen.m $
+%   $Id: ai_ungen.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargout>0
     varargout=cell(1,nargout);
@@ -57,8 +68,10 @@ switch cmd
     case 'open'
         Out=Local_open_file(varargin{:});
         varargout{1}=Out;
+    case 'readc'
+        varargout{1}=Local_read_file('cell',varargin{:});
     case 'read'
-        Out=Local_read_file(varargin{:});
+        Out=Local_read_file('array',varargin{:});
         if nargout==1
             varargout{1}=Out;
         elseif nargout>1
@@ -311,7 +324,7 @@ switch T.SubType
     case 'circle'
         nel=length(T.Seg)*(NPointPerCircle+2);
     case 'donut'
-        nel=length(T.Seg)*(2*(NPointPerCircle+1)+1);
+        nel=length(T.Seg)*2*(NPointPerCircle+2);
 end
 T.TotalNPnt=nel-1;
 
@@ -320,27 +333,59 @@ function N=NPointPerCircle
 N=36;
 
 
-function Data=Local_read_file(varargin)
-if nargin==1 && isstruct(varargin{1})
-    T=varargin{1};
+function Data=Local_read_file(tp,varargin)
+if nargin==1
+    T=Local_open_file;
 else
-    T=Local_open_file(varargin{:});
+    if isstruct(varargin{1})
+        T=varargin{1};
+    else
+        T=Local_open_file(varargin{1});
+    end
+end
+if nargin<=2 || isequal(varargin{2},':')
+    objects = 1:length(T.Seg);
+else
+    objects = varargin{2};
 end
 
-nel=T.TotalNPnt;
+if strcmp(T.SubType,'point')
+    nel = length(objects);
+    Data = NaN(nel,2);
+    for i = 1:nel
+        Data(i,:) = T.Seg(objects(i)).Coord;
+    end
+    return
+end
 
-Data=repmat(NaN,nel,2);
-offset=0;
+cellData = strcmp(tp,'cell');
+if cellData
+    Data = cell(1,length(objects));
+else
+    switch T.SubType
+        case {'line','polygon'}
+            nel = 0;
+            for i = objects
+                t1=size(T.Seg(i).Coord,1);
+                nel = nel+t1+1;
+            end
+        case 'rectangle'
+            nel = (5+1) * length(objects);
+        case 'circle'
+            nel = (NPointPerCircle+1) * length(objects);
+        case 'donut'
+            nel = (2*NPointPerCircle+2) * length(objects);
+    end
+    offset = 0;
+    Data = NaN(nel,2);
+end
+
 alpha=2*pi*[0:NPointPerCircle-1 0]'/NPointPerCircle;
 sina=sin(alpha);
 cosa=cos(alpha);
-for i=1:length(T.Seg)
-    Coord=T.Seg(i).Coord;
+for i = 1:length(objects)
+    Coord = T.Seg(objects(i)).Coord;
     switch T.SubType
-        case 'point'
-            Data(offset+1,:)=Coord;
-            offset=offset+1;
-            continue
         case {'line','polygon'}
         case 'rectangle'
             Coord=[Coord(1:2);Coord([1 4]);Coord(3:4);Coord([3 2]);Coord(1:2)];
@@ -348,11 +393,16 @@ for i=1:length(T.Seg)
             Coord=[Coord(1)+Coord(3)*sina Coord(2)+Coord(3)*cosa];
         case 'donut'
             Coord=[Coord(1)+Coord(4)*sina Coord(2)+Coord(4)*cosa
+                NaN NaN
                 Coord(1)+Coord(3)*sina Coord(2)+Coord(3)*cosa];
     end
-    t1=size(Coord,1);
-    Data(offset+(1:t1),:)=Coord;
-    offset=offset+t1+1;
+    if cellData
+        Data{i} = Coord;
+    else
+        t1 = size(Coord,1);
+        Data(offset+(1:t1),:) = Coord;
+        offset = offset+t1+1;
+    end
 end
 
 

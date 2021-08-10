@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -56,6 +56,7 @@
 !                           lun( 2) = unit system-intermediate file
 
       use rd_token     !   tokenized reading
+      use dlwq0t_data
       use timers       !   performance timers
       implicit none
 
@@ -176,6 +177,10 @@
          endif
       endif
 
+!     Copy timers data to dlwqt0_data
+      dlwq0t_otime  = otime 
+      dlwq0t_isfact = isfact  
+
 !     Read number of transported and number of passive systems
 
       if ( gettoken ( nosys , ierr2 ) .gt. 0 ) goto 100
@@ -207,7 +212,10 @@
          if ( isys .eq. notot .and. ifound .eq. 2 ) exit
          if ( ifound .ne. 0 ) goto 100
          if ( itype .eq. 1 ) then                  ! a string was found. must be *n
-            if ( cdummy(1:1) .ne. '*' ) goto 100   ! only a multiplication is accepted
+            if ( cdummy(1:1) .ne. '*' ) then       ! only a multiplication is accepted
+               write( lunut, 2170 ) trim(cdummy)
+               goto 100
+            endif
             read ( cdummy(2:), * ) imult(isys)
             nomult = nomult + 1
             intread = .false.
@@ -342,6 +350,7 @@
  2130 format ( /' ERROR. system name not unique')
  2140 format (      I5 , 5X , A20 )
  2150 format ( /' ERROR. End of file on unit:',I3,/' Filename = ',A )
- 2160 format ( /' ERROR reading file on unit:',I3,/' Filename = ',A )
+ 2160 format ( /' ERROR reading file on unit:',I3,' - first line invalid. Please check',/' Filename = ',A )
+ 2170 format ( /' ERROR encountered invalid repeat count - should start with an asterisk (*): ',A )
 
       end

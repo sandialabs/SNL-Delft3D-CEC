@@ -1,7 +1,7 @@
 subroutine gdp_dealloc(gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine gdp_dealloc(gdp)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: gdp_dealloc.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/gdp/gdp_dealloc.f90 $
+!  $Id: gdp_dealloc.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/gdp/gdp_dealloc.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! NONE
@@ -299,10 +299,13 @@ subroutine gdp_dealloc(gdp)
     deallocate (gdp%gdpostpr , STAT = istat)
     deallocate (gdp%gdrestart, STAT = istat)
     if (gdp%gdrtc%rtcmod /= noRTC) then
-       if (associated(gdp%gdrtc%mnrtcsta))   deallocate (gdp%gdrtc%mnrtcsta  , STAT = istat)
-       if (associated(gdp%gdrtc%namrtcsta))  deallocate (gdp%gdrtc%namrtcsta , STAT = istat)
-       if (associated(gdp%gdrtc%zrtcsta))    deallocate (gdp%gdrtc%zrtcsta   , STAT = istat)
-       if (associated(gdp%gdrtc%s1rtcsta))   deallocate (gdp%gdrtc%s1rtcsta  , STAT = istat)
+       if (associated(gdp%gdrtc%mnrtcsta))    deallocate (gdp%gdrtc%mnrtcsta   , STAT = istat)
+       if (associated(gdp%gdrtc%mnrtcsta_gl)) deallocate (gdp%gdrtc%mnrtcsta_gl, STAT = istat)
+       if (associated(gdp%gdrtc%inodertcsta)) deallocate (gdp%gdrtc%inodertcsta, STAT = istat)
+       if (associated(gdp%gdrtc%namrtcsta))   deallocate (gdp%gdrtc%namrtcsta  , STAT = istat)
+       if (associated(gdp%gdrtc%r0rtcsta))    deallocate (gdp%gdrtc%r0rtcsta   , STAT = istat)
+       if (associated(gdp%gdrtc%s1rtcsta))    deallocate (gdp%gdrtc%s1rtcsta   , STAT = istat)
+       if (associated(gdp%gdrtc%zrtcsta))     deallocate (gdp%gdrtc%zrtcsta    , STAT = istat)
     endif
     deallocate (gdp%gdrtc, STAT = istat)
     if (localscour) then

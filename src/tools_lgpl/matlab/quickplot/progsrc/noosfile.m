@@ -8,34 +8,34 @@ function [Out1,Out2] = noosfile(cmd,varargin)
 
 
 %----- LGPL --------------------------------------------------------------------
-%                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
-%                                                                               
-%   This library is free software; you can redistribute it and/or                
-%   modify it under the terms of the GNU Lesser General Public                   
-%   License as published by the Free Software Foundation version 2.1.                         
-%                                                                               
-%   This library is distributed in the hope that it will be useful,              
-%   but WITHOUT ANY WARRANTY; without even the implied warranty of               
-%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU            
-%   Lesser General Public License for more details.                              
-%                                                                               
-%   You should have received a copy of the GNU Lesser General Public             
-%   License along with this library; if not, see <http://www.gnu.org/licenses/>. 
-%                                                                               
-%   contact: delft3d.support@deltares.nl                                         
-%   Stichting Deltares                                                           
-%   P.O. Box 177                                                                 
-%   2600 MH Delft, The Netherlands                                               
-%                                                                               
-%   All indications and logos of, and references to, "Delft3D" and "Deltares"    
-%   are registered trademarks of Stichting Deltares, and remain the property of  
-%   Stichting Deltares. All rights reserved.                                     
-%                                                                               
+%
+%   Copyright (C) 2011-2020 Stichting Deltares.
+%
+%   This library is free software; you can redistribute it and/or
+%   modify it under the terms of the GNU Lesser General Public
+%   License as published by the Free Software Foundation version 2.1.
+%
+%   This library is distributed in the hope that it will be useful,
+%   but WITHOUT ANY WARRANTY; without even the implied warranty of
+%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%   Lesser General Public License for more details.
+%
+%   You should have received a copy of the GNU Lesser General Public
+%   License along with this library; if not, see <http://www.gnu.org/licenses/>.
+%
+%   contact: delft3d.support@deltares.nl
+%   Stichting Deltares
+%   P.O. Box 177
+%   2600 MH Delft, The Netherlands
+%
+%   All indications and logos of, and references to, "Delft3D" and "Deltares"
+%   are registered trademarks of Stichting Deltares, and remain the property of
+%   Stichting Deltares. All rights reserved.
+%
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/noosfile.m $
-%   $Id: noosfile.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/noosfile.m $
+%   $Id: noosfile.m 65778 2020-01-14 14:07:42Z mourits $
 
 switch lower(cmd)
     case 'open'
@@ -61,108 +61,111 @@ fid = fopen(filename,'r');
 if fid<0
     error('Could not open file %s',filename)
 end
-
-i = 1;
-anyheader = 0;
-while ~feof(fid)
-    %
-    % parse header
-    %
-    % #------------------------------------------------------
-    % # Timeseries retrieved from the MATROOS series database
-    % # Created at Mon Nov 19 12:07:20 CET 2007
-    % #------------------------------------------------------
-    % # Location    : hoekvanholland
-    % # Position    : (4.120118,51.979135)
-    % # Source      : observed
-    % # Unit        : waterlevel
-    % # Analyse time: most recent
-    % # Timezone    : GMT
-    % #------------------------------------------------------
-    %
-    Series(i).location = 'unspecified';
-    Series(i).x = NaN;
-    Series(i).y = NaN;
-    Series(i).source = 'unspecified';
-    Series(i).unit = 'unspecified';
-    Series(i).analysis_time = 'unspecified';
-    Series(i).timezone = 'MET';
-    missval = [];
-    %Series(i).header_offset = ftell(fid);
-    %
-    header = 1;
-    while header && ~feof(fid)
-        loc = ftell(fid);
-        line = deblank2(fgetl(fid));
-        if isempty(line)
-            % skip empty lines?
-        elseif line(1)=='#'
-            anyheader = 1;
-            [keyw,n,err,j]=sscanf(line(2:end),'%[^:=]%1[:=]',2);
-            if n==2 % keyword line
-                val = deblank2(line(j+1:end));
-                switch lower(deblank2(keyw(1:end-1)))
-                    case 'location'
-                        Series(i).location = val;
-                    case 'position'
-                        loc = sscanf(val,'(%f,%f)',2);
-                        if length(loc)==2
-                            Series(i).x = loc(1);
-                            Series(i).y = loc(2);
-                        end
-                    case 'source'
-                        Series(i).source = val;
-                    case 'unit'
-                        Series(i).unit = val;
-                    case 'analyse time'
-                        tval = sscanf(val,'%f',1);
-                        if isempty(tval)
-                            Series(i).analysis_time = val;
-                        else
-                            Series(i).analysis_time = ymdhm(tval);
-                        end
-                    case 'timezone'
-                        Series(i).timezone = val;
-                    case 'missing val'
-                        missval = sscanf(val,'%f',1);
+try
+    i = 1;
+    anyheader = 0;
+    while ~feof(fid)
+        %
+        % parse header
+        %
+        % #------------------------------------------------------
+        % # Timeseries retrieved from the MATROOS series database
+        % # Created at Mon Nov 19 12:07:20 CET 2007
+        % #------------------------------------------------------
+        % # Location    : hoekvanholland
+        % # Position    : (4.120118,51.979135)
+        % # Source      : observed
+        % # Unit        : waterlevel
+        % # Analyse time: most recent
+        % # Timezone    : GMT
+        % #------------------------------------------------------
+        %
+        Series(i).location = 'unspecified';
+        Series(i).x = NaN;
+        Series(i).y = NaN;
+        Series(i).source = 'unspecified';
+        Series(i).unit = 'unspecified';
+        Series(i).analysis_time = 'unspecified';
+        Series(i).timezone = 'MET';
+        missval = [];
+        %Series(i).header_offset = ftell(fid);
+        %
+        header = 1;
+        while header && ~feof(fid)
+            loc = ftell(fid);
+            line = strtrim(fgetl(fid));
+            if isempty(line)
+                % skip empty lines?
+            elseif line(1)=='#'
+                anyheader = 1;
+                [keyw,n,err,j]=sscanf(line(2:end),'%[^:=]%1[:=]',2);
+                if n==2 % keyword line
+                    val = strtrim(line(j+1:end));
+                    switch lower(strtrim(keyw(1:end-1)))
+                        case 'location'
+                            Series(i).location = val;
+                        case 'position'
+                            loc = sscanf(val,'(%f,%f)',2);
+                            if length(loc)==2
+                                Series(i).x = loc(1);
+                                Series(i).y = loc(2);
+                            end
+                        case 'source'
+                            Series(i).source = val;
+                        case 'unit'
+                            Series(i).unit = val;
+                        case 'analyse time'
+                            tval = sscanf(val,'%f',1);
+                            if isempty(tval)
+                                Series(i).analysis_time = val;
+                            else
+                                Series(i).analysis_time = ymdhm(tval);
+                            end
+                        case 'timezone'
+                            Series(i).timezone = val;
+                        case 'missing val'
+                            missval = sscanf(val,'%f',1);
+                    end
                 end
-            end
-        else
-            [values,n,err]=sscanf(line,'%f');
-            if ~isempty(err)
-                fclose(fid);
-                error('Missing comment character or invalid data in line "%s".',line)
-            elseif n~=2
-                error('Two numbers expected per data line, but reading "%s".',line)
-            elseif i==1 && ~anyheader
-                fclose(fid);
-                error('NOOS file without header not supported.')
-            end
-            header = 0;
-            fseek(fid,loc,-1);
-            %Series(i).data_offset = loc;
-            data = fscanf(fid,'%f',[2 inf]);
-            data(1,:) = ymdhm(data(1,:));
-            if isempty(missval) % default clip all values >= 1000
-                valid = abs(data(2,:))<1000;
             else
-                valid = data(2,:)~=missval;
+                [values,n,err]=sscanf(line,'%f');
+                if ~isempty(err)
+                    fclose(fid);
+                    error('Missing comment character or invalid data in line "%s".',line)
+                elseif n~=2
+                    error('Two numbers expected per data line, but reading "%s".',line)
+                elseif i==1 && ~anyheader
+                    fclose(fid);
+                    error('NOOS file without header not supported.')
+                end
+                header = 0;
+                fseek(fid,loc,-1);
+                %Series(i).data_offset = loc;
+                data = fscanf(fid,'%f',[2 inf]);
+                data(1,:) = ymdhm(data(1,:));
+                if isempty(missval) % default clip all values >= 1000
+                    valid = abs(data(2,:))<1000;
+                else
+                    valid = data(2,:)~=missval;
+                end
+                Series(i).times = data(1,valid);
+                Series(i).val = data(2,valid);
+                i = i+1;
             end
-            Series(i).times = data(1,valid);
-            Series(i).val = data(2,valid);
-            i = i+1;
+        end
+        if header
+            % file ends with comment/header lines. Remove the incomplete data
+            % block since it doesn't contain any data.
+            Series(i)=[];
         end
     end
-    if header
-        % file ends with comment/header lines. Remove the incomplete data
-        % block since it doesn't contain any data.
-        Series(i)=[];
-    end
+    fclose(fid);
+    FI.FileName = filename;
+    FI.FileType = 'NOOS';
+    FI.Series = Series;
+catch
+    fclose(fid);
 end
-fclose(fid);
-FI.FileName = filename;
-FI.FileType = 'NOOS';
-FI.Series = Series;
 
 function date = ymdhm(data)
 yr = floor(data/100000000);

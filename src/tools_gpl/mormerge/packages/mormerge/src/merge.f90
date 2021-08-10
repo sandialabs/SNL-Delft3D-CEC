@@ -1,7 +1,7 @@
 subroutine merge (inputfile, workdir, runid)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine merge (inputfile, workdir, runid)
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: merge.f90 5022 2015-04-29 08:43:24Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_gpl/mormerge/packages/mormerge/src/merge.f90 $
+!  $Id: merge.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_gpl/mormerge/packages/mormerge/src/merge.f90 $
 !!--description-----------------------------------------------------------------
 !
 !
@@ -113,8 +113,7 @@ subroutine merge (inputfile, workdir, runid)
    ! Output initialization
    !
    write(filnam,'(3a)') 'mormerge_', trim(runid), '.log'
-   lundia = newunit()
-   open(lundia, file=trim(filnam), status='replace', action='write')
+   open(newunit = lundia, file=trim(filnam), status='replace', action='write')
    write(lundia,'( a)') trim(version_full(5:))
    write(lundia,'( a)') ' '
    write(lundia,'( a)') 'COMMAND LINE ARGUMENTS'
@@ -201,8 +200,7 @@ subroutine merge (inputfile, workdir, runid)
    write(mmsyncfilnam,'(6a)') trim(workdir), slash, 'sync', slash, &
                                & 'merge', trim(runid)
    !write(*,*)'mmsyncfilnam:',trim(mmsyncfilnam)
-   lunfil = newunit()
-   open (lunfil, file=mmsyncfilnam, position='append', action='write', iostat=istat)
+   open (newunit = lunfil, file=mmsyncfilnam, position='append', action='write', iostat=istat)
    if (istat /= 0) then
       write(*,*)' *** WARNING: unable to write in file ',trim(mmsyncfilnam)
    else
@@ -292,8 +290,7 @@ subroutine merge (inputfile, workdir, runid)
       ! Synchronisation
       !
       if (mod(loopcount,10) == 0) then
-         lunfil = newunit()
-         open (lunfil, file=mmsyncfilnam, position='append', action='write', iostat=istat)
+         open (newunit = lunfil, file=mmsyncfilnam, position='append', action='write', iostat=istat)
          if (istat /= 0) then
             write(*,*)' *** WARNING: unable to write in file ',trim(mmsyncfilnam)
          else

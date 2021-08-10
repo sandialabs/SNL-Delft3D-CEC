@@ -51,25 +51,28 @@ NODULA     NODUL NODULA_P   NOD_P NODULARIA phosphorus type      0.40       0.40
 ANABAENA   ANABA ANABAENA_E ANA_E ANABAENA energy type           0.45       0.45       0.220      -1.0       -1.0       0.015      -1.0       0.002      0.033      2.5        0.190       1.083     1          0.035      1.080      0.0        0.0        0.20E-02   8000.0     .012       1.072      1.0        0.0        0.0        0.35       0.55       0.0         0
 ANABAENA   ANABA ANABAENA_N ANA_N ANABAENA nitrogen type         0.40       0.40       0.113      -1.0       -1.0       0.013      -1.0       0.002      0.020      2.5        0.150       1.095     1          0.045      1.085      0.0        0.0        0.20E-02   8000.0     .012       1.072      1.0        0.0        0.0        0.35       0.55       0.0         0
 ANABAENA   ANABA ANABAENA_P ANA_P ANABAENA phosphorus type       0.40       0.40       0.170      -1.0       -1.0       0.010      -1.0       0.002      0.020      2.5        0.150       1.095     1          0.045      1.085      0.0        0.0        0.20E-02   8000.0     .012       1.072      1.0        0.0        0.0        0.35       0.55       0.0         0
-4  ; number of output per group
+5  ; number of output per group
 RCPPALG
 RCMRTALG
-Lim_GALG
-Lim_MALG
-6  ; number of output per group
+EffMALG
+EffTALG
+EffiALG
+6  ; number of output per type
 VSEDALG
 SALFNALG
 FLOFNALG
 PSEDALG
 FSEDALG
 M2_ALG
-6   ; number of one to one proto-actual processes
+8   ; number of one to one proto-actual processes
 EXTINABVLP EXTINABVL
 EXTINABUVP EXTINABUV
 BLOOM_P    BLOOM
 PHY_BLO_P  PHY_BLO
 SEDPHBLO_P SEDPHBLO
 ULVAFIX_P  ULVAFIX
+EFFMBLO_P      EFFMBLO
+EFFABLO_P      EFFABLO
 2  ; number of processes to be expanded per type
 CALVSALG
 SEDALG

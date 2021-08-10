@@ -1,0 +1,128 @@
+\documentclass[signature]{deltares_report}
+\usepackage{listings}
+\usepackage[titletoc]{appendix}
+%-----------------------------------------------
+\lstset{ %
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code listings
+}
+
+\definecolor{Gray}{gray}{0.9}
+
+\begin{document}
+\pagestyle{empty}
+\cleardoublepage
+%
+
+\newcommand{\ProgramName}{PROJECT_NAME\xspace}
+
+\title{\ProgramName}
+\subtitle{Functional Design}
+\projectnumber{PROJECT_NUMBER}
+\client{Deltares}
+\reference{PROJECT_NUMBER-PROJECT_NAME-001}
+\classification{-}
+
+\date{PROJECT_DATE}
+\version{1.0}
+
+\keywords{software}
+
+\references{Refer to \autoref{chapterLiterature}}
+
+\summary{}
+
+\versioni{1.0}
+\datei{PROJECT_DATE}
+\authori{Carles Salvador Soriano Perez}
+\revieweri{}
+\approvali{}
+
+\status{draft}
+\disclaimer{}
+
+%\deltarestitle
+
+
+%------------------------------------------------------------------------------
+\chapter{Introduction} 
+\label{chapterIntroduction}
+
+\section{Purpose and scope of this document} \label{sec:PurposeAndScope}
+
+\section{Related Documents}
+\label{sec:RelatedDocuments}
+\bigskip
+\begin{longtable}{|p{0.28\textwidth}|p{0.72\textwidth}|}
+\caption{Overview of related documents for the \ProgramName \label{tab:RelatedDocuments}}\\	\hline
+		\hline 
+		\textbf{Document} & \textbf{Reference} \\
+		\hline 
+		\hline 
+		Manual & \citep{PROJECT_NAME_ManualPROJECT_YEAR} \\
+		Technical Design & \citep{PROJECT_NAME_TechnicalDesignPROJECT_YEAR} \\
+		Technical Documentation & \citep{PROJECT_NAME_TechnicalDocumentationPROJECT_YEAR} \\
+		Test Plan & \citep{PROJECT_NAME_TestPlanPROJECT_YEAR} \\
+		Test Report & \citep{PROJECT_NAME_TestReportPROJECT_YEAR} \\
+    \hline			
+\end{longtable}
+
+\section{Versions}
+\label{sec:Versions}
+
+\subsection{Version 1.0}
+\label{sec:Version}
+This is the draft version of this document
+
+%------------------------------------------------------------------------------
+\chapter{Requirements}
+\label{sec:Requirements}
+To do
+
+\section{Functional Requirements}
+\label{sec:FunctionalRequirements}
+To do
+
+\section{Non-functional Requirements}
+\label{sec:NonFunctionalRequirements}
+To do
+
+%------------------------------------------------------------------------------
+\chapter{Specification of the Requirements}
+\label{sec:SpecificationOfTheRequirements}
+To do
+
+\section{Calculations}
+\label{sec:Calculations}
+To do: Add subsections if needed. 
+
+\section{Validate.Input}
+\label{sec:ValidateInput}
+To do
+
+\section{Validate.Output}
+\label{sec:ValidateOutput}
+To do
+
+\section{Performance.Speed}
+\label{sec:PerformanceSpeed}
+To do
+
+\section{Code.Coverage}
+\label{sec:CodeCoverage}
+Code coverage of the \ProgramName should be at least 80\%.
+
+%------------------------------------------------------------------------------
+\chapter{Error Handling}
+\label{sec:ErrorHandling}
+To do
+
+%------------------------------------------------------------------------------
+\chapter{Literature}  \label{chapterLiterature}
+
+\bibliography{../PROJECT_NAME_references/PROJECT_NAME_references}
+
+\pagestyle{empty}
+\mbox{}
+
+%------------------------------------------------------------------------------
+\end{document}

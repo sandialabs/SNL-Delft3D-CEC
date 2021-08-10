@@ -2,7 +2,7 @@ subroutine trabg(utot      ,di        ,taub      ,par       ,sbot      , &
                & ssus      ,dg        ,dgsd      ,chezy     )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine trabg(utot      ,di        ,taub      ,par       ,sbot      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: trabg.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/trabg.f90 $
+!  $Id: trabg.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/trabg.f90 $
 !!--description-----------------------------------------------------------------
 !
 !  Computes sediment transport according to the Gaeuman et al modified form of the 
@@ -96,7 +96,7 @@ subroutine trabg(utot      ,di        ,taub      ,par       ,sbot      , &
     b       = (1.0_fp - ao) / (1.0_fp + exp(1.9_fp - (di / (3.0_fp * dg))))
     ! converts true dgsd back to sigma phi squared consistent with definition in paper
     sigphi  = (log(dgsd) / log(2.0_fp))**2
-    taurm   = (thco + 0.022_fp / (1_fp + exp(7.1_fp * sigphi - 11.786_fp))) * (rhosol - rhow) * ag * dg
+    taurm   = (thco + 0.022_fp / (1.0_fp + exp(7.1_fp * sigphi - 11.786_fp))) * (rhosol - rhow) * ag * dg
     tauri   = taurm * (di / dg)**b
     phi     = taub / tauri
     if (phi < 1.35_fp) then

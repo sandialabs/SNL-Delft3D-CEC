@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -168,10 +168,14 @@
 !.. for curvilinear grids these are curvilinear coordinates epsilon and nu)
 !
          if(np==1.or.mp==mmax) then
-            stop ' Particle outside domain in umagi '
+            write (*,*) ' Particle outside domain in umagi '
+            call stop_exit(1)
          endif
          mn    = lgrid ( np, mp )
-         if(mn <= 0) stop ' MN at forbidden position in umagi '
+         if(mn <= 0) then
+            write (*,*) ' MN at forbidden position in umagi '
+            call stop_exit(1)
+         endif
          mn2   = lgrid2( np, mp )
          kdep = (kp-1)*nmax*mmax
 !
@@ -257,11 +261,15 @@
             he = he + xq*yq*hc
             he = he + (1.0-xq)*yq*hd
             if(kp <= 0.or.kp > layt) then
-               stop  ' KP out of range in umagi '
+               write (*,*) ' KP out of range in umagi '
+               call stop_exit(1)
             endif
             he = he*tcktot(kp)
 !
-            if(he <= (1.0e-15)) stop 'HP to small or negative in umagi'
+            if(he <= (1.0e-15)) then
+               write (*,*) ' HP to small or negative in umagi'
+               call stop_exit(1)
+            endif   
          else
             he = depth(mn)
          endif

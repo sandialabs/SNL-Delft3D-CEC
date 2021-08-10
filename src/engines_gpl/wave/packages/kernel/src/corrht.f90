@@ -3,7 +3,7 @@ subroutine corrht(hrm       ,deph      ,tp        ,wavel     ,wavek     , &
                 & grav      )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine corrht(hrm       ,deph      ,tp        ,wavel     ,wavek     , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: corrht.f90 5425 2015-09-18 16:11:26Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/kernel/src/corrht.f90 $
+!  $Id: corrht.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/kernel/src/corrht.f90 $
 !!--description-----------------------------------------------------------------
 !
 !
@@ -47,13 +47,8 @@ subroutine corrht(hrm       ,deph      ,tp        ,wavel     ,wavek     , &
 !!--pseudo code and references--------------------------------------------------
 ! NONE
 !!--declarations----------------------------------------------------------------
+    use mathconsts, only: twopi_sp, sqrt2_sp
     implicit none
-    !
-    !
-    ! COMMON variables
-    !
-    real ::         pi, twopi, wort2, gamma
-    common /const / pi, twopi, wort2, gamma
 !
 ! Global variables
 !
@@ -80,24 +75,9 @@ subroutine corrht(hrm       ,deph      ,tp        ,wavel     ,wavek     , &
     ldep   = .false.
     dismax = 0.0
     if (deph>0.05 .and. hrm>=0.01 .and. tp>0.0) then
-       if (choice) then
-          !
-          ! Adjust wave-coefficients
-          !
-          call wavenr_htk(deph, tp, wavek)
-          !
-          hmax   = 0.88/wavek*tanh(gamma*wavek*deph/0.88)
-          hrm    = min(hrm, hmax)
-          hs     = hrm*wort2
-          tpmin  = 14.09*sqrt(hs/grav)
-          dismax = 0.25*rho*grav*hmax*hmax/tp
-          dish   = min(dish, dismax)
-          tp     = min(tp, tpmin)
-       endif
-       !
        call wavenr_htk(deph, tp, wavek)
        !
-       wavel = twopi/wavek
+       wavel = twopi_sp/wavek
     else
        !
        ! Too shallow water or waves too small

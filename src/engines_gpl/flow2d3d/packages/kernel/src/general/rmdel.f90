@@ -1,7 +1,7 @@
 subroutine rmdel(filnam    ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine rmdel(filnam    ,gdp       )
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rmdel.f90 5616 2015-11-27 14:35:08Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/general/rmdel.f90 $
+!  $Id: rmdel.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/general/rmdel.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Test existence of file and if delete file, using
@@ -65,10 +65,10 @@ subroutine rmdel(filnam    ,gdp       )
     lundia              => gdp%gdinout%lundia
     !
     call remove_leading_spaces(filnam    ,lfil      )
-    inquire (file = filnam(:lfil), exist = ex)
-    if (ex) then
-       inquire (file = filnam(:lfil), opened = ex)
-       if (ex) then
+    inquire (file = filnam(:lfil), exist = ex, iostat = ierr)
+    if (ierr==0 .and. ex) then
+       inquire (file = filnam(:lfil), opened = ex, iostat = ierr)
+       if (ierr==0 .and. ex) then
           inquire (file = filnam(:lfil), number = luntmp)
           ! Need to close this first. The status = 'delete' triggers an error when file was opened as readonly.
           close (luntmp, iostat = ierr)

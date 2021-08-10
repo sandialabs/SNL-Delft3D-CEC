@@ -1,7 +1,7 @@
 module bedcomposition_module
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ module bedcomposition_module
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: bedcomposition_module.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/bedcomposition_module.f90 $
+!  $Id: bedcomposition_module.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/bedcomposition_module.f90 $
 !!--module description----------------------------------------------------------
 !
 ! This module keeps track of the bed composition at one or more locations. The
@@ -35,9 +35,8 @@ module bedcomposition_module
 ! bed may be schematized using one or more layers.
 !
 !!--module declarations---------------------------------------------------------
-
 use precision
-
+private
 
 !
 ! public data types
@@ -193,8 +192,8 @@ subroutine bedcomposition_module_info(messages)
     !
     type(message_stack) :: messages
     !
-    call addmessage(messages,'$Id: bedcomposition_module.f90 4612 2015-01-21 08:48:09Z mourits $')
-    call addmessage(messages,'$URL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/bedcomposition_module.f90 $')
+    call addmessage(messages,'$Id: bedcomposition_module.f90 65778 2020-01-14 14:07:42Z mourits $')
+    call addmessage(messages,'$URL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/bedcomposition_module.f90 $')
 end subroutine bedcomposition_module_info
 !
 !
@@ -1072,9 +1071,9 @@ subroutine lyrsedimentation_eulerian(this, nm, dzini, dmi, svfracdep)
        k = k+1
     enddo
     !
-    ! don't fill the last underlayer
+    ! don't fill the last underlayer unless it's empty
     !
-    if (k == nlyr) k = k-1
+    if (k == nlyr .and. thlyr(k, nm)>0.0_fp) k = k-1
     !
     ! start filling upwards
     !
@@ -1083,7 +1082,7 @@ subroutine lyrsedimentation_eulerian(this, nm, dzini, dmi, svfracdep)
           !
           ! sediment can be added to this layer
           !
-          if ( dz > theulyr-thlyr(k, nm) ) then
+          if ( dz > theulyr-thlyr(k, nm) .and. thlyr(k, nm)>0.0_fp ) then
              !
              ! not all sediment can be added to this layer
              !
@@ -1735,7 +1734,7 @@ subroutine getvfrac(this, frac, nmfrom, nmto)
     select case(this%settings%iunderlyr)
     case(2)
        do nm = nmfrom, nmto
-          if (comparereal(thlyr(1, nm),0.0_fp) == 0) then
+          if (comparereal(thlyr(1, nm), 0.0_fp) == 0) then
              frac(nm, :) = 1.0_fp/this%settings%nfrac
           else
              thick = svfrac(1, nm) * thlyr(1, nm)
@@ -2032,11 +2031,16 @@ function allocmorlyr(this) result (istat)
     !                   neulyr  eulerian underlayers
     !                   1       persistent base layer
     !
-    settings%nlyr   = 2 + settings%nlalyr + settings%neulyr
-    settings%keuler = 2 + settings%nlalyr
-    if (settings%exchlyr) then
-       settings%nlyr   = settings%nlyr + 1
-       settings%keuler = settings%keuler + 1
+    if (settings%iunderlyr==1) then
+       settings%nlyr   = 1
+       settings%keuler = 1
+    elseif (settings%iunderlyr==2) then
+       settings%nlyr   = 2 + settings%nlalyr + settings%neulyr
+       settings%keuler = 2 + settings%nlalyr
+       if (settings%exchlyr) then
+          settings%nlyr   = settings%nlyr + 1
+          settings%keuler = settings%keuler + 1
+       endif
     endif
     !
     nmlb  = settings%nmlb
@@ -2105,6 +2109,8 @@ function allocwork(this, work) result (istat)
     integer, pointer :: nfrac
     integer, pointer :: nlyr
     !
+    real(fp) :: dmiss = -999.0_fp
+    !
     !! executable statements -------------------------------------------------------
     !
     nfrac => this%settings%nfrac
@@ -2112,8 +2118,11 @@ function allocwork(this, work) result (istat)
     !
     istat = 0
     if (istat == 0) allocate (work%msed2(nfrac, nlyr), stat = istat)
+    if (istat == 0) work%msed2 = dmiss
     if (istat == 0) allocate (work%thlyr2(nlyr)     , stat = istat)
+    if (istat == 0) work%thlyr2 = dmiss
     if (istat == 0) allocate (work%svfrac2(nlyr)    , stat = istat)
+    if (istat == 0) work%svfrac2 = dmiss
 end function allocwork
 !
 !

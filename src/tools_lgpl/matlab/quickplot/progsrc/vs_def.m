@@ -67,7 +67,7 @@ function [VSNEW,ErrMsg]=vs_def(varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -92,8 +92,8 @@ function [VSNEW,ErrMsg]=vs_def(varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/vs_def.m $
-%   $Id: vs_def.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/vs_def.m $
+%   $Id: vs_def.m 65778 2020-01-14 14:07:42Z mourits $
 
 % DataInfoOut=vs_def(DataInfo,Type,Name, ...)
 % DataInfoOut=vs_def(Type,Name, ...)
@@ -483,6 +483,23 @@ end
 AllElms={VSNEW.ElmDef(:).Name};
 TotSize=0;
 NElm=length(varargin);
+uElm = unique(varargin);
+if length(uElm)<NElm
+    for i=length(uElm):-1:1
+        if length(strmatch(uElm{i},varargin,'exact'))==1
+            uElm(i) = [];
+        end
+    end
+    elmStr = sprintf('''%s'', ',uElm{:});
+    if length(uElm)>1
+        elm = 'elements';
+        occur = 'occur';
+    else
+        elm = 'element';
+        occur = 'occurs';
+    end
+    warning('The %s %s %s multiple times in the newly created cell ''%s''; the second copy will be inaccessible!',elm,elmStr(1:end-2),occur,Name)
+end
 ElmNrs=ones(1,NElm);
 for i=1:NElm
    x=strmatch(deblank(varargin{i}),AllElms,'exact');

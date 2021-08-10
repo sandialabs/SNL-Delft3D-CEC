@@ -1,8 +1,8 @@
 subroutine findnm_kcs_flowwrapper(xp    , yp    , mp    , np    , &
-                                & rmp   , rnp   , inside, gdp)
+                                & rmp   , rnp   , inside,spheric, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -26,8 +26,8 @@ subroutine findnm_kcs_flowwrapper(xp    , yp    , mp    , np    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: findnm_kcs_flowwrapper.f90 5747 2016-01-20 10:00:59Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/findnm_kcs_flowwrapper.f90 $
+!  $Id: findnm_kcs_flowwrapper.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/findnm_kcs_flowwrapper.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Locate a point in the Delft3D curvilinear mesh
@@ -57,7 +57,6 @@ subroutine findnm_kcs_flowwrapper(xp    , yp    , mp    , np    , &
     integer , pointer :: nlb
     integer , pointer :: nmaxus
     integer , pointer :: nub
-    logical , pointer :: spheric
     real(hp), pointer :: dearthrad
 !
 ! Global variables
@@ -69,6 +68,7 @@ subroutine findnm_kcs_flowwrapper(xp    , yp    , mp    , np    , &
     real(fp) , intent(out)   :: rmp     ! Fractional M index of point
     real(fp) , intent(out)   :: rnp     ! Fractional N index of point
     logical  , intent(inout) :: inside  ! True if point lies inside grid (or mp,np valid)
+    logical  , intent(in)    :: spheric ! Spherical coordinates
 !
 ! Local variables
 !
@@ -85,7 +85,6 @@ subroutine findnm_kcs_flowwrapper(xp    , yp    , mp    , np    , &
     nmaxus    => gdp%d%nmaxus
     nub       => gdp%d%nub
     dearthrad => gdp%gdconstd%dearthrad
-    spheric   => gdp%gdtricom%sferic
     !
     call findnm_kcs (xp    , yp    ,r(xcor),r(ycor), mlb   , mub   , &
                    & nlb   , nub   , mmax  , nmaxus, mp    , np    , &

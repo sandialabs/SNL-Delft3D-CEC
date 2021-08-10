@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -454,7 +454,7 @@
      &              nosubs , nosubs , nrftot(8), nrharm(8), ifact  ,
      &              dtflg1 , disper , volume   , iwidth   , lchar  ,
      &              filtype, dtflg3 , vrsion   , ioutpt   , ierrh  ,
-     &              iwar   )
+     &              iwar   , .false.)
       IERR = IERR + IERRH
 !
       IERR2 = 0

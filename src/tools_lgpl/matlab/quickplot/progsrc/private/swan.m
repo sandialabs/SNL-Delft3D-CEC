@@ -3,7 +3,7 @@ function varargout=swan(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function varargout=swan(cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/swan.m $
-%   $Id: swan.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/swan.m $
+%   $Id: swan.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin==0
     error('Missing command.')
@@ -150,14 +150,14 @@ while ~TableLine
         fclose(fid);
         error('No table record found in file: %s',filename)
     else
-        TableLine = ~isempty(strmatch('tab',lower(deblank2(Line))));
+        TableLine = ~isempty(strmatch('tab',lower(strtrim(Line))));
     end
 end
 %
-Line = deblank2(Line);
+Line = strtrim(Line);
 while ~isempty(strmatch(Line(end-1:end),{' _',' &'},'exact'))
     Line2 = fgetl(fid);
-    Line2 = deblank2(Line2);
+    Line2 = strtrim(Line2);
     Line = [Line(1:end-1) Line2];
 end
 quotes=strfind(Line,'''');

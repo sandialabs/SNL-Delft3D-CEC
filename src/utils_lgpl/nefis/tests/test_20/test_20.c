@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <string.h>
 
+#define PTR8
+
 #include "btps.h"
 #include "nef-def.h"
 #include "nef-tag.h"

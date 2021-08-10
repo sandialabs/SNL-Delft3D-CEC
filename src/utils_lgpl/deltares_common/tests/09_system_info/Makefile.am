@@ -1,21 +1,16 @@
 #-------------------------------------------------------------------------------
 #   Makefile for delftflow
 #
-#   Irv.Elshoff@deltares.nl
-#   Adri.Mourits@deltares.nl
-#   Fedor.Baart@deltares.nl
-#   02 dec 2008
-#
 #   Copyright (C)  Stichting Deltares, 2011-2013.
 #-------------------------------------------------------------------------------
 
 include $(top_srcdir)/common.am
 
-bin_PROGRAMS = system_info.exe
+bin_PROGRAMS = system_info
 
 #-------------------------------------------------------------------------------
 #Sources
-system_info_exe_SOURCES = \
+system_info_SOURCES = \
 	main.cpp
 
 #-------------------------------------------------------------------------------
@@ -26,7 +21,7 @@ INCLUDES = \
 #-------------------------------------------------------------------------------
 #Libraries
 
-system_info_exe_LDADD = \
+system_info_LDADD = \
 	$(top_builddir)/utils_lgpl/deltares_common/packages/deltares_common_c/src/libDeltaresCommonC.la
 
 

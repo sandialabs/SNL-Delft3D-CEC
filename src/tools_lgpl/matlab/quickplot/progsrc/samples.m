@@ -22,7 +22,7 @@ function [x,y,z]=samples(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -47,8 +47,8 @@ function [x,y,z]=samples(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/samples.m $
-%   $Id: samples.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/samples.m $
+%   $Id: samples.m 65778 2020-01-14 14:07:42Z mourits $
 
 switch lower(cmd)
     case 'read'
@@ -112,7 +112,14 @@ if simplexyz
             xyz = xyz0;
         otherwise
             xyz.XYZ = xyz0;
-            npar = size(xyz0,2);            
+            if iscell(xyz0)
+                npar = 0;
+                for c = 1:length(xyz0)
+                    npar = npar+size(xyz0{c},2);
+                end
+            else
+                npar = size(xyz0,2);
+            end
             xyz.Params = cell(1,npar);
             for i=1:npar
                 xyz.Params{i}=sprintf('Parameter %i',i);
@@ -148,7 +155,7 @@ if simplexyz
                     if length(j1) == npar && length(j2) == npar
                         xyz.ParamUnits = repmat({''},1,npar);
                         for j = 1:npar
-                            xyz.ParamUnits{j} = deblank2(xyz.Header{i}(j1(j)+1:j2(j)-1));
+                            xyz.ParamUnits{j} = strtrim(xyz.Header{i}(j1(j)+1:j2(j)-1));
                         end
                         par = textscan(xyz.Header{i-1}(2:end),'%s');
                         xyz.Params = par{1};
@@ -164,7 +171,7 @@ else % readtype always forced to 'struct'
         xyz.Header={};
         while ischar(Line) && ~isempty(Line) && (Line(1)=='*' || Line(1)=='#')
             skiplines=skiplines+1;
-            xyz.Header{skiplines} = deblank2(Line(2:end));
+            xyz.Header{skiplines} = strtrim(Line(2:end));
             Line=fgetl(fid);
         end
         if ~ischar(Line)
@@ -248,7 +255,11 @@ if isstruct(xyz)
     end
     %
     if isempty(xyz.Time)
-        xyz.nLoc  = size(xyz.XYZ,1);
+        if iscell(xyz.XYZ)
+            xyz.nLoc  = size(xyz.XYZ{1},1);
+        else
+            xyz.nLoc  = size(xyz.XYZ,1);
+        end
         xyz.Times = gettimestamp(xyz.Header);
     else
         crds = [xyz.X xyz.Y];

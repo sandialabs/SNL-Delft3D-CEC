@@ -1,7 +1,7 @@
 subroutine initfmtbcc(gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine initfmtbcc(gdp       )
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: initfmtbcc.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/data/src/gdp/initfmtbcc.f90 $
+!  $Id: initfmtbcc.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/data/src/gdp/initfmtbcc.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! NONE
@@ -43,7 +43,7 @@ subroutine initfmtbcc(gdp       )
     !
     ! The following list of pointer parameters is used to point inside the gdp structure
     !
-    character*37, dimension(:) , pointer :: fmtbcc
+    character*38, dimension(:) , pointer :: fmtbcc
 !
 ! Global variables
 !
@@ -57,17 +57,17 @@ subroutine initfmtbcc(gdp       )
     !
     fmtbcc  => gdp%gdfmtbcc%fmtbcc
     !
-    fmtbcc(1) = '(a1,i5,                     t89  ,a1)'
-    fmtbcc(2) = '(a20,a1,a63,a3,a1,          t89  ,a1)'
-    fmtbcc(3) = '(a20,a1,a10,a1,a40,         t89  ,a1)'
-    fmtbcc(4) = '(2(a20,a1),                 t89  ,a1)'
-    fmtbcc(5) = '(a20,                       t89  ,a1)'
-    fmtbcc(6) = '(a20,                       t89  ,a1)'
-    fmtbcc(7) = '(a20,a1,a15,a1,             t89  ,a1)'
-    fmtbcc(8) = '(a20,i9,                    t89  ,a1)'
-    fmtbcc(9) = '(a20,a1,a7,a1,              t89  ,a1)'
-    fmtbcc(10) = '(a20,a1,a6,a1,              t89  ,a1)'
-    fmtbcc(11) = '(a20,a1,a36,a1,1x,2(a10,a1),t89  ,a1)'
-    fmtbcc(12) = '(a20,i6,                    t89  ,a1)'
-    fmtbcc(13) = '(f16.4,  5g14.6,            t89  ,a1)'
+    fmtbcc(1) = '(a1,i5,                     t89   ,a1)'
+    fmtbcc(2) = '(a20,a1,a63,a3,a1,          t89   ,a1)'
+    fmtbcc(3) = '(a20,a1,a10,a1,a40,         t89   ,a1)'
+    fmtbcc(4) = '(2(a20,a1),                 t89   ,a1)'
+    fmtbcc(5) = '(a20,                       t89   ,a1)'
+    fmtbcc(6) = '(a20,                       t89   ,a1)'
+    fmtbcc(7) = '(a20,a1,a15,a1,             t89   ,a1)'
+    fmtbcc(8) = '(a20,i9,                    t89   ,a1)'
+    fmtbcc(9) = '(a20,a1,a7,a1,              t89   ,a1)'
+    fmtbcc(10) = '(a20,a1,a6,a1,              t89   ,a1)'
+    fmtbcc(11) = '(a20,a1,a36,a1,1x,2(a10,a1),t89   ,a1)'
+    fmtbcc(12) = '(a20,i6,                    t89   ,a1)'
+    fmtbcc(13) = '(f16.4,  5g14.6,            t89   ,a1)'
 end subroutine initfmtbcc

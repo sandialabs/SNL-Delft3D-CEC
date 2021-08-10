@@ -3,7 +3,7 @@ function hNew=gensurface(hOld,Ops,Parent,Val,X,Y,Z)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -28,8 +28,8 @@ function hNew=gensurface(hOld,Ops,Parent,Val,X,Y,Z)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/gensurface.m $
-%   $Id: gensurface.m 5462 2015-09-30 11:58:22Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/gensurface.m $
+%   $Id: gensurface.m 65778 2020-01-14 14:07:42Z mourits $
 
 zcoord=nargin>6;
 blank=isnan(Val(:));
@@ -50,7 +50,7 @@ if ~isequal(size(X),size(Val))
 end
 X(isnan(Val))=NaN;
 Y(isnan(Val))=NaN;
-if ~isempty(hOld) & ishandle(hOld)
+if ~isempty(hOld) && ishandle(hOld)
     hNew=hOld;
     set(hNew,'xdata',X, ...
         'ydata',Y, ...

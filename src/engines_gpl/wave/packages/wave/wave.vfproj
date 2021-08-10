@@ -1,57 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{35D95B51-6CBE-473D-9ED5-1BB7CE16BE24}">
+<VisualStudioProject ProjectType="typeDynamicLibrary" ProjectCreator="Intel Fortran" Keyword="Dll" Version="11.0" ProjectIdGuid="{9C377843-12C3-49F0-AF6E-7EB08A1AE514}">
 	<Platforms>
 		<Platform Name="Win32"/>
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
-		<Configuration Name="Debug|Win32" OutputDirectory="../../bin/$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="include;..\data\bin\$(ConfigurationName);..\kernel\bin\$(ConfigurationName);..\..\..\..\utils_lgpl\precision\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\meteo\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/" Traceback="true" NullPointerCheck="true" BoundsCheck="true" UninitializedVariablesCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\wave.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" IgnoreDefaultLibraryNames="libc.lib;libcmtd.lib;libcmt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="wsock32.lib netapi32.lib comctl32.lib user32.lib advapi32.lib comdlg32.lib gdi32.lib winspool.lib"/>
+		<Configuration Name="Debug|Win32" OutputDirectory="..\..\bin\$(ConfigurationName)\" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\lib\$(PlatformName)\$(ConfigurationName);..\kernel\lib\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\inifiles\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\third_party_open\netcdf\win64_ifort12_debug\include" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(UniversalCRTSdkDir)Lib\10.0.15063.0\ucrt\x86;&quot;..\..\..\..\third_party_open\netcdf\netCDF 4.6.1\lib&quot;;..\..\..\..\third_party_open\pthreads\bin\win32" IgnoreDefaultLibraryNames="libc.lib;libcmtd.lib;libcmt.lib" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="netcdf.lib pthreadVCE2.lib "/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.F90 ..\..\ .\include\version_number.ini"/>
-				<Tool Name="VFPostBuildEventTool" CommandLine="echo &quot;This file is overwritten by the post-build command of the project wave&quot; &gt; ./src/wave_version.F90"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="..\..\..\..\scripts_lgpl\win32\oss-install_debug.cmd wave"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|Win32" OutputDirectory="../../bin/$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="include;..\data\bin\$(ConfigurationName);..\kernel\bin\$(ConfigurationName);..\..\..\..\utils_lgpl\precision\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\meteo\lib\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(ConfigurationName)\static" ModulePath="$(OutDir)/"/>
-				<Tool Name="VFLinkerTool" AdditionalOptions="/LTCG" OutputFile="$(OutDir)\wave.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" IgnoreDefaultLibraryNames="libc.lib;libcd.lib;libcmt.lib" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="wsock32.lib netapi32.lib comctl32.lib user32.lib advapi32.lib comdlg32.lib gdi32.lib winspool.lib"/>
+		<Configuration Name="Release|Win32" OutputDirectory="..\..\bin\$(ConfigurationName)\" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(UniversalCRTSdkDir)Lib\10.0.15063.0\ucrt\x86;&quot;..\..\..\..\third_party_open\netcdf\netCDF 4.6.1\lib&quot;;..\..\..\..\third_party_open\pthreads\bin\win32" IgnoreDefaultLibraryNames="libc.lib;libcd.lib;libcmt.lib" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="netcdf.lib pthreadVCE2.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.F90 ..\..\ .\include\version_number.ini"/>
-				<Tool Name="VFPostBuildEventTool" CommandLine="..\..\..\..\scripts_lgpl\win32\oss-install.cmd wave ..\bin &quot;$(IFORT_COMPILER15)redist\ia32\compiler\&quot;
-echo &quot;This file is overwritten by the post-build command of the project wave&quot; &gt; ./src/wave_version.F90"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="..\..\..\..\scripts_lgpl\win32\oss-install.cmd wave bin &quot;$(IFORT_COMPILER17)redist\ia32\compiler\&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Debug|x64" OutputDirectory="../../bin/$(PlatformName)\$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="include;..\data\bin\$(PlatformName)\$(ConfigurationName);..\kernel\bin\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static" WarnInterfaces="true" ModulePath="$(OutDir)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\wave.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" IgnoreDefaultLibraryNames="libc.lib;libcmtd.lib;libcmt.lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="wsock32.lib netapi32.lib comctl32.lib user32.lib advapi32.lib comdlg32.lib gdi32.lib winspool.lib"/>
+		<Configuration Name="Debug|x64" OutputDirectory="..\..\bin\$(PlatformName)\$(ConfigurationName)\" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\data\lib\$(PlatformName)\$(ConfigurationName);..\kernel\lib\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\inifiles\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\third_party_open\netcdf\lib\win32\x64\Debug" WarnInterfaces="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(UniversalCRTSdkDir)Lib\10.0.15063.0\ucrt\x64;..\..\..\..\third_party_open\pthreads\bin\x64;..\..\..\..\third_party_open\netcdf\$(PlatformName)\$(ConfigurationName);..\..\..\..\third_party_open\netcdf\netCDF 4.6.1\lib;..\..\..\..\utils_lgpl\delftio\packages\delftio_shm\bin\$(PlatformName)\$(ConfigurationName)" IgnoreDefaultLibraryNames="libc.lib;libcmtd.lib;libcmt.lib" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="delftio_shm.lib netcdf.lib netcdff.lib netcdf4.lib pthreadVC2.lib "/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.F90 ..\..\ .\include\version_number.ini"/>
-				<Tool Name="VFPostBuildEventTool" CommandLine="echo &quot;This file is overwritten by the post-build command of the project wave&quot; &gt; ./src/wave_version.F90"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="..\..\..\..\scripts_lgpl\win64\oss-install_debug_x64.cmd wave"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|x64" OutputDirectory="../../bin/$(PlatformName)\$(ConfigurationName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="include;..\data\bin\$(PlatformName)\$(ConfigurationName);..\kernel\bin\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\meteo\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static" ModulePath="$(OutDir)/"/>
-				<Tool Name="VFLinkerTool" AdditionalOptions="/LTCG" OutputFile="$(OutDir)\wave.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" IgnoreDefaultLibraryNames="libc.lib;libcd.lib;libcmt.lib" SubSystem="subSystemConsole" LargeAddressAware="addrAwareLarge" AdditionalDependencies="wsock32.lib netapi32.lib comctl32.lib user32.lib advapi32.lib comdlg32.lib gdi32.lib winspool.lib"/>
+		<Configuration Name="Release|x64" OutputDirectory="..\..\bin\$(PlatformName)\$(ConfigurationName)\" BuildLogFile="$(IntDir)\BuildLog_dll.htm" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions="/LTCG" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="$(UniversalCRTSdkDir)Lib\10.0.15063.0\ucrt\x64;..\data\lib\$(PlatformName)\$(ConfigurationName);..\io\lib\$(PlatformName)\$(ConfigurationName);..\kernel\lib\$(PlatformName)\$(ConfigurationName);..\manager\lib\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\delftio\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\delftio\packages\delftio_shm\bin\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\deltares_common\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\deltares_common\packages\deltares_common_c\bin\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\ec_module\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\gridgeom\packages\gridgeom\$(PlatformName)\$(ConfigurationName);..\..\..\..\utils_lgpl\nefis\lib\$(PlatformName)\$(ConfigurationName)\static;..\..\..\..\utils_lgpl\io_netcdf\packages\io_netcdf\$(PlatformName)\$(ConfigurationName);..\..\..\..\third_party_open\netcdf\$(PlatformName)\$(ConfigurationName);&quot;..\..\..\..\third_party_open\netcdf\netCDF 4.6.1\lib&quot;;..\..\..\..\third_party_open\pthreads\bin\x64;..\..\..\..\third_party_open\triangle\$(PlatformName)\$(ConfigurationName)" LinkLibraryDependencies="false" IgnoreDefaultLibraryNames="libc.lib;libcd.lib;libcmt.lib" SubSystem="subSystemWindows" ImportLibrary="$(TargetDir)$(TargetName)_dll.lib" LinkDLL="true" AdditionalDependencies="gridgeom.lib delftio_shm.lib data.lib io.lib kernel.lib manager.lib delftio.lib deltares_common.lib deltares_common_c.lib ec_module.lib nefis.lib io_netcdf.lib netcdf.lib netcdff.lib netcdf4.lib triangle_c.lib pthreadVC2.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool" CommandLine="call ..\..\..\..\scripts_lgpl\win32\update_version.cmd .\src\wave_version.F90 ..\..\ .\include\version_number.ini"/>
-				<Tool Name="VFPostBuildEventTool" CommandLine="..\..\..\..\scripts_lgpl\win64\oss-install_x64.cmd wave ..\bin &quot;$(IFORT_COMPILER15)redist\intel64\compiler\&quot;
-echo &quot;This file is overwritten by the post-build command of the project wave&quot; &gt; ./src/wave_version.F90"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="..\..\..\..\scripts_lgpl\win64\oss-install_x64.cmd wave bin &quot;$(IFORT_COMPILER17)redist\intel64\compiler\&quot;"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
-		<File RelativePath=".\resource\wl.ico"/></Filter>
+		<File RelativePath="..\manager\src\wave_version.rc"/></Filter>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath=".\src\checklicense.f90"/>
-		<File RelativePath=".\src\usage.f90"/>
-		<File RelativePath=".\src\wave.f90"/>
-		<File RelativePath=".\src\wave_version.F90"/></Filter></Files>
+		<File RelativePath=".\src\wave_bmi.f90"/></Filter>
+		<File RelativePath="..\manager\src\resource.h"/></Files>
 	<Globals/></VisualStudioProject>

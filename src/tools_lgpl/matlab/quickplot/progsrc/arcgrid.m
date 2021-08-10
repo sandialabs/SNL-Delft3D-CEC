@@ -52,7 +52,7 @@ function [Out,Out2]=arcgrid(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -77,8 +77,8 @@ function [Out,Out2]=arcgrid(cmd,varargin)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/arcgrid.m $
-%   $Id: arcgrid.m 5295 2015-07-25 05:45:18Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/arcgrid.m $
+%   $Id: arcgrid.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin==0
     if nargout>0
@@ -120,7 +120,10 @@ switch cmd
 end
 
 
-function Structure=Local_open_file(filename)
+function Structure=Local_open_file(filename,single)
+if nargin<2
+    single = false;
+end
 Structure.Check='NotOK';
 Structure.FileType='arcgrid';
 
@@ -271,7 +274,7 @@ elseif Structure.CellSize<=0
 end
 Structure.Check='OK';
 Structure.FileBase=[p filesep n];
-if isempty(Times)
+if isempty(Times) && ~single
     Times=[];
     %
     % For case sensitive file systems assume that all extensions have the same
@@ -282,10 +285,19 @@ if isempty(Times)
         ndigits=ndigits+1;
     end
     digits=n(length(n)-ndigits+1:end);
-    if all(abs(digits)>47 & abs(digits)<58)
+    if ~isempty(digits) && all(abs(digits)>47 & abs(digits)<58)
         Structure.FileBase=[p filesep n(1:end-ndigits)];
         Structure.NDigits=ndigits;
         [Times,FileNr]=getfiletimes(Structure.FileBase,'',Structure.Extension,time_in_file);
+        S1=Local_open_file([Structure.FileBase FileNr{1} '.' Structure.Extension],true);
+        SL=Local_open_file([Structure.FileBase FileNr{end} '.' Structure.Extension],true);
+        if S1.NCols ~= SL.NCols || ...
+                S1.NRows ~= SL.NRows || ...
+                S1.XCorner ~= SL.XCorner || ...
+                S1.YCorner ~= SL.YCorner
+            FileNr = {};
+            Times = [];
+        end
         if ~isempty(FileNr)
             Structure.FileNr = FileNr;
         end

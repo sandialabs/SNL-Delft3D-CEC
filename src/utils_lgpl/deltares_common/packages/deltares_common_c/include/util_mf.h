@@ -1,6 +1,6 @@
 //---- LGPL --------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: util_mf.h 4612 2015-01-21 08:48:09Z mourits $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/deltares_common/packages/deltares_common_c/include/util_mf.h $
+// $Id: util_mf.h 65778 2020-01-14 14:07:42Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/deltares_common/packages/deltares_common_c/include/util_mf.h $
 /*------------------------------------------------------------------------------
 //  Delft3D - C Utilities
 //  Global definitions
@@ -64,30 +64,40 @@
 #   define CUTIL_GETMP  FC_FUNC(cutil_getmp,CUTIL_GETMP)
 #   define CUTIL_GETENV FC_FUNC(cutil_getenv,CUTIL_GETENV)
 #   define CUTIL_SYSTEM FC_FUNC(cutil_system,CUTIL_SYSTEM)
+#   define CUTIL_SLEEP FC_FUNC(cutil_sleep,CUTIL_SLEEP)
 #   define CUTIL_CGETCP FC_FUNC(cutil_cgetcp,CUTIL_CGETCP)
 #   define CUTIL_CDATE  FC_FUNC(cutil_cdate,CUTIL_CDATE)
 #   define CUTIL_CSTOP  FC_FUNC(cutil_cstop,CUTIL_CSTOP)
+#   define CUTIL_MF_SETMAXSTDIO  FC_FUNC(cutil_mf_setmaxstdio,CUTIL_MF_SETMAXSTDIO)
 #   define CUTIL_MF_OPEN  FC_FUNC(cutil_mf_open,CUTIL_MF_OPEN)
 #   define CUTIL_MF_CLOSE  FC_FUNC(cutil_mf_close,CUTIL_MF_CLOSE)
 #   define CUTIL_MF_REWIND  FC_FUNC(cutil_mf_rewind,CUTIL_MF_REWIND)
 #   define CUTIL_MF_BACKSPACE  FC_FUNC(cutil_mf_backspace,CUTIL_MF_BACKSPACE)
 #   define CUTIL_MF_READ  FC_FUNC(cutil_mf_read,CUTIL_MF_READ)
+#   define CUTIL_MF_GETPOS  FC_FUNC(cutil_mf_getpos,CUTIL_MF_GETPOS)
 #   define CUTIL_MF_EOF  FC_FUNC(cutil_mf_eof,CUTIL_MF_EOF)
+#   define CUTIL_CMP_DOUBLE  FC_FUNC(cutil_cmp_double,CUTIL_CMP_DOUBLE)
+#   define CUTIL_CMP_SINGLE  FC_FUNC(cutil_cmp_float,CUTIL_CMP_SINGLE)
 #else
 // WIN32
 #   define STDCALL  /* nothing */
 #   define CUTIL_GETMP  CUTIL_GETMP
 #   define CUTIL_GETENV CUTIL_GETENV
 #   define CUTIL_SYSTEM CUTIL_SYSTEM
+#   define CUTIL_SLEEP CUTIL_SLEEP
 #   define CUTIL_CGETCP CUTIL_CGETCP
 #   define CUTIL_CDATE  CUTIL_CDATE
 #   define CUTIL_CSTOP  CUTIL_CSTOP
+#   define CUTIL_MF_SETMAXSTDIO  CUTIL_MF_SETMAXSTDIO
 #   define CUTIL_MF_OPEN  CUTIL_MF_OPEN
 #   define CUTIL_MF_CLOSE  CUTIL_MF_CLOSE
 #   define CUTIL_MF_REWIND  CUTIL_MF_REWIND
 #   define CUTIL_MF_BACKSPACE  CUTIL_MF_BACKSPACE
 #   define CUTIL_MF_READ  CUTIL_MF_READ
+#   define CUTIL_MF_GETPOS CUTIL_MF_GETPOS
 #   define CUTIL_MF_EOF  CUTIL_MF_EOF
+#   define CUTIL_CMP_DOUBLE  CUTIL_CMP_DOUBLE
+#   define CUTIL_CMP_SINGLE  CUTIL_CMP_SINGLE
 #endif
 
 
@@ -99,10 +109,12 @@
 void    STDCALL         CUTIL_GETMP (char *, int *, int *);
 void    STDCALL         CUTIL_GETENV(char *, int *, char *, int *);
 void    STDCALL         CUTIL_SYSTEM(char *, int *);
+void    STDCALL         CUTIL_SLEEP (int *);
 #else
 void    STDCALL         CUTIL_GETMP (char *, int *, int *, int);
 void    STDCALL         CUTIL_GETENV(char *, int *, char *, int *, int, int);
 void    STDCALL         CUTIL_SYSTEM(char *, int *, int);
+void    STDCALL         CUTIL_SLEEP (int *);
 #endif
 
 #if defined (__cplusplus)

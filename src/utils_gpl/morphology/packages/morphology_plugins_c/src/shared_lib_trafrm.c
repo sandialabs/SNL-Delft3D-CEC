@@ -1,6 +1,6 @@
 //---- GPL ---------------------------------------------------------------------
 //
-// Copyright (C)  Stichting Deltares, 2011-2015.
+// Copyright (C)  Stichting Deltares, 2011-2020.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
 // Stichting Deltares. All rights reserved.
 //
 //------------------------------------------------------------------------------
-// $Id: shared_lib_trafrm.c 4612 2015-01-21 08:48:09Z mourits $
-// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_plugins_c/src/shared_lib_trafrm.c $
+// $Id: shared_lib_trafrm.c 65813 2020-01-17 16:46:56Z mourits $
+// $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_plugins_c/src/shared_lib_trafrm.c $
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -82,7 +82,7 @@ void RemoveTrailingBlanks_dll(char * String);
  * ============================================================================
  */
 #if defined(WIN32)
-long STDCALL PERFORM_FUNCTION_EQTRAN(long   * sharedDLLHandle    ,
+long STDCALL PERFORM_FUNCTION_EQTRAN(long long int   * sharedDLLHandle    ,
                               char   * function           ,
                               long   * dll_integers       ,
                               long   * max_integers       ,
@@ -104,8 +104,8 @@ long STDCALL PERFORM_FUNCTION_EQTRAN(long   * sharedDLLHandle    ,
                               double * t_relax            ,
                               char   * message            ,
                               long     length_function    ,
-                              long     length_dll_strings ,
-                              long     length_message     )
+                              long     length_dll_strings )
+                              // message is a c-string: no length specification added
 #elif defined(salford32)
 extern "C" PERFORM_FUNCTION_EQTRAN(  long   * sharedDLLHandle    ,
                               char   * function           ,
@@ -129,8 +129,8 @@ extern "C" PERFORM_FUNCTION_EQTRAN(  long   * sharedDLLHandle    ,
                               double * t_relax            ,
                               char   * message            ,
                               long     length_function    ,
-                              long     length_dll_strings ,
-                              long     length_message     )
+                              long     length_dll_strings )
+                              // message is a c-string: no length specification added
 #elif defined (HAVE_CONFIG_H)
 long STDCALL PERFORM_FUNCTION_EQTRAN(long   * sharedDLLHandle    ,
                               char   * function           ,
@@ -154,8 +154,8 @@ long STDCALL PERFORM_FUNCTION_EQTRAN(long   * sharedDLLHandle    ,
                               double * t_relax            ,
                               char   * message            ,
                               long     length_function    ,
-                              long     length_dll_strings ,
-                              long     length_message     )
+                              long     length_dll_strings )
+                              // message is a c-string: no length specification added
 #endif
 {
 
@@ -167,14 +167,16 @@ long STDCALL PERFORM_FUNCTION_EQTRAN(long   * sharedDLLHandle    ,
                                     char   *, long   *,
                                     long   *, double *, double *, double *, double *, double *,
                                     long   *, double *, double *, double *, double *, double *,
-                                    char   *, long    , long    );
+                                    char   *, long    );
+                                    // message is a c-string: no length specification added
 #elif defined (HAVE_CONFIG_H)
   typedef void * (STDCALL * MyProc)(long   *, long   *,
                                     double *, long   *,
                                     char   *, long   *,
                                     long   *, double *, double *, double *, double *, double *,
                                     long   *, double *, double *, double *, double *, double *,
-                                    char   *, long    , long    );
+                                    char   *, long    );
+                                    // message is a c-string: no length specification added
 #endif
   MyProc proc;
   char * fun_name;
@@ -211,7 +213,8 @@ long STDCALL PERFORM_FUNCTION_EQTRAN(long   * sharedDLLHandle    ,
                       sswv        ,
                       t_relax     ,
                       message     ,
-                      length_dll_strings, length_message );
+                      length_dll_strings);
+                      // message is a c-string: no length specification added
 #elif defined (HAVE_CONFIG_H)
      (void *) (*proc)(dll_integers, max_integers,
                       dll_reals   , max_reals   ,
@@ -228,7 +231,9 @@ long STDCALL PERFORM_FUNCTION_EQTRAN(long   * sharedDLLHandle    ,
                       sswu        ,
                       sswv        ,
                       t_relax     ,
-                      message     , length_dll_strings, length_message );
+                      message     ,
+                      length_dll_strings);
+                      // message is a c-string: no length specification added
 #endif
   }
   free(fun_name); fun_name = NULL;
@@ -239,7 +244,7 @@ long STDCALL PERFORM_FUNCTION_EQTRAN(long   * sharedDLLHandle    ,
  * ============================================================================
  */
 #if defined(WIN32)
-long STDCALL PERFORM_FUNCTION_EROSILT(long   * sharedDLLHandle    ,
+long STDCALL PERFORM_FUNCTION_EROSILT(long long int  * sharedDLLHandle    ,
                               char   * function           ,
                               long   * dll_integers       ,
                               long   * max_integers       ,
@@ -251,8 +256,8 @@ long STDCALL PERFORM_FUNCTION_EROSILT(long   * sharedDLLHandle    ,
                               double * source             ,
                               char   * message            ,
                               long     length_function    ,
-                              long     length_dll_strings ,
-                              long     length_message     )
+                              long     length_dll_strings )
+	                          // message is a c-string: no length specification added
 #elif defined(salford32)
 extern "C" PERFORM_FUNCTION_EROSILT(  long   * sharedDLLHandle    ,
                               char   * function           ,
@@ -266,8 +271,8 @@ extern "C" PERFORM_FUNCTION_EROSILT(  long   * sharedDLLHandle    ,
                               double * source             ,
                               char   * message            ,
                               long     length_function    ,
-                              long     length_dll_strings ,
-                              long     length_message     )
+                              long     length_dll_strings )
+	                          // message is a c-string: no length specification added
 #elif defined (HAVE_CONFIG_H)
 long STDCALL PERFORM_FUNCTION_EROSILT(long   * sharedDLLHandle    ,
                               char   * function           ,
@@ -281,8 +286,8 @@ long STDCALL PERFORM_FUNCTION_EROSILT(long   * sharedDLLHandle    ,
                               double * source             ,
                               char   * message            ,
                               long     length_function    ,
-                              long     length_dll_strings ,
-                              long     length_message     )
+                              long     length_dll_strings )
+	                          // message is a c-string: no length specification added
 #endif
 {
 
@@ -293,13 +298,15 @@ long STDCALL PERFORM_FUNCTION_EROSILT(long   * sharedDLLHandle    ,
                                     double *, long   *,
                                     char   *, long   *,
                                     double *, double *,
-                                    char   *, long    , long    );
+                                    char   *, long    );
+                                    // message is a c-string: no length specification added
 #elif defined (HAVE_CONFIG_H)
   typedef void * (STDCALL * MyProc)(long   *, long   *,
                                     double *, long   *,
                                     char   *, long   *,
                                     double *, double *,
-                                    char   *, long    , long    );
+                                    char   *, long    );
+                                    // message is a c-string: no length specification added
 #endif
   MyProc proc;
   char * fun_name;
@@ -324,13 +331,15 @@ long STDCALL PERFORM_FUNCTION_EROSILT(long   * sharedDLLHandle    ,
                       dll_reals   , max_reals   ,
                       dll_strings , max_strings ,
                       sink        , source      ,
-                      message     , length_dll_strings, length_message );
+                      message     , length_dll_strings);
+	                  // message is a c-string: no length specification added
 #elif defined (HAVE_CONFIG_H)
      (void *) (*proc)(dll_integers, max_integers,
                       dll_reals   , max_reals   ,
                       dll_strings , max_strings ,
                       sink        , source      ,
-                      message     , length_dll_strings, length_message );
+                      message     , length_dll_strings);
+	                  // message is a c-string: no length specification added
 #endif
   }
   free(fun_name); fun_name = NULL;

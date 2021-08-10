@@ -5,10 +5,10 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
                    & tauc      ,taubcw    ,taurat    ,ta        ,caks      , &
                    & dss       ,mudfrac   ,eps       ,aksfac    ,rwave     , &
                    & camax     ,rdc       ,rdw       ,iopkcw    ,iopsus    , &
-                   & vonkar    ,wave      ,tauadd    )
+                   & vonkar    ,wave      ,tauadd    ,betam     )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -32,8 +32,8 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: bedbc1993.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_gpl/morphology/packages/morphology_kernel/src/bedbc1993.f90 $
+!  $Id: bedbc1993.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_gpl/morphology/packages/morphology_kernel/src/bedbc1993.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Compute bed roughness and shear stress parameters
@@ -50,6 +50,7 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
 ! Call variables
 !
     real(fp), intent(out) :: aks    !  Description and declaration in esm_alloc_real.f90
+    real(fp), intent(in)  :: betam
     real(fp), intent(out) :: caks
     real(fp), intent(in)  :: d50
     real(fp), intent(in)  :: d90
@@ -106,8 +107,8 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
 !
 !! executable statements -------------------------------------------------------
 !
-    delr = 0.0
-    uwb  = 0.0
+    delr = 0.0_fp
+    uwb  = 0.0_fp
     !
     ! G. Lesser's implementation of Van Rijn's pick-up function for waves and currents.
     !
@@ -115,8 +116,8 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
     ! (current-only Z0 values transferred from TAUBOT).
     ! Expression limits aks to minimum of 0.01*h1 for accuracy
     !
-    rc   = 30.*z0cur
-    delr = 0.025
+    rc   = 30.0_fp*z0cur
+    delr = 0.025_fp
     !
     usus  = umod
     zusus = zumod
@@ -140,17 +141,17 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
     !
     ! Calculate Van Rijn's reference height
     !
-    aks = max(aksfac*rc, 0.01*h1)
+    aks = max(aksfac*rc, 0.01_fp*h1)
     !
     ! Adjust velocity to top of wave mixing layer and calculate other
     ! wave parameters (if waves are present)
     !
-    tauwav = 0.0
-    muwa   = 0.0
-    muw    = 0.0
+    tauwav = 0.0_fp
+    muwa   = 0.0_fp
+    muw    = 0.0_fp
     !
     if (wave) then
-       if (tp>0.0) then
+       if (tp>0.0_fp) then
           !
           ! Calculate apparent (enhanced) bed roughness ra
           !
@@ -159,16 +160,16 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
           ! TAUBOT dependent on the chosen wave-current interaction
           ! model.
           !
-          ra = 30.0*z0rou
+          ra = 30.0_fp*z0rou
           !
           ! still limit according to Van Rijn
           !
-          ra = min(10.*rc, ra)
+          ra = min(10.0_fp*rc, ra)
           !
           ! Calculate wave parameters
           !
-          uwb = sqrt(2.0)*uorb
-          awb = tp*uwb/(2.0*pi)
+          uwb = sqrt(2.0_fp)*uorb
+          awb = tp*uwb/(2.0_fp*pi)
           !
           ! Note: need this check to avoid floating overflow errors in
           ! calculation of fw and f1w
@@ -177,19 +178,19 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
           !
           ! Check aks height
           !
-          aks = max(delr/2, aks)
+          aks = max(delr/2.0_fp, aks)
           !
           ! Compute wave boundary laver thickness
           !
-          delw = 0.072*awb*(awb/rw)**(-0.25)
+          delw = 0.072_fp*awb*(awb/rw)**(-0.25_fp)
           !
           ! Thickness of wave boundary mixing layer (Van Rijn (1993))
           !
-          delm = 3.0*delw
+          delm = 3.0_fp*delw
           !
           ! Limit minimum delm thickness
           !
-          delm = max(delm, ra/30)
+          delm = max(delm, ra/30.0_fp)
           !
           ! Convert velocity to velocity at top of wave mixing layer,
           ! based on ENHANCED bed roughness
@@ -197,23 +198,23 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
           ! interaction factor alfacw is no longer required.
           ! Set this as the reference velocity and height
           !
-          usus  = umod*log(1.0 + delm/z0rou)/log(1.0 + zumod/z0rou)
+          usus  = umod*log(1.0_fp + delm/z0rou)/log(1.0_fp + zumod/z0rou)
           zusus = delm
           !
           ! Calculate tauwav and muwa
           ! Calculate bed-shear stress due to waves
           !
-          fw     = min(exp( - 6.0 + 5.2*(awb/rw)**( - 0.19)), 0.3_fp)
-          tauwav = 0.25*rhowat*fw*uwb**2
+          fw     = min(exp( - 6.0_fp + 5.2_fp*(awb/rw)**( - 0.19_fp)), 0.3_fp)
+          tauwav = 0.25_fp*rhowat*fw*uwb**2
           !
           ! Calculate efficiency factor for waves
           ! (at reference level aks)
           !
-          muwa = 0.6/dstar
+          muwa = 0.6_fp/dstar
           !
           ! And for bed-load slope effects
           !
-          f1w = exp( - 6.0 + 5.2*(awb/(3*d90))**( - 0.19))
+          f1w = exp( - 6.0_fp + 5.2_fp*(awb/(3*d90))**(-0.19_fp))
           muw = f1w/fw
        endif
     endif
@@ -244,43 +245,43 @@ subroutine bedbc1993(tp        ,uorb      ,rhowat    ,h1        ,umod      , &
     ! Calculate efficiency factor currents
     !
     if (d90>0.0_fp) then
-        f1c = 0.24*log10(12.0*h1/(3.0*d90))**( - 2)
+        f1c = 0.24_fp*log10(12.0_fp*h1/(3.0_fp*d90))**(-2)
     else
         f1c = 0.0_fp
     endif
-    fc  = 0.24*log10(12.0*h1/rc)**( - 2)
+    fc  = 0.24_fp*log10(12.0_fp*h1/rc)**(-2)
     muc = f1c/fc
     !
     ! Calculate bed shear stress ratio for bed-load slope effects
     ! Note: this ignores bed-slope effects on initiation of motion
     !
     taubcw = muc*tauc + muw*tauwav
-    taucr1 = taucr*(1.0 + mudfrac)**3
+    taucr1 = taucr*(1.0_fp + mudfrac)**betam
     taurat = taubcw/taucr1
     !
     ! Calculate Van Rijn's Dimensionless bed-shear stress for reference
     ! concentration at z=a
     !
-    ta = max(0.0_fp, (muc*tauc + muwa*tauwav)/taucr1 - 1.0)
+    ta = max(0.0_fp, (muc*tauc + muwa*tauwav)/taucr1 - 1.0_fp)
     !
     ! Equilibrium concentration at reference level aks
     ! following Van Rijn.
     !
     if (ta>eps) then
-       caks = min(0.015*d50*ta**1.5/(aks*dstar**0.3), camax)
+       caks = min(0.015_fp*d50*ta**1.5_fp/(aks*dstar**0.3_fp), camax)
     else
-       caks = 0.0
+       caks = 0.0_fp
     endif
     !
     ! Determination of suspended sediment size dss
     !
     if (iopsus==1) then
-       if (ta<=1.0) then
-          dss = d50*0.64
-       elseif (ta>=25.0) then
+       if (ta<=1.0_fp) then
+          dss = d50*0.64_fp
+       elseif (ta>=25.0_fp) then
           dss = d50
        else
-          dss = d50*(1.0 + 0.015*(ta - 25.0))
+          dss = d50*(1.0_fp + 0.015_fp*(ta - 25.0_fp))
        endif
     endif
 end subroutine bedbc1993

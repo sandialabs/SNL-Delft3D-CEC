@@ -1,0 +1,119 @@
+\documentclass[signature]{deltares_report}
+\usepackage{listings}
+\usepackage[titletoc]{appendix}
+\usepackage{pdfpages}
+%-----------------------------------------------
+\lstset{ %
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code listings
+}
+\definecolor{Gray}{gray}{0.9}
+\begin{document}
+\pagestyle{empty}
+\cleardoublepage
+%
+
+\newcommand{\ProgramName}{PROJECT_NAME\xspace}
+
+\title{\ProgramName}
+\subtitle{Test Report}
+\projectnumber{PROJECT_NUMBER}
+\client{Deltares}
+\reference{PROJECT_NUMBER-PROJECT_NAME-006}
+\classification{-}
+
+\date{PROJECT_DATE}
+\version{1.0}
+
+\keywords{software}
+
+\references{Refer to \autoref{chapterLiterature}}
+
+\summary{}
+
+\versioni{1.0}
+\datei{PROJECT_DATE}
+\authori{Carles Salvador Soriano Perez}
+\revieweri{}
+\approvali{}
+
+\status{draft}
+\disclaimer{}
+
+%\deltarestitle
+
+
+%------------------------------------------------------------------------------
+\chapter{Introduction} 
+\label{chapterIntroduction}
+
+\section{Purpose and scope of this document} \label{sec:PurposeAndScope}
+
+
+\section{Related Documents}
+\label{sec:RelatedDocuments}
+\bigskip
+\begin{longtable}{|p{0.28\textwidth}|p{0.72\textwidth}|}
+\caption{Overview of related documents for the \ProgramName \label{tab:RelatedDocuments}}\\	\hline
+		\hline 
+		\textbf{Document} & \textbf{Reference} \\
+		\hline 
+		\hline 
+		Functional Design & \citep{PROJECT_NAME_FunctionalDesignPROJECT_YEAR} \\
+		Technical Design & \citep{PROJECT_NAME_TechnicalDesignPROJECT_YEAR} \\
+		Technical Documentation & \citep{PROJECT_NAME_TechnicalDocumentationPROJECT_YEAR} \\
+		Test Plan & \citep{PROJECT_NAME_TestPlanPROJECT_YEAR} \\
+    \hline			
+\end{longtable}
+
+\section{Requirements}
+\label{sec:requirements}
+
+
+\section{Versions}
+\label{sec:Versions}
+
+\subsection{Version 1.0}
+\label{sec:Version}
+This is a first draft of the document.
+
+%------------------------------------------------------------------------------
+\chapter{Component Testing} 
+\label{chapterUnitTest}
+
+
+%------------------------------------------------------------------------------
+\chapter{Integration tests}
+\label{chapterIntegrationTests}
+
+
+%------------------------------------------------------------------------------
+\chapter{System Testing} 
+\label{chapterSystemTest}
+
+
+%------------------------------------------------------------------------------
+\chapter{Acceptance tests} 
+\label{chapterAcceptanceTest}
+
+
+%------------------------------------------------------------------------------
+\chapter{Coverage Tests} 
+\label{chapterCoverage}
+
+%------------------------------------------------------------------------------
+
+\chapter{Conclusion} 
+\label{chapterConclusion}
+
+%------------------------------------------------------------------------------
+
+\chapter{Literature}  \label{chapterLiterature}
+
+\bibliography{../PROJECT_NAME_references/PROJECT_NAME_references}
+
+%----------------------------------------
+\pagestyle{empty}
+\mbox{}
+
+%------------------------------------------------------------------------------
+\end{document}

@@ -3,7 +3,7 @@ function outdata = qp_plotmanager(cmd,UD,logfile,logtype,cmdargs)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -28,8 +28,8 @@ function outdata = qp_plotmanager(cmd,UD,logfile,logtype,cmdargs)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_plotmanager.m $
-%   $Id: qp_plotmanager.m 5632 2015-12-09 08:50:03Z jagers $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/qp_plotmanager.m $
+%   $Id: qp_plotmanager.m 65778 2020-01-14 14:07:42Z mourits $
 
 mfig = findobj(allchild(0),'flat','tag','Delft3D-QUICKPLOT');
 UD=getappdata(mfig,'QPHandles');
@@ -630,11 +630,13 @@ switch cmd
                         out_of_options=0;
                         while length(it_same_name)>1 && ~strcmp(Nms{it},separator)
                             extrastr = repmat({''},1,length(Items));
+                            cancut = 0;
                             for itloc=it_same_name
                                 switch extend
                                     case 1
+                                        cancut = 1;
                                         if isfield(UserDatas{itloc}.PlotState.FI,'Name')
-                                            extrastr{itloc}=abbrevfn(UserDatas{itloc}.PlotState.FI.Name);
+                                            extrastr{itloc}=UserDatas{itloc}.PlotState.FI.Name;
                                         end
                                     case 2
                                         stat=UserDatas{itloc}.PlotState.Selected{ST_};
@@ -678,6 +680,17 @@ switch cmd
                                         k=UserDatas{itloc}.PlotState.Selected{K_};
                                         if isequal(k,0)
                                             extrastr{itloc}='All K';
+                                        elseif iscell(k)
+                                            switch k{1}
+                                                case 'z'
+                                                    extrastr{itloc} = sprintf('at Z=%g',k{2});
+                                                case 'dz_below_max'
+                                                    extrastr{itloc} = sprintf('at %g below surface',k{2});
+                                                case 'dz_above_min'
+                                                    extrastr{itloc} = sprintf('at %g above bed',k{2});
+                                                case 'depth_frac'
+                                                    extrastr{itloc} = sprintf('at %g%% of depth',k{2}*100);
+                                            end
                                         elseif ~isempty(k)
                                             extrastr{itloc}=['K=' vec2str(k,'nobrackets')];
                                         end
@@ -702,8 +715,48 @@ switch cmd
                             end
                             it_extra_same=find(strcmp(extrastr{it},extrastr(it_same_name)));
                             if length(it_extra_same)<length(it_same_name)
+                                minstrlen = min(cellfun('length',extrastr(it_same_name)));
+                                %
+                                if cancut
+                                    %
+                                    % look for first character different
+                                    %
+                                    c1diff = false;
+                                    for i1 = 1:minstrlen
+                                        c1 = extrastr{it_same_name(1)}(i1);
+                                        for itloc=it_same_name
+                                            if extrastr{itloc}(i1)~=c1
+                                                c1diff = true;
+                                                break
+                                            end
+                                        end
+                                        if c1diff
+                                            break
+                                        end
+                                    end
+                                    %
+                                    % look for last character different
+                                    %
+                                    c2diff = false;
+                                    for i2 = 0:minstrlen-1
+                                        c2 = extrastr{it_same_name(1)}(end-i2);
+                                        for itloc=it_same_name
+                                            if extrastr{itloc}(end-i2)~=c2
+                                                c2diff = true;
+                                                break
+                                            end
+                                        end
+                                        if c2diff
+                                            break
+                                        end
+                                    end
+                                else
+                                    i1 = 1;
+                                    i2 = 0;
+                                end
+                                %
                                 for itloc=it_same_name
-                                    Nms{itloc}=cat(2,Nms{itloc},' - ',extrastr{itloc});
+                                    Nms{itloc}=cat(2,Nms{itloc},' - ',extrastr{itloc}(i1:end-i2));
                                 end
                                 it_same_name=it_same_name(it_extra_same);
                             end
@@ -812,7 +865,7 @@ switch cmd
                     case {'moveitemdown','moveitemtoback'}
                         ItVal2 = ItVal+1;
                 end
-                if ItVal2>length(ItTags)
+                if ItVal2>length(ItTags) || ItVal2<1
                     break
                 end
                 %
@@ -1854,7 +1907,7 @@ switch cmd
     case 'refreshitemprop'
         It = getItem(UD);
         hOptions = UD.PlotMngr.Options.Handles;
-        if isempty(It) || length(It)>1
+        if isempty(It) || length(It)>1 || ~ishandle(It)
             % no item or multiple items selected - for the time being can't
             % visualize options. Call qp_update_options with empty Ops to
             % hide them all.
@@ -1888,7 +1941,7 @@ if ~iscell(ItData)
     It = [];
 else
     ItIDs=ItData{2};
-    ItVal=get(UD.PlotMngr.ItList,'value');
+    ItVal=get(UD.PlotMngr.ItList,'value'); % <-- use ItData{1} - ItData{2} is invalid if animated or linked
     if isempty(ItIDs)
         It=[];
     else

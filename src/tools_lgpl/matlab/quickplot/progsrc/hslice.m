@@ -12,7 +12,7 @@ function dataOut = hslice(dataIn,Type,Z0)
 %
 %       TYPE           | meaning of ALPHA
 %       ------------------------------------------------------------------
-%       'z'            | vertical level Z0
+%       'z'            | vertical level ALPHA (equal to HSLICE(DATA3D,ALPHA)
 %       'dz_below_max' | ALPHA is the distance dz below top
 %       'dz_above_min' | ALPHA is the distance dz below bottom
 %       'depth_frac'   | ALPHA is the depth fraction (0 = top, 1 = bottom)
@@ -33,7 +33,7 @@ function dataOut = hslice(dataIn,Type,Z0)
 
 %----- LGPL --------------------------------------------------------------------
 %                                                                               
-%   Copyright (C) 2011-2015 Stichting Deltares.                                     
+%   Copyright (C) 2011-2020 Stichting Deltares.                                     
 %                                                                               
 %   This library is free software; you can redistribute it and/or                
 %   modify it under the terms of the GNU Lesser General Public                   
@@ -58,8 +58,8 @@ function dataOut = hslice(dataIn,Type,Z0)
 %                                                                               
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/hslice.m $
-%   $Id: hslice.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/hslice.m $
+%   $Id: hslice.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargin<2
    error('Not enough input arguments.')
@@ -70,6 +70,11 @@ elseif ~ischar(Type)
    error('Expected string as second input argument.')
 else
    % Type: z, dz_below_max, dz_above_min, depth_frac
+end
+if isempty(Z0)
+    error('Empty horizontal slice level ALPHA specified.')
+elseif numel(Z0)>1
+    error('Horizontal slice level ALPHA should be scalar.')
 end
 
 dataOut = dataIn;
@@ -82,12 +87,12 @@ end
 nflds = length(flds);
 
 szZ = size(dataIn.Z);
-dataOut.Z = repmat(NaN,szZ(1:end-1));
+dataOut.Z = repmat(NaN,[szZ(1:end-1) 1]);
 for i = 1:nflds
    Fld = flds{i};
    Field3D = getfield(dataIn,Fld);
    szV = size(Field3D);
-   Field2D = repmat(NaN,szV(1:end-1));
+   Field2D = repmat(NaN,[szV(1:end-1) 1]);
    dataOut = setfield(dataOut,Fld,Field2D);
 end
 
@@ -105,7 +110,7 @@ switch Type
       Zmax = max(dataIn.Z,[],zdim);
       Z0 = Zmax + (Zmin - Zmax) * Z0;
    case 'z'
-      Z0 = repmat(Z0,szZ(1:zdim-1));
+      Z0 = repmat(Z0,[szZ(1:zdim-1) 1]);
    otherwise
       error('Unknown slice TYPE.')
 end
@@ -113,7 +118,7 @@ end
 for k = 1:szZ(zdim)-1
    Zk0 = dataIn.Z(fulldims{:},k);
    Zk1 = dataIn.Z(fulldims{:},k+1);
-   inRange = Zk1<=Z0 & Z0<=Zk0;
+   inRange = (Zk1<=Z0 & Z0<=Zk0) | (Zk0<=Z0 & Z0<=Zk1);
    if any(inRange(:))
       dZ = Zk0(inRange)-Zk1(inRange);
       dZ(dZ==0) = NaN;

@@ -1,7 +1,7 @@
 subroutine getfield(itim, comfil, grpnam, funam, ierr, fcom, nmaxus, mmax, kmax, lmax, l)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2014.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ subroutine getfield(itim, comfil, grpnam, funam, ierr, fcom, nmaxus, mmax, kmax,
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: getfield.f90 4649 2015-02-04 15:38:11Z ye $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/output/getfield.f90 $
+!  $Id: getfield.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/output/getfield.f90 $
 !!--description-----------------------------------------------------------------
 !
 ! Method used:
@@ -84,7 +84,7 @@ subroutine getfield(itim, comfil, grpnam, funam, ierr, fcom, nmaxus, mmax, kmax,
        do m = 1, mmax
           do n = 1, nmaxus
              i = i+1
-             fcom(n, m, k, 1) = sbuff(i)
+             fcom(n, m, k, l) = sbuff(i)
           enddo
        enddo
     enddo

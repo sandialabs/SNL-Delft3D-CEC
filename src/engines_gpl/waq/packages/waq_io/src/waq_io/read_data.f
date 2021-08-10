@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -62,7 +62,8 @@
       integer                               :: idummy        ! dummy
       real                                  :: rdummy        ! dummy
       integer                               :: i1,i2,i3      ! indexes
-      integer                               :: ierr_alloc    ! indexes
+      integer                               :: ibrk          ! indexe
+      integer                               :: ierr_alloc    ! error status
       integer(4) :: ithndl = 0
       if (timon) call timstrt( "read_data", ithndl )
 
@@ -134,8 +135,16 @@
             if ( nobrk .gt. mxbrk ) then ! resize
                mxbrk = mxbrk*2
                allocate(times2(mxbrk),values2(ndim1,ndim2,mxbrk))
-               times2(1:nobrk-1) = data_block%times(1:nobrk-1)
-               values2(1:ndim1,1:ndim2,1:nobrk-1) = data_block%values(1:ndim1,1:ndim2,1:nobrk-1)
+               do ibrk = 1, nobrk-1
+                  times2(ibrk) = data_block%times(ibrk)
+               end do
+               do ibrk = 1, nobrk-1
+                  do i2 = 1 , ndim2
+                     do i1 = 1 , ndim1
+                        values2(i1,i2,ibrk) = data_block%values(i1,i2,ibrk)
+                     enddo
+                  enddo
+               enddo
                deallocate(data_block%times,data_block%values)
                data_block%times => times2
                data_block%values => values2
@@ -143,7 +152,9 @@
                nullify(values2)
                if ( ftype .eq. FUNCTYPE_HARMONIC .or. ftype .eq. FUNCTYPE_FOURIER ) then
                   allocate(phase2(mxbrk))
-                  phase2(1:nobrk-1) = data_block%phase(1:nobrk-1)
+                  do ibrk = 1, nobrk-1
+                     phase2(ibrk) = data_block%phase(ibrk)
+                  end do
                   deallocate(data_block%phase)
                   data_block%phase => phase2
                   nullify(phase2)
@@ -173,8 +184,16 @@
 
          if ( nobrk .ne. mxbrk ) then
             allocate(times2(nobrk),values2(ndim1,ndim2,nobrk))
-            times2(1:nobrk) = data_block%times(1:nobrk)
-            values2(1:ndim1,1:ndim2,1:nobrk) = data_block%values(1:ndim1,1:ndim2,1:nobrk)
+            do ibrk = 1, nobrk
+               times2(ibrk) = data_block%times(ibrk)
+            end do
+            do ibrk = 1, nobrk
+               do i2 = 1 , ndim2
+                  do i1 = 1 , ndim1
+                     values2(i1,i2,ibrk) = data_block%values(i1,i2,ibrk)
+                  enddo
+               enddo
+            enddo
             deallocate(data_block%times,data_block%values)
             data_block%times => times2
             data_block%values => values2
@@ -182,7 +201,9 @@
             nullify(values2)
             if ( ftype .eq. FUNCTYPE_HARMONIC .or. ftype .eq. FUNCTYPE_FOURIER ) then
                allocate(phase2(mxbrk))
-               phase2(1:nobrk) = data_block%phase(1:nobrk)
+               do ibrk = 1, nobrk
+                  phase2(ibrk) = data_block%phase(ibrk)
+               end do
                deallocate(data_block%phase)
                data_block%phase => phase2
                nullify(phase2)

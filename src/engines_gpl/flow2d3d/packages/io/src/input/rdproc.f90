@@ -1,13 +1,13 @@
 subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
                 & temp     ,wind      ,ktemp     ,keva        ,ivapop2  , &
-                & irov     ,ctunit    ,z0v       ,sferic      ,tgfcmp   , &
+                & irov     ,z0v       ,sferic      ,tgfcmp   , &
                 & temeqs   ,saleqs    ,wstcof    ,rhoa        ,secflo   , &
                 & betac    ,equili    ,lsec      ,chzmin      ,rmincf   , &
                 & rtcmod   ,couplemod ,nonhyd    ,mmax        ,nmax     , &
                 & nmaxus   ,sedim     ,idensform ,solrad_read2, gdp)
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -31,15 +31,15 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: rdproc.f90 5619 2015-11-28 14:35:04Z jagers $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/io/src/input/rdproc.f90 $
+!  $Id: rdproc.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/io/src/input/rdproc.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: - Reads physical coefficients for temperature
 !                model, rigid wall, tidal forces, density &
 !                wind: KTEMP, FCLOU, SAREA, IVAPOP, SECCHI,
 !                      STANTON, DALTON ,IROV, Z0V, TGFCMP,
-!                      TEMPW, SALW, WSTRES, RHOA
+!                      TEMPW, SALW, WSTRES, RHOA , SDlake, Wslake
 ! Method used:
 !
 !!--pseudo code and references--------------------------------------------------
@@ -47,6 +47,7 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
 !!--declarations----------------------------------------------------------------
     use precision
     use properties
+    use dfparall
     !
     use globaldata
     !
@@ -65,6 +66,8 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
     real(fp)                   , pointer :: dalton
     real(fp)                   , pointer :: qtotmx
     real(fp)                   , pointer :: lambda
+    integer                    , pointer :: wslake
+    integer                    , pointer :: sdlake
     integer                    , pointer :: ivapop
     integer                    , pointer :: maseva
     logical                    , pointer :: free_convec
@@ -80,6 +83,7 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
     integer                    , pointer :: n1_nhy
     integer                    , pointer :: n2_nhy
     integer                    , pointer :: nhiter
+    integer                    , pointer :: sleepduringwave ! Description and decleration in tricom.igs
     real(fp)                   , pointer :: epsnh
     logical                    , pointer :: l2norm
     real(fp)                   , pointer :: rel_epsnh
@@ -94,6 +98,7 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
     real(fp)                   , pointer :: ti_nodal
     logical                    , pointer :: xbeach
     real(fp)                   , pointer :: tunit
+    character(10)              , pointer :: tunitstr
     logical                    , pointer :: ztbml
 !
 ! Global variables
@@ -129,7 +134,6 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
     real(fp)                 :: z0v         !  Description and declaration in physco.igs
     real(fp), dimension(6)   :: wstcof      !  Description and declaration in physco.igs
     character(*)             :: mdfrec      !!  Standard rec. length in MD-file (300)
-    character(1)             :: ctunit      ! Time scale for time parameters, currently set to 'M'(inute - fixed). 
     character(1)             :: equili      !!  Equilibrium or advection and diffusion default = no equilibrium ('N') which means lsec = 1
     character(36)            :: tgfcmp      !  Description and declaration in tricom.igs
 !
@@ -175,6 +179,8 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
     sarea               => gdp%gdheat%sarea
     fclou               => gdp%gdheat%fclou
     gapres              => gdp%gdheat%gapres
+    wslake              => gdp%gdheat%wslake
+    sdlake              => gdp%gdheat%sdlake
     stanton             => gdp%gdheat%stanton
     dalton              => gdp%gdheat%dalton
     qtotmx              => gdp%gdheat%qtotmx
@@ -183,32 +189,34 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
     maseva              => gdp%gdheat%maseva
     free_convec         => gdp%gdheat%free_convec
     solrad_read         => gdp%gdheat%solrad_read
-    m1_nhy    => gdp%gdnonhyd%m1_nhy
-    m2_nhy    => gdp%gdnonhyd%m2_nhy
-    n1_nhy    => gdp%gdnonhyd%n1_nhy
-    n2_nhy    => gdp%gdnonhyd%n2_nhy
-    nhiter    => gdp%gdnonhyd%nhiter
-    rel_epsnh => gdp%gdnonhyd%rel_epsnh
-    tetaq     => gdp%gdnonhyd%tetaq
-    tetaz     => gdp%gdnonhyd%tetaz
-    flag_pp   => gdp%gdnonhyd%flag_pp
-    updwl     => gdp%gdnonhyd%updwl
-    precon    => gdp%gdnonhyd%precon
-    krylov    => gdp%gdnonhyd%krylov
-    milu      => gdp%gdnonhyd%milu
-    nh_level  => gdp%gdnonhyd%nh_level
-    epsnh     => gdp%gdnonhyd%epsnh
-    l2norm    => gdp%gdnonhyd%l2norm
-    lunmd     => gdp%gdinout%lunmd
-    lundia    => gdp%gdinout%lundia
-    lunscr    => gdp%gdinout%lunscr
-    nrcmp     => gdp%gdtfzeta%nrcmp
-    tgfdef    => gdp%gdtfzeta%tgfdef
-    itis      => gdp%gdrdpara%itis
-    ti_nodal  => gdp%gdinttim%ti_nodal
-    xbeach    => gdp%gdprocs%xbeach
-    tunit     => gdp%gdexttim%tunit
-    ztbml     => gdp%gdzmodel%ztbml
+    m1_nhy              => gdp%gdnonhyd%m1_nhy
+    m2_nhy              => gdp%gdnonhyd%m2_nhy
+    n1_nhy              => gdp%gdnonhyd%n1_nhy
+    n2_nhy              => gdp%gdnonhyd%n2_nhy
+    nhiter              => gdp%gdnonhyd%nhiter
+    rel_epsnh           => gdp%gdnonhyd%rel_epsnh
+    tetaq               => gdp%gdnonhyd%tetaq
+    tetaz               => gdp%gdnonhyd%tetaz
+    flag_pp             => gdp%gdnonhyd%flag_pp
+    updwl               => gdp%gdnonhyd%updwl
+    precon              => gdp%gdnonhyd%precon
+    krylov              => gdp%gdnonhyd%krylov
+    milu                => gdp%gdnonhyd%milu
+    nh_level            => gdp%gdnonhyd%nh_level
+    epsnh               => gdp%gdnonhyd%epsnh
+    l2norm              => gdp%gdnonhyd%l2norm
+    lunmd               => gdp%gdinout%lunmd
+    lundia              => gdp%gdinout%lundia
+    lunscr              => gdp%gdinout%lunscr
+    nrcmp               => gdp%gdtfzeta%nrcmp
+    tgfdef              => gdp%gdtfzeta%tgfdef
+    itis                => gdp%gdrdpara%itis
+    ti_nodal            => gdp%gdinttim%ti_nodal
+    xbeach              => gdp%gdprocs%xbeach
+    tunit               => gdp%gdexttim%tunit
+    tunitstr            => gdp%gdexttim%tunitstr
+    ztbml               => gdp%gdzmodel%ztbml
+    sleepduringwave     => gdp%gdtricom%sleepduringwave
     include 'tfzeta.gdt'
     !
     ! initialize local parameters
@@ -273,6 +281,12 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
     n1_nhy      = 0
     m2_nhy      = 0
     n2_nhy      = 0
+    !
+    if (parll) then
+       sleepduringwave = 100
+    else
+       sleepduringwave = 0
+    endif
     !
     ! locate and read 'Ktemp ' number of temperature model use
     ! only if temp = .true., default value allowed => idef
@@ -515,6 +529,30 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
              dalton = rdef
              write(message, '(a,e14.5)') 'Ocean heat model: Using default Dalton number ', dalton
              call prterr(lundia, 'G051', trim(message))
+          endif
+          !
+          ! Locate and read 'Wslake'
+          ! 
+          Wslake = 0
+          call prop_get_integer(gdp%mdfile_ptr, '*', 'Wslake', Wslake)
+          !
+          ! test constistency
+          !
+          if (Wslake<0 .or. Wslake>1) then
+             call prterr(lundia    ,'U061'    ,' '       )
+             Wslake = 0
+          endif
+          !
+          ! Locate and read 'SDlake'
+          !
+          SDlake = 0
+          call prop_get_integer(gdp%mdfile_ptr, '*', 'SDlake', SDlake)
+          !
+          ! test constistency
+          !
+          if (SDlake<0 .or. SDlake>1) then
+             call prterr(lundia    ,'U061'    ,' '       )
+             SDlake = 0
           endif
           !
           ! reset RDEF
@@ -1266,7 +1304,7 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
     ti_nodal = 21600.0_fp / tunit
     call prop_get(gdp%mdfile_ptr, '*', 'NodalT', ti_nodal)
     if (comparereal(ti_nodal,21600.0_fp/tunit) /= 0) then
-       write (message,'(a,e12.4,3a)') 'Updating tidal node factors every ', ti_nodal, ' [',ctunit,']'
+       write (message,'(a,e12.4,3a)') 'Updating tidal node factors every ', ti_nodal, ' [',trim(tunitstr),']'
        call prterr(lundia, 'G051', trim(message))
     endif
     !
@@ -1283,5 +1321,7 @@ subroutine rdproc(error    ,nrrec     ,mdfrec    ,htur2d      ,salin    , &
        call prterr(lundia, 'G051', trim(message))
        write (lundia, '(a)') '            smooth bottom shear stress representation (Z-model only)'
     endif
+    !
+    call prop_get(gdp%mdfile_ptr, '*', 'SleepDuringWave', sleepduringwave)
  9999 continue
 end subroutine rdproc

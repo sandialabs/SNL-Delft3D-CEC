@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -49,7 +49,7 @@
 !     logical unitnumbers   : lunin  - input unit number hydrodynamic file
 !                             lunout - monitor file
 
-!     subroutines called    : srstop   , stops execution
+!     subroutines called    : stop_exit   , stops execution
 
       use precision_part         ! single/double precision
       use timers
@@ -166,7 +166,7 @@
             messge = 0
             goto 20
          endif
-         call srstop( 1 )
+         call stop_exit( 1 )
       endif
 
       if ( timon ) call timstop ( ithndl )

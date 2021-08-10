@@ -1,4 +1,4 @@
-!!  Copyright (C)  Stichting Deltares, 2012-2015.
+!!  Copyright (C)  Stichting Deltares, 2012-2020.
 !!
 !!  This program is free software: you can redistribute it and/or modify
 !!  it under the terms of the GNU General Public License version 3,
@@ -22,8 +22,8 @@
 !!  rights reserved.
 
       subroutine dlwq7a ( lun    , lchar  , filtype, inpfil   , syname ,
-     &                    iwidth , ioutpt , gridps , constants, ierr   ,
-     &                    iwar   )
+     &                    iwidth , ioutpt , gridps , constants, chkpar ,
+     &                    ierr   , iwar   )
 
 !     Deltares Software Centre
 
@@ -41,6 +41,7 @@
 
 !     implicit none
 
+      include 'omp_lib.h'
       INCLUDE 'sysn.inc' !   COMMON  /  SYSN   /   System characteristics
 
 !     declaration of arguments
@@ -56,6 +57,7 @@
       integer               , intent(in   ) :: ioutpt       !< level of reporting to ascii output file
       type(GridPointerColl) , intent(in   ) :: GridPs       !< collection off all grid definitions
       type(t_dlwq_item)     , intent(inout) :: constants    !< delwaq constants list
+      logical               , intent(in)    :: chkpar(2)    !< check for SURF and LENGTH
       integer               , intent(inout) :: ierr         !< cummulative error count
       integer  ( 4)         , intent(inout) :: iwar         !< cumulative warning count
 
@@ -81,6 +83,7 @@
       integer                                 idata                ! help variable
       logical                                 taupart              ! is tau present?
       logical                                 vdfpart              ! is vertical diffusion present
+      integer                              :: special              ! index of special parameters
       integer(4) :: ithndl = 0
       if (timon) call timstrt( "dlwq7a", ithndl )
 
@@ -144,6 +147,8 @@
                   nothrd = nint(dlwqdata%values(inothr,1,1))
                   write(lunut,2310)
                   write(lunut,2320) nothrd
+                  if ( nothrd .gt. 0 ) call omp_set_num_threads( nothrd )
+                  nothrd = omp_get_max_threads()
                endif
             endif
             ch20 = 'TAU'
@@ -224,6 +229,32 @@
          endif
       enddo
 
+!     if necessary, check for the parameters SURF and LENGTH
+
+      if ( chkpar(1) ) then
+         ch20 = 'SURF'
+         call zoek( ch20 , parameters%no_item, parameters%name, 20 , special )
+         if ( special <= 0 ) then
+            call zoek( ch20 , segfuncs%no_item, segfuncs%name, 20 , special )
+            if ( special <= 0 ) then
+               ierr = ierr + 1
+               write( lunut, 2410 )
+            endif
+         endif
+      endif
+
+      if ( chkpar(2) ) then
+         ch20 = 'LENGTH'
+         call zoek( ch20 , parameters%no_item, parameters%name, 20 , special )
+         if ( special <= 0 ) then
+            call zoek( ch20 , segfuncs%no_item, segfuncs%name, 20 , special )
+            if ( special <= 0 ) then
+               ierr = ierr + 1
+               write( lunut, 2420 )
+            endif
+         endif
+      endif
+
 !     proc_pars opruimen
 
       ierr3 = dlwq_cleanup(substances)
@@ -254,5 +285,7 @@
  2340 FORMAT (   ' WARNING: TAU not found. DELPAR will try to get its own TAU or compute it!' )
  2350 FORMAT (   ' VertDisp from DELWAQ will be used for DELPAR'  )
  2360 FORMAT (   ' WARNING: VertDisp not found. DELPAR will try to get its own VertDisp or compute it!' )
+ 2410 FORMAT ( /,' ERROR: No parameter or segment function "SURF" found - needed for special waste loads!' )
+ 2420 FORMAT ( /,' ERROR: No parameter or segment function "LENGTH" found - needed for special waste loads!' )
 !
       END

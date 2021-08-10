@@ -3,12 +3,22 @@ function varargout=bna(cmd,varargin)
 %   FILEINFO = BNA('open',FILENAME) opens the specified file, reads its
 %   contents and returns a structure describing the data.
 %
-%   [X,Y] = BNA('read',FILEINFO) returns the X and Y data of all lines in
-%   the file. If instead of the FILEINFO structure -- as obtained from a
-%   BNA('open',...) call -- a file name is provided then the indicated file
-%   is first opened. If only one output argument is requested then a Nx2
-%   array is returned with X data in the first column and Y data in the
-%   second column.
+%   XY = BNA('readc',FILEINFO,IDX) reads the objects listed by IDX from
+%   the file given by FILEINFO. It returns a cell array XY in which every
+%   entry XY{I} is an Nx2 matrix containing N pairs of X,Y coordinates
+%   representing object I. If instead of the FILEINFO structure -- as
+%   obtained from a BNA('open',...) call -- a file name is provided then
+%   the indicated file is first opened. If IDX isn't specified or equal to
+%   ':' then the coordinates of all objects are returned.
+%
+%   [X,Y] = BNA('read',FILEINFO,IDX) returns the X and Y data of the
+%   objects specified by the indices IDX from the file. If instead of the
+%   FILEINFO structure -- as obtained from a BNA('open',...) call -- a file
+%   name is provided then the indicated file is first opened. If only one
+%   output argument is requested then a Nx2 array is returned with X data
+%   in the first column and Y data in the second column. If IDX isn't
+%   specified or equal to ':' then the coordinates of all objects are
+%   returned.
 %
 %   BNA('write',FILENAME,X,Y) writes the (X,Y) coordinates as line segments
 %   to the indicated file. X and Y should either be vectors of equal length
@@ -24,7 +34,7 @@ function varargout=bna(cmd,varargin)
 
 %----- LGPL --------------------------------------------------------------------
 %
-%   Copyright (C) 2011-2015 Stichting Deltares.
+%   Copyright (C) 2011-2020 Stichting Deltares.
 %
 %   This library is free software; you can redistribute it and/or
 %   modify it under the terms of the GNU Lesser General Public
@@ -49,8 +59,8 @@ function varargout=bna(cmd,varargin)
 %
 %-------------------------------------------------------------------------------
 %   http://www.deltaressystems.com
-%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/tools_lgpl/matlab/quickplot/progsrc/private/bna.m $
-%   $Id: bna.m 4612 2015-01-21 08:48:09Z mourits $
+%   $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/tools_lgpl/matlab/quickplot/progsrc/private/bna.m $
+%   $Id: bna.m 65778 2020-01-14 14:07:42Z mourits $
 
 if nargout>0
     varargout=cell(1,nargout);
@@ -62,8 +72,10 @@ switch cmd
     case 'open'
         Out=Local_open_file(varargin{:});
         varargout{1}=Out;
+    case 'readc'
+        varargout{1}=Local_read_file('cell',varargin{:});
     case 'read'
-        Out=Local_read_file(varargin{:});
+        Out=Local_read_file('array',varargin{:});
         if nargout==1
             varargout{1}=Out;
         elseif nargout>1
@@ -140,21 +152,44 @@ end
 nel=nel-1;
 T.TotalNPnt=nel;
 
-function Data=Local_read_file(varargin)
-if nargin==1 && isstruct(varargin{1})
-    T=varargin{1};
+function Data=Local_read_file(tp,varargin)
+if nargin==1
+    T=Local_open_file;
 else
-    T=Local_open_file(varargin{:});
+    if isstruct(varargin{1})
+        T=varargin{1};
+    else
+        T=Local_open_file(varargin{1});
+    end
+end
+if nargin<=2 || isequal(varargin{2},':')
+    objects = 1:length(T.Seg);
+else
+    objects = varargin{2};
 end
 
-nel=T.TotalNPnt;
+cellData = strcmp(tp,'cell');
+if cellData
+    Data = cell(1,length(objects));
+else
+    nel = 0;
+    for i = objects
+        t1=size(T.Seg(i).Coord,1);
+        nel = nel+t1+1;
+    end
+    offset = 0;
+    Data = NaN(nel,2);
+end
 
-Data=repmat(NaN,nel,2);
-offset=0;
-for i=1:length(T.Seg)
-    t1=size(T.Seg(i).Coord,1);
-    Data(offset+(1:t1),:)=T.Seg(i).Coord;
-    offset=offset+t1+1;
+for i = 1:length(objects)
+    Coord = T.Seg(objects(i)).Coord;
+    if cellData
+        Data{i} = Coord;
+    else
+        t1 = size(Coord,1);
+        Data(offset+(1:t1),:) = Coord;
+        offset = offset+t1+1;
+    end
 end
 
 

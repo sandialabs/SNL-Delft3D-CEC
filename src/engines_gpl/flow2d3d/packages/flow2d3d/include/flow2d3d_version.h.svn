@@ -20,11 +20,14 @@
 #define modname_company "Deltares"
 #define modname_company_url  = "http://www.deltares.nl"
 
+#define modname_sourcecode_url "@(#) $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/flow2d3d/include/flow2d3d_version.h.svn $"
+
 /*=================================================== DO NOT MAKE CHANGES BELOW THIS LINE ===================================================================== */
 
-static char modname_version       [] = {modname_major"."modname_minor"."modname_revision"."modname_build};
-static char modname_version_short [] = {modname_major"."modname_minor};
-static char modname_version_full  [] = {modname_company", "modname_program" Version "modname_major"."modname_minor"."modname_revision"."modname_build", "__DATE__", "__TIME__""};
+static char modname_version       [] = {modname_major "." modname_minor "." modname_revision "." modname_build};
+static char modname_version_short [] = {modname_major "." modname_minor};
+static char modname_version_full  [] = {modname_company ", " modname_program " Version " modname_major "." modname_minor "." modname_revision "." modname_build ", " __DATE__ ", " __TIME__ ""};
+static char modname_url           [] = {modname_sourcecode_url};
 
 /* Needed for the output file headers */
 static char com_file_version       [] = {"3.55.00"};
@@ -37,6 +40,8 @@ static char map_file_version       [] = {"3.54.30"};
 #   define STDCALL  /* nothing */
 #   define GETSHORTVERSIONSTRING FUNC_CAT( FC_FUNC(getshortversionstring,GETSHORTVERSIONSTRING), F90_MOD_NAME)
 #   define GETFULLVERSIONSTRING FUNC_CAT( FC_FUNC(getfullversionstring,GETFULLVERSIONSTRING), F90_MOD_NAME)
+#   define GETVERSIONIDSTRING FUNC_CAT( FC_FUNC(getversionidstring,GETVERSIONIDSTRING), F90_MOD_NAME)
+#   define GETURLSTRING FUNC_CAT( FC_FUNC(geturlstring,GETURLSTRING), F90_MOD_NAME)
 #   define GETCOMFILEVERSIONSTRING FUNC_CAT( FC_FUNC(getcomfileversionstring,GETCOMFILEVERSIONSTRING), F90_MOD_NAME)
 #   define GETDROFILEVERSIONSTRING FUNC_CAT( FC_FUNC(getdrofileversionstring,GETDROFILEVERSIONSTRING), F90_MOD_NAME)
 #   define GETHISFILEVERSIONSTRING FUNC_CAT( FC_FUNC(gethisfileversionstring,GETHISFILEVERSIONSTRING), F90_MOD_NAME)
@@ -46,6 +51,8 @@ static char map_file_version       [] = {"3.54.30"};
 #   define STDCALL  /* nothing */
 #   define GETSHORTVERSIONSTRING FUNC_CAT( GETSHORTVERSIONSTRING_, F90_MOD_NAME)
 #   define GETFULLVERSIONSTRING FUNC_CAT( GETFULLVERSIONSTRING_, F90_MOD_NAME)
+#   define GETVERSIONIDSTRING FUNC_CAT( GETVERSIONIDSTRING_, F90_MOD_NAME)
+#   define GETURLSTRING FUNC_CAT( GETURLSTRING_, F90_MOD_NAME)
 #   define GETCOMFILEVERSIONSTRING FUNC_CAT( GETCOMFILEVERSIONSTRING_, F90_MOD_NAME)
 #   define GETDROFILEVERSIONSTRING FUNC_CAT( GETDROFILEVERSIONSTRING_, F90_MOD_NAME)
 #   define GETHISFILEVERSIONSTRING FUNC_CAT( GETHISFILEVERSIONSTRING_, F90_MOD_NAME)
@@ -59,6 +66,8 @@ extern "C" {
 
 void   STDCALL GETSHORTVERSIONSTRING( char *, int );
 void   STDCALL GETFULLVERSIONSTRING( char *, int );
+void   STDCALL GETVERSIONIDSTRING( char *, int );
+void   STDCALL GETURLSTRING( char *, int );
 void   STDCALL GETCOMFILEVERSIONSTRING( char *, int );
 void   STDCALL GETDROFILEVERSIONSTRING( char *, int );
 void   STDCALL GETHISFILEVERSIONSTRING( char *, int );

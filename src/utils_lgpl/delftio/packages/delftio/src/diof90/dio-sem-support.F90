@@ -1,6 +1,6 @@
 !----- LGPL --------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This library is free software; you can redistribute it and/or                
 !  modify it under the terms of the GNU Lesser General Public                   
@@ -24,8 +24,8 @@
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: dio-sem-support.F90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-sem-support.F90 $
+!  $Id: dio-sem-support.F90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/utils_lgpl/delftio/packages/delftio/src/diof90/dio-sem-support.F90 $
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!
 !!! DIO-sem-support: semaphore support functions
@@ -63,6 +63,8 @@ subroutine DioSemGetLock(name)
     logical                       :: exists
     integer                       :: timeWaited
     logical                       :: succes
+    
+    integer                       :: iunit
 
     ! body
     
@@ -80,9 +82,9 @@ subroutine DioSemGetLock(name)
         endif
     else
 #if (defined(WIN32))
-        open(dioStartLun - 6,file=fname,status='new', iostat=ierr, share='DENYRW')
+        open(newunit=iunit,file=fname,status='new', iostat=ierr, share='DENYRW')
 #else
-        open(dioStartLun - 6,file=fname,status='new', iostat=ierr)
+        open(newunit=iunit,file=fname,status='new', iostat=ierr)
 #endif
         if (ierr.gt.0) then
             if (DioStreamSleep(timeWaited)) then
@@ -91,7 +93,7 @@ subroutine DioSemGetLock(name)
                 succes =.false.
             endif
         endif
-        close(dioStartLun - 6)
+        close(iunit)
     endif
 
 end subroutine DioSemGetLock
@@ -111,15 +113,16 @@ subroutine DioSemReleaseLock(name)
     
     character(Len=DioMaxStreamLen):: fname  ! vars to check file existence
     integer                       :: ierr
+    integer                       :: iunit  
 
     ! body
     
     fname = trim(name) // '.lock'
-    open(dioStartLun - 7,file=fname,status='old', iostat=ierr)
+    open(newunit=iunit,file=fname,status='old', iostat=ierr)
     if (ierr.gt.0) then
         call DioStreamError(991, 'Could not open sem-file', trim(fname), ' for deletion')
     else
-        close(dioStartLun - 7,status='delete')
+        close(iunit,status='delete')
     endif
 
 end subroutine DioSemReleaseLock

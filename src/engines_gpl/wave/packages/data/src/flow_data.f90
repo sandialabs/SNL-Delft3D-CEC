@@ -1,7 +1,7 @@
 module flow_data
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ module flow_data
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: flow_data.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/wave/packages/data/src/flow_data.f90 $
+!  $Id: flow_data.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/wave/packages/data/src/flow_data.f90 $
 !!--description-----------------------------------------------------------------
 !
 !!--pseudo code and references--------------------------------------------------
@@ -53,6 +53,7 @@ subroutine flow_init (mode, it01, tscale)
    use swan_input    ! Needed when running stand_alone
    use sync_flowwave
    use wave_data
+   use string_module, only: str_token, count_words
    !
    implicit none
 !
@@ -75,25 +76,57 @@ subroutine flow_init (mode, it01, tscale)
 !
    mud          = .false.
    subdom_names = ' '
-   if (mode == stand_alone) then
+   if (swan_run%flowgridfile/=' ') then
+      !
+      ! Running in Delft3D FM mode
+      ! mode may be stand_alone or not
+      !
       if (swan_run%useflowdata .or. swan_run%swwav) then
-         num_subdomains = 1
+         num_subdomains = checkcomfiles(swan_run%flowgridfile)
+         if (num_subdomains == 1) then
+            write(*,'(3a)') '*** MESSAGE: Using data from NetCDF file "', trim(swan_run%flowgridfile), '".'
+         else
+            write(*,'(a,i0,a)') '*** MESSAGE: Using data from ', num_subdomains, ' NetCDF files'
+            write(*,'(2a)')     '             Base name: ', trim(swan_run%flowgridfile)
+            write(*,'(a,i4.4)')  '             Partition range: 0000 - ', num_subdomains-1
+         endif
+         flow_data_initialized = .true.
+      endif
+   elseif (mode==stand_alone) then
+      !
+      ! Running in Delft3D 4 stand alone mode
+      !
+      if (swan_run%useflowdata .or. swan_run%swwav) then
+         if (swan_run%comfile == ' ') then
+            swan_run%comfile = swan_run%casl
+            num_subdomains = 1
+         else
+            num_subdomains = count_words(swan_run%comfile)
+         endif
+         !
          allocate (runids(num_subdomains))
-         runids(1) = swan_run%casl
-         write(*,'(a,i0,a)') '*** MESSAGE: Using data from the following FLOW domain:'
-         write(*,'(13x,a)') trim(runids(1))
+         write(*,'(a,i0,a)') '*** MESSAGE: Using data from the following FLOW domain(s):'
+         do idom = 1,num_subdomains
+            call str_token(swan_run%comfile,runids(idom))
+            write(*,'(13x,a)') trim(runids(idom))
+         enddo
+         !
+         ! Obtain time settings from first com file
+         !
          write(filnam,'(2a)') 'com-',trim(runids(1))
          call get_params(tscale, dummy, filnam)
          flow_data_initialized = .true.
       endif
-   else
+   else ! mode/=stand_alone .and. swan_run%flowgridfile==' '
+      !
+      ! Running in Delft3D 4 coupled mode
+      !
       write (*,'(a)') '  Waiting for initialisation from FLOW'
       num_subdomains = wave_from_flow_init(subdom_names, it01, d_tscale, mud)
-      tscale        = real(d_tscale,sp)
+      tscale         = real(d_tscale,sp)
       if (num_subdomains < 1) then
          write(*,'(a)') '*** ERROR: Delftio initialization WAVE side failed'
-         write(*,'(a)') '           Is file ''dioconfig.ini'' present?'
-         stop
+         call wavestop(1, '           Is file ''dioconfig.ini'' present?')
       endif
       allocate (runids(num_subdomains))
       write(*,'(a,i0,a)') '*** MESSAGE: Connected to the following ',num_subdomains,' FLOW domain(s):'
@@ -110,8 +143,7 @@ subroutine flow_init (mode, it01, tscale)
          num_muddomains = wave_from_flow_init(subdom_names, it01, d_tscale, mud)
          if (num_muddomains < 1) then
             write(*,'(a)') '*** ERROR: Delftio initialization WAVE side failed'
-            write(*,'(a)') '           Is file ''dioconfig.ini'' present?'
-            stop
+            call wavestop(1, '           Is file ''dioconfig.ini'' present?')
          endif
          allocate (mudids(num_muddomains))
          write(*,'(a,i0,a)') '*** MESSAGE: Connected to the following ',num_muddomains,' MUD domain(s):'
@@ -122,13 +154,13 @@ subroutine flow_init (mode, it01, tscale)
          if (num_muddomains /= 1) then
             write(*,'(a)') '*** ERROR: Interaction with Fluid Mud is currently only possible for one domain'
             call wave_to_flow_status(flow_wave_comm_error, mud)
-            stop
+            call wavestop(1, '*** ERROR: Interaction with Fluid Mud is currently only possible for one domain')
          endif
          if (num_muddomains /= num_subdomains) then
             write(*,'(a,2(i0,a))') '*** ERROR: number of mud domains (', num_muddomains, &
                 & ') is not equal to the number of water domains (',num_subdomains,').'
             call wave_to_flow_status(flow_wave_comm_error, mud)
-            stop
+            call wavestop(1, 'Number of mud domains is not equal to the number of water domains')
          endif
          call wave_to_flow_status(flow_wave_comm_result_ok, mud)
       endif
@@ -145,5 +177,51 @@ subroutine deallocate_flow_data ()
       deallocate (mudids, stat=ierr)
    endif
 end subroutine deallocate_flow_data
+!
+!
+!===============================================================================
+function checkcomfiles(basename) result(numDomains)
+   !
+   ! Return
+   integer :: numDomains
+   !
+   ! Parameters
+   character(*), intent(in) :: basename
+   !
+   ! Locals
+   integer :: partitionlocation
+   integer :: retval
+   logical :: ex
+   character(300) :: filnam
+   !
+   ! Body
+   retval = 0
+   inquire (file = trim(basename), exist = ex)
+   if (ex) then
+      retval = 1
+   else
+      partitionlocation = index(basename, '_com.nc')
+      if (partitionlocation == 0) then
+          call wavestop(1, 'The NetCDF com file specified does not contain the substring "_com.nc"')
+      endif
+      do
+         write(filnam,'(a,a,i4.4,a)') basename(:partitionlocation-1), '_', retval, trim(basename(partitionlocation:))
+         inquire (file = trim(filnam), exist = ex)
+         if (ex) then
+            ! Found an existing com-file
+            retval = retval + 1
+         else
+            ! Not an existing com-file (anymore)
+            exit
+         endif
+      enddo
+      if (retval == 0) then
+          write(*,'(2a)') '*** ERROR: File does not exist:', trim(basename)
+          write(*,'(2a)') '           And partition variant does not exist:', trim(filnam)
+          call wavestop(1, 'No com-file to connect to')
+      endif
+   endif
+   numDomains = retval
+end function checkcomfiles
 
 end module flow_data

@@ -1,7 +1,7 @@
 module m_d3d_state
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -25,8 +25,8 @@ module m_d3d_state
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: m_d3d_state.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/flow2d3d_openda/src/m_d3d_state.f90 $
+!  $Id: m_d3d_state.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/flow2d3d_openda/src/m_d3d_state.f90 $
 !-------------------------------------------------------------------------------
 !
 use precision     ! for fp
@@ -241,7 +241,7 @@ subroutine m_d3d_dump_d3d_state(d3d_state,lun,fname)
   allocate (d3d_one_state%core%u (nlb:nub, mlb:mub, kmax), stat=ierr)
   if (ierr .ne. 0) then
     print *,'error allocating u1'
-    stop
+    call throwexception()
   endif
   allocate (d3d_one_state%core%v (nlb:nub, mlb:mub, kmax), stat = ierr)   
   allocate (d3d_one_state%core%dp (nlb:nub, mlb:mub) )  
@@ -261,7 +261,7 @@ subroutine m_d3d_dump_d3d_state(d3d_state,lun,fname)
   allocate (d3d_one_state%pseudo%w (nlb:nub, mlb:mub, 0:kmax), stat = ierr)   
   if (ierr .ne. 0) then
     print *,'error allocating w'
-    stop
+    call throwexception()
   endif
 
   allocate (d3d_one_state%pseudo%vicuv (nlb:nub, mlb:mub, 1:kmax+2), stat = ierr)
@@ -302,7 +302,7 @@ integer :: ierr
    deallocate(d3d_one_state%core%u, stat = ierr)
      if (ierr .ne. 0) then
       print *,'error de-allocating '
-      stop
+      call throwexception()
     endif
    deallocate(d3d_one_state%core%v, stat = ierr)   
 

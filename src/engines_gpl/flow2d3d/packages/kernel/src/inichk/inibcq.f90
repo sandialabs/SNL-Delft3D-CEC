@@ -1,9 +1,9 @@
 subroutine inibcq(lundia    ,error     ,runid     ,itbct     ,nto       , &
                 & ntof      ,ntoq      ,kcd       ,nambnd    ,hydrbc    , &
-                & bubble    ,gdp       )
+                & bubble    ,kmax      ,gdp       )
 !----- GPL ---------------------------------------------------------------------
 !                                                                               
-!  Copyright (C)  Stichting Deltares, 2011-2015.                                
+!  Copyright (C)  Stichting Deltares, 2011-2020.                                
 !                                                                               
 !  This program is free software: you can redistribute it and/or modify         
 !  it under the terms of the GNU General Public License as published by         
@@ -27,8 +27,8 @@ subroutine inibcq(lundia    ,error     ,runid     ,itbct     ,nto       , &
 !  Stichting Deltares. All rights reserved.                                     
 !                                                                               
 !-------------------------------------------------------------------------------
-!  $Id: inibcq.f90 4612 2015-01-21 08:48:09Z mourits $
-!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/branches/research/Deltares/20160119_tidal_turbines/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/inibcq.f90 $
+!  $Id: inibcq.f90 65778 2020-01-14 14:07:42Z mourits $
+!  $HeadURL: https://svn.oss.deltares.nl/repos/delft3d/tags/delft3d4/65936/src/engines_gpl/flow2d3d/packages/kernel/src/inichk/inibcq.f90 $
 !!--description-----------------------------------------------------------------
 !
 !    Function: Reads the QH relations from file for the
@@ -56,6 +56,7 @@ subroutine inibcq(lundia    ,error     ,runid     ,itbct     ,nto       , &
 !
     integer                              , intent(in)  :: kcd    !  Description and declaration in dimens.igs
     integer                                            :: lundia !  Description and declaration in inout.igs
+    integer                              , intent(in)  :: kmax   !  Description and declaration in esm_alloc_int.f90
     integer                              , intent(in)  :: nto    !  Description and declaration in esm_alloc_int.f90
     integer                              , intent(in)  :: ntof   !  Description and declaration in dimens.igs
     integer                              , intent(in)  :: ntoq   !  Description and declaration in dimens.igs
@@ -91,7 +92,7 @@ subroutine inibcq(lundia    ,error     ,runid     ,itbct     ,nto       , &
     character(20)                          :: chlp20
     character(20)                          :: namhlp
     character(256)                         :: filnam  ! Help var. for file name 
-    character(36), dimension(1 + 2*mxkmax) :: parnam  ! Number of parameter records in time dependent direct access files for BCT 
+    character(36), dimension(1 + 2*kmax)   :: parnam  ! Number of parameter records in time dependent direct access files for BCT 
     character(36), dimension(2)            :: defpar  ! Default parameter 
     character(500)                         :: record  ! Record for BCT file 
 !
