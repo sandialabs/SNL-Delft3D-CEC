@@ -57,6 +57,7 @@ subroutine tricom_init(olv_handle, gdp)
     use globaldata
     use dfparall
     use d3d_olv_class
+    use m_rdturbine, only: mapturbine, updturbine
     !
     implicit none
     !
@@ -1072,6 +1073,10 @@ subroutine tricom_init(olv_handle, gdp)
     if (culvert) then
        call rdcul(nsrc, ch(namsrc), i(mnksrc) ,r(voldis), gdp)       
     endif
+    
+    call mapturbine(gdp%turbines, r(xcor), r(ycor), r(guu), r(gvv), i(kcu), i(kcv), error, gdp)
+    if (error) goto 9996
+    
     !
     ! Put header on the screen
     !
@@ -1532,6 +1537,12 @@ subroutine tricom_init(olv_handle, gdp)
                      & r(sig)    ,r(s1)     ,d(dps)    ,r(r0)     , &
                      & nsluv     ,r(cbuv)   ,nsrc      ,r(disch)  , &
                      & gdp)
+    !
+    ! Update turbines before first wrh_main call ...
+    !
+    call updturbine(gdp%turbines, r(dzu1), r(dzv1), r(dpu), r(dpv), &
+                     & r(hu), r(hv), r(s1), r(thick), r(u1), r(v1), &
+                     & r(alfas), 0.0_fp, nmaxddb, gdp)
     !
     ! End of synchronisation point 2
     ! ==============================

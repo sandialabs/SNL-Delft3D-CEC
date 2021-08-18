@@ -46,6 +46,7 @@ subroutine z_trisol_nhfull(dischy    ,solver    ,icreep   ,ithisc    , &
     use sync_flm
     use SyncRtcFlow
     use flow2d3d_timers
+    use m_rdturbine, only : updturbine, updturbinethrust
     !
     use globaldata
     !
@@ -1345,6 +1346,10 @@ subroutine z_trisol_nhfull(dischy    ,solver    ,icreep   ,ithisc    , &
           call timer_stop(timer_updbar, gdp)
        endif
        !
+       call updturbine(gdp%turbines, r(dzu0), r(dzv0), r(dpu), r(dpv), &
+                     & r(hu), r(hv), r(s0), r(thick), r(u0), r(v0), &
+                     & r(alfas), dtsec, nmaxddb, gdp)
+       !
        ! Computation of U1 and V1, i.e. evaluate momentum equations with explicit
        ! pressure term (water level gradient and non-hydrostatic pressure)
        !
@@ -1376,6 +1381,9 @@ subroutine z_trisol_nhfull(dischy    ,solver    ,icreep   ,ithisc    , &
                            & r(sig)    ,r(p0)     ,r(crbc)   , &
                            & r(pship)  ,r(diapl)  ,r(rnpl)   ,r(cfurou) ,r(cfvrou) , &
                            & r(precip) ,gdp       )
+       !
+       call updturbinethrust(gdp%turbines, r(u0), r(u1), r(v0), r(v1), &
+                           & r(gvu), r(guv), r(wrkb2), nmaxddb, dtsec, gdp)
        !
        ! Non hydrostatic pressure
        ! w0 = non-hydrostatic vertical velocity after complete time step

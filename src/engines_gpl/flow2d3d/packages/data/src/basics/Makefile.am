@@ -29,7 +29,9 @@ FMODULES += \
 #-------------------------------------------------------------------------------
 #Sources
 libDataBasics_la_SOURCES = \
+         turbine_module.f90 \
          globaldata.f90 \
+         rdturbine.f90 \
          sp_buffer.f90 \
          flow_tables.f90 \
          timers.f90 \

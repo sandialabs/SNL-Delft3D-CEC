@@ -53,6 +53,7 @@ subroutine rdstru(lunmd     ,lundia    ,error     ,mdfrec    ,nrrec     , &
 !!--declarations----------------------------------------------------------------
     use precision
     use properties
+    use m_rdturbine, only: rdturbine, echoturbine
     !
     use globaldata
     !
@@ -134,6 +135,7 @@ subroutine rdstru(lunmd     ,lundia    ,error     ,mdfrec    ,nrrec     , &
     character(256)         :: fillwl !!  File name for Local Weirs
     character(256)         :: filppl !!  File name for Porous Plates
     character(256)         :: filrgs !!  File name for Rigid Sheets
+    character(256)         :: filtrb !!  File name for Turbines
     character(256)         :: filcdw 
 !
 !! executable statements -------------------------------------------------------
@@ -150,6 +152,14 @@ subroutine rdstru(lunmd     ,lundia    ,error     ,mdfrec    ,nrrec     , &
     !
     struct = .false.
     riglid = 1.0
+    !
+    filtrb = ' '
+    call prop_get(gdp%mdfile_ptr,'*','FilTrb',filtrb)
+    if (filtrb /= ' ') then
+       call rdturbine(filtrb, lundia, gdp%turbines, error)
+       if (error) return
+       call echoturbine(gdp%turbines, lundia)
+    endif
     !
     ! Look for Rigid lid factor
     !

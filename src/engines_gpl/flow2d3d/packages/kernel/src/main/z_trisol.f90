@@ -65,6 +65,7 @@ subroutine z_trisol(dischy    ,solver    ,icreep    ,ithisc    , &
     use sync_flm
     use SyncRtcFlow
     use flow2d3d_timers
+    use m_rdturbine, only : updturbine, updturbinethrust
     !
     use globaldata
     !
@@ -1370,6 +1371,10 @@ subroutine z_trisol(dischy    ,solver    ,icreep    ,ithisc    , &
           call timer_stop(timer_updbar, gdp)
        endif
        !
+       call updturbine(gdp%turbines, r(dzu0), r(dzv0), r(dpu), r(dpv), &
+                     & r(hu), r(hv), r(s0), r(thick), r(u0), r(v0), &
+                     & r(alfas), hdt, nmaxddb, gdp)
+       !
        ! Computation of V1, i.e. evaluate momentum equation for one half
        ! timestep. 
        ! HU is updated calculate HV and set KFV = 0 for HV < HTRSH (.5*DRYFLC)
@@ -1411,6 +1416,9 @@ subroutine z_trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                 & r(rnpl)   ,sbkol     ,r(cfurou) ,r(cfvrou) ,r(r0)     , &
                 & lstsci    ,r(precip)  ,gdp       )
        call timer_stop(timer_1stadi, gdp)
+       !
+       call updturbinethrust(gdp%turbines, r(u0), r(u1), r(v0), r(v1), &
+                           & r(gvu), r(guv), r(wrkb2), nmaxddb, hdt, gdp)
        !
        ! Calculate tau_bottom values using local 'updated' values for
        ! HU and HV use work array WRKA3 for this purpose.
@@ -2163,6 +2171,10 @@ subroutine z_trisol(dischy    ,solver    ,icreep    ,ithisc    , &
           call timer_stop(timer_updbar, gdp)
        endif
        !
+       call updturbine(gdp%turbines, r(dzu0), r(dzv0), r(dpu), r(dpv), &
+                     & r(hu), r(hv), r(s0), r(thick), r(u0), r(v0), &
+                     & r(alfas), hdt, nmaxddb, gdp)
+       !
        ! Computation of U1, i.e. evaluate momentum equation for one half
        ! timest calculate HU and set KFU = 0 for HU < HTRSH (.5*DRYFLC)
        !
@@ -2202,6 +2214,9 @@ subroutine z_trisol(dischy    ,solver    ,icreep    ,ithisc    , &
                 & r(rnpl)   ,sbkol     ,r(cfurou) ,r(cfvrou) ,r(r0)     , &
                 & lstsci    ,r(precip)  ,gdp       )
        call timer_stop(timer_2ndadi, gdp)
+       !
+       call updturbinethrust(gdp%turbines, r(u0), r(u1), r(v0), r(v1), &
+                           & r(gvu), r(guv), r(wrkb2), nmaxddb, hdt, gdp)
        !
        ! Calculate tau_bottom values using local values for HU and HV
        ! use work array WRKA3 for this purpose.

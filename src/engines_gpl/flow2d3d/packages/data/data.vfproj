@@ -184,8 +184,10 @@
 		<File RelativePath="src\basics\datagroups.f90"/>
 		<File RelativePath="src\basics\flow_tables.f90"/>
 		<File RelativePath="src\basics\globaldata.f90"/>
+		<File RelativePath=".\src\basics\rdturbine.f90"/>
 		<File RelativePath="src\basics\sp_buffer.f90"/>
-		<File RelativePath="src\basics\timers.f90"/></Filter>
+		<File RelativePath="src\basics\timers.f90"/>
+		<File RelativePath=".\src\basics\turbine_module.f90"/></Filter>
 		<Filter Name="gdp">
 		<File RelativePath="src\gdp\clradv2d.f90"/>
 		<File RelativePath="src\gdp\clrbedformpar.f90"/>
