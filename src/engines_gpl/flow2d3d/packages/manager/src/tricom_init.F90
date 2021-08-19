@@ -212,6 +212,8 @@ subroutine tricom_init(olv_handle, gdp)
     integer(pntrsize)                   , pointer :: dps
     integer(pntrsize)                   , pointer :: dpu
     integer(pntrsize)                   , pointer :: dpv
+    integer(pntrsize)                   , pointer :: dzu1
+    integer(pntrsize)                   , pointer :: dzv1
     integer(pntrsize)                   , pointer :: ewabr0
     integer(pntrsize)                   , pointer :: ewabr1
     integer(pntrsize)                   , pointer :: ewave0
@@ -590,6 +592,8 @@ subroutine tricom_init(olv_handle, gdp)
     dps                 => gdp%gdr_i_ch%dps
     dpu                 => gdp%gdr_i_ch%dpu
     dpv                 => gdp%gdr_i_ch%dpv
+    dzu1                => gdp%gdr_i_ch%dzu1
+    dzv1                => gdp%gdr_i_ch%dzv1
     ewabr0              => gdp%gdr_i_ch%ewabr0
     ewabr1              => gdp%gdr_i_ch%ewabr1
     ewave0              => gdp%gdr_i_ch%ewave0

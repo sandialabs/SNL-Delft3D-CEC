@@ -48,22 +48,24 @@ module tables
     public org_checktable
     public org_checktableparnames
     public org_gettablelocation
+    public org_gettablename
     public org_gettablentimes
     public org_gettabletimes
     public org_gettabledata
     public org_getfilename
     !
     integer, parameter, public :: MAXTABLECLENGTH = 47
-
     integer, parameter, public :: CHKTAB_PARNAME  = 1
     integer, parameter, public :: CHKTAB_POSITIVE = 2
     integer, parameter, public :: CHKTAB_BLOCK    = 3
     integer, parameter, public :: CHKTAB_LOGICAL  = 4
-
+    integer, parameter, public :: GETTABLE_LOCATION = 0
+    integer, parameter, public :: GETTABLE_NAME     = 1
+    
     interface org_gettable
        module procedure org_gettable_vector, org_gettable_scalar
     end interface
-
+    
     interface org_gettabledata
        module procedure org_gettabledata_vector, org_gettabledata_scalar
     end interface
@@ -87,6 +89,7 @@ module tables
         type(tableparametertype), dimension(:)  , pointer :: parameters
         real(hp)                , dimension(:)  , pointer :: times
         real(fp)                , dimension(:,:), pointer :: values
+        logical                                           :: hastime
         character(MAXTABLECLENGTH)                        :: name
         character(MAXTABLECLENGTH)                        :: contents
         character(MAXTABLECLENGTH)                        :: location
@@ -181,7 +184,8 @@ subroutine org_readtable(this, filnam, refjulday, errorstring)
     error       = .false.
     errorstring = 'org_readtable: memory alloc error'
     !
-    open(newunit=lunbcm, file = filnam, form = 'formatted', &
+    lunbcm = newunit()
+    open (lunbcm, file = filnam, form = 'formatted', &
         & status = 'old', iostat = istat)
     if (istat /= 0) then
        errorstring = '*** ERROR Error while opening file '//trim(filnam)
@@ -230,7 +234,7 @@ subroutine org_readtable(this, filnam, refjulday, errorstring)
              !
              ! time column should be treated in a different manner
              !
-             if (trim(table%timefunction) == 'non-equidistant') then
+             if (table%hastime .and. trim(table%timefunction) == 'non-equidistant') then
                 ipar = -1
              endif
           endif
@@ -362,6 +366,7 @@ subroutine org_readtable(this, filnam, refjulday, errorstring)
           do itable = 1, ntables
              table => tables(itable)
              !
+             table%hastime       = .false.
              table%timestep      = -999.0_hp
              table%geocoords     = -999.0_fp
              table%metriccoords  = -999.0_fp
@@ -388,6 +393,7 @@ subroutine org_readtable(this, filnam, refjulday, errorstring)
           do itable = 1, ntables
              table => tables(itable)
              !
+             if (table%hastime) then
              if (table%refdate == -999 .and. table%timeunitstr /= 'date') then
                 errorstring = 'Missing reference-date record in table ''' // &
                             & trim(table%name) // ''''
@@ -400,11 +406,23 @@ subroutine org_readtable(this, filnam, refjulday, errorstring)
                 !
                 table%nparameters = table%nparameters - 1
              endif
+             else
+                table%timeunit     = 1.0_hp
+                table%timefunction = 'N/A'
+             endif
              !
                              allocate(table%parameters(table%nparameters), stat = istat)
              if (istat == 0) allocate(table%times(table%nrecords), stat = istat)
              if (istat == 0) allocate(table%values(table%nrecords,table%nparameters), stat = istat)
              if (istat /= 0) goto 210
+             !
+             do i = 1,table%nparameters
+                table%parameters(i)%name          = ''
+                table%parameters(i)%unit          = ''
+                table%parameters(i)%interpolation = ''
+          enddo
+             table%times  = 0.0_hp
+             table%values = 0.0_fp
           enddo
           !
           rewind(lunbcm)
@@ -943,6 +961,7 @@ subroutine org_readtable_keyword()
        ipar = ipar + 1
        if (iread_phase == 2) then
           table%nparameters = ipar
+          if (ipar==1 .and. cfield(2)(1:5)=='time ') table%hastime = .true.
        elseif (iread_phase == 3) then
           if (ntoken < 2) then
              errorstring = 'Too few arguments on line'
@@ -1346,8 +1365,10 @@ subroutine org_gettabledata_scalar(this       ,itable     ,ipar       , &
     !
     real(fp)                 :: alpha
     real(fp)                 :: extrapol
+    real(fp)                 :: valreq
     !
     integer                  :: i
+    integer                  :: irc
     integer                  :: j
     integer                  :: datediff
     !
@@ -1362,6 +1383,10 @@ subroutine org_gettabledata_scalar(this       ,itable     ,ipar       , &
     table => this%tables(itable)
     errorstring = ' '
     !
+    if (table%hastime) then
+       !
+       ! Standard time function
+       !
     select case(trim(table%timefunction))
     case ('non-equidistant','equidistant','constant')
        !
@@ -1518,13 +1543,52 @@ subroutine org_gettabledata_scalar(this       ,itable     ,ipar       , &
           & ' please contact code supplier'
        return
     endselect
+    else
+    !
+       ! Function of other quantity
+       !
+       valreq = timhr
+       if (comparereal(valreq, table%values(1,1)) == -1) then
+           !
+           ! value too small
+           !
+           write(errorstring,'(2A,E12.3,3A,E12.3)') &
+               & trim(table%parameters(1)%name),' (',valreq, &
+               & ') too small; minimum value in table ',trim(table%name), &
+               & ' is ',table%values(1,1)
+       elseif (comparereal(valreq, table%values(table%nrecords,1)) == 1) then
+           !
+           ! value too large
+           !
+           write(errorstring,'(2A,E12.3,3A,E12.3)') &
+               & trim(table%parameters(1)%name),' (',valreq, &
+               & ') too large; maximum value in table ',trim(table%name), &
+               & ' is ',table%values(table%nrecords,1)
+       else
+           !
+           ! in range
+           !
+           do irc = 1, table%nrecords-1
+               if (comparereal(valreq, table%values(irc,1)) > -1 .and. &
+                 & comparereal(valreq, table%values(irc+1,1)) < 1) then
+                   alpha = (table%values(irc+1,1) - valreq) / (table%values(irc+1,1) - table%values(irc,1))
+                   do i = 1, npar
+                      j = ipar + i - 1
+                      values(i) = table%values(irc,j) * alpha + &
+                                & table%values(irc+1,j) * (1.0_fp - alpha)
+                   enddo
+                   exit
+               endif
+           enddo
+       endif
+    endif
     !
 end subroutine org_gettabledata_scalar
 !
 !
 !===============================================================================
 subroutine org_gettable_vector(this      ,location  ,parname   ,ivec      , &
-                         & nparmin   ,errorstring)
+                             & nparmin   ,errorstring,fieldid  )
 !!--description-----------------------------------------------------------------
 !
 !    Function: Find table for specified location and quantity
@@ -1539,18 +1603,30 @@ subroutine org_gettable_vector(this      ,location  ,parname   ,ivec      , &
     character(*)           ,intent(in)  :: parname
     type(tablefiletype)    ,intent(in)  :: this
     character(256)         ,intent(out) :: errorstring
+    integer       ,optional,intent(in)  :: fieldid
+!
+! Local variables
+!
+    integer                             :: locfieldid
 !
 !! executable statements -------------------------------------------------------
 !
-    call org_gettable(this      ,location  ,parname   ,ivec(1)   , &
-                & ivec(2)   ,ivec(3)   ,nparmin   ,errorstring)
+    if (present(fieldid)) then
+       locfieldid = fieldid
+    else
+       locfieldid = 0
+    endif
+    call org_gettable_scalar(this      ,location  ,parname   ,ivec(1)   , &
+                           & ivec(2)   ,ivec(3)   ,nparmin   ,errorstring, &
+                           & locfieldid)
     ivec(4) = 1
 end subroutine org_gettable_vector
 !
 !
 !===============================================================================
 subroutine org_gettable_scalar(this      ,location  ,parname   ,itable    , &
-                         & ipar      ,npar      ,nparmin   ,errorstring)
+                             & ipar      ,npar      ,nparmin   ,errorstring, &
+                             & fieldid   )
 !!--description-----------------------------------------------------------------
 !
 !    Function: Find table for specified location and quantity
@@ -1567,12 +1643,15 @@ subroutine org_gettable_scalar(this      ,location  ,parname   ,itable    , &
     character(*)           ,intent(in)  :: parname
     type(tablefiletype)    ,intent(in)  :: this
     character(256)         ,intent(out) :: errorstring
+    integer       ,optional,intent(in)  :: fieldid
 !
 ! Local variables
 !
     integer                                :: i
     integer                                :: j
+    integer                                :: locfieldid
     integer                                :: lpn
+    logical                                :: chk
     !
     type(tabletype), dimension(:), pointer :: tables
 !
@@ -1584,9 +1663,18 @@ subroutine org_gettable_scalar(this      ,location  ,parname   ,itable    , &
     !
     lpn = min(20,len(parname))
     !
+    if (present(fieldid)) then
+       locfieldid = fieldid
+    else
+       locfieldid = 0
+    endif
 loop_tables: do i = 1, size(tables)
-       if (trim(tables(i)%location) == location) then
-          !
+       if (locfieldid==0) then
+          chk = tables(i)%location == location
+       elseif (locfieldid==1) then
+          chk = tables(i)%name == location
+       endif
+       if (chk) then
           do j = 1, tables(i)%nparameters
              if (tables(i)%parameters(j)%name(1:lpn) == parname(1:lpn)) then
                 itable = i
@@ -1813,6 +1901,41 @@ character(MAXTABLECLENGTH) function org_gettablelocation(this    ,itable     ,er
        org_gettablelocation = ' '
     endif
 end function org_gettablelocation
+!
+!
+!===============================================================================
+character(MAXTABLECLENGTH) function org_gettablename(this    ,itable     ,errorstring)
+!!--description-----------------------------------------------------------------
+!
+!    Function: Get name of table
+!
+!!------------------------------------------------------------------------------
+    implicit none
+!
+! Global variables
+!
+    type(tablefiletype)          ,intent(in)  :: this
+    integer                      ,intent(in)  :: itable
+    character(256)               ,intent(out) :: errorstring
+!
+! Local variables
+!
+!
+!! executable statements -------------------------------------------------------
+!
+    if (associated(this%tables)) then
+       if (itable<=size(this%tables)) then
+          errorstring = ' '
+          org_gettablename = this%tables(itable)%name
+       else
+          errorstring = 'Table index is too large'
+          org_gettablename = ' '
+       endif
+    else
+       errorstring = 'Tables not yet initialised'
+       org_gettablename = ' '
+    endif
+end function org_gettablename
 !
 !
 !===============================================================================

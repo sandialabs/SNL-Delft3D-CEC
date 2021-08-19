@@ -43,7 +43,7 @@ subroutine rdturbine(filtrb, lundia, turbines, error)
     !use grid_dimens_module, only: griddimtype
     use turbine_module, only: structure_turbines, allocate_turbines
     use message_module, only: write_error, write_warning, FILE_NOT_FOUND, FILE_READ_ERROR, PREMATURE_EOF
-    use table_handles, only: readtable, gettable
+    use table_handles, only: readtable, gettable, GETTABLE_NAME
     use mathconsts, only: pi
     !
     implicit none
@@ -189,7 +189,7 @@ subroutine rdturbine(filtrb, lundia, turbines, error)
           call prop_get_string(aturbine, '*', 'ThrustCurve', turbines%nr(itrb)%thrustcrvname)
           call gettable(turbines%curves, turbines%nr(itrb)%thrustcrvname, 'thrust coefficient', &
                 & turbines%nr(itrb)%thrustcrvnr(1), turbines%nr(itrb)%thrustcrvnr(2), &
-                & nval, 1, message)
+                & nval, 1, message, GETTABLE_NAME)
           if (nval/=1) then
               write(message,'(3A)') 'Unable to find table for thrust curve "',trim(turbines%nr(itrb)%thrustcrvname),'"'
               call write_error(message,unit=lundia)
@@ -201,7 +201,7 @@ subroutine rdturbine(filtrb, lundia, turbines, error)
           if (turbines%nr(itrb)%powercrvname /= ' ') then
               call gettable(turbines%curves, turbines%nr(itrb)%powercrvname, 'power coefficient', &
                     & turbines%nr(itrb)%powercrvnr(1), turbines%nr(itrb)%powercrvnr(2), &
-                    & nval, 1, message)
+                    & nval, 1, message, GETTABLE_NAME)
               if (nval/=1) then
                   write(message,'(3A)') 'Unable to find table for power curve "',trim(turbines%nr(itrb)%powercrvname),'"'
                   call write_error(message,unit=lundia)
@@ -365,7 +365,7 @@ subroutine mapturbine(turbines, xcor, ycor, guu, gvv, kcu, kcv, error, gdp)
             inside = .false.
             xu = turbine%xyz(1) + cos(turbine%angle*degrad) * turbine%ndiamu * turbine%diam
             yu = turbine%xyz(2) + sin(turbine%angle*degrad) * turbine%ndiamu * turbine%diam
-            call findnm_kcs_flowwrapper(xu, yu, m, n, rm, rn, inside, gdp)
+            call findnm_kcs_flowwrapper(xu, yu, m, n, rm, rn, inside, spheric, gdp)
             if (.not.inside) then
                 call write_error('Velocity reference point primary side outside domain for turbine: '//trim(turbine%name),unit=lundia)
                 error = .true.
@@ -376,7 +376,7 @@ subroutine mapturbine(turbines, xcor, ycor, guu, gvv, kcu, kcv, error, gdp)
             inside = .false.
             xu = turbine%xyz(1) - cos(turbine%angle*degrad) * turbine%ndiamu * turbine%diam
             yu = turbine%xyz(2) - sin(turbine%angle*degrad) * turbine%ndiamu * turbine%diam
-            call findnm_kcs_flowwrapper(xu, yu, m, n, rm, rn, inside, gdp)
+            call findnm_kcs_flowwrapper(xu, yu, m, n, rm, rn, inside, spheric, gdp)
             if (.not.inside) then
                 call write_error('Velocity reference point reverse side outside domain for turbine: '//trim(turbine%name),unit=lundia)
                 error = .true.
@@ -387,7 +387,7 @@ subroutine mapturbine(turbines, xcor, ycor, guu, gvv, kcu, kcv, error, gdp)
             ! ^^^ This doesn't work for spheric models!  ^^^
             !
             inside = .false.
-            call findnm_kcs_flowwrapper(turbine%xyz(1), turbine%xyz(2), m, n, rm, rn, inside, gdp)
+            call findnm_kcs_flowwrapper(turbine%xyz(1), turbine%xyz(2), m, n, rm, rn, inside, spheric, gdp)
             call n_and_m_to_nm(n, m, turbine%cellnr, gdp)
             turbine%relhpos(1) = rn
             turbine%relhpos(2) = rm
