@@ -1,12 +1,15 @@
-1   1.6000000e+003  [kg/m3]   :LSED, no. of sediment; CSOIL, reference density for hindered settling
-sand                          :SEDTYP, type of sediment (sand or mud)
- 2.6500000e+003     [kg/m3]   :RHOSOL, specific density
- 1.9999999e-004     [m]       :SEDDIA, mean sediment diameter (D50)
-0.0                 [ppt]     :SALMAX, salinity saline water
-0.0                 [m/s]     :WS0,    settling velocity fresh water
-0.0                 [m/s]     :WSM,    settling velocity saline water
-0.0                 [N/m2]    :TCDUNI, critical bed shear stress for sedimentation
-0.0                 [N/m2]    :TCEUNI, critical bed shear stress for erosion
-0.0                 [kg/m2/s] :EROUNI, sediment erosion rate
- 1.6000000e+003     [kg/m3]   :CDRYB,  dry bed density
- 8.0000000e+003     [kg/m2]   :SDBUNI, initial sediment mass at bed per unit area
+[SedimentFileInformation]
+   FileCreatedBy    = Delft3D FLOW-GUI, Version: 3.59.01.48550         
+   FileCreationDate = Tue Jun 20 2017, 14:18:26         
+   FileVersion      = 02.00                        
+[SedimentOverall]
+   Cref             =  1.6000000e+003      [kg/m3]  CSoil Reference density for hindered settling calculations
+   IopSus           = 0                             If Iopsus = 1: susp. sediment size depends on local flow and wave conditions
+[Sediment]
+   Name             = #Sediment sand#               Name of sediment fraction
+   SedTyp           = sand                          Must be "sand", "mud" or "bedload"
+   RhoSol           =  2.6500000e+003      [kg/m3]  Specific density
+   SedDia           =  1.9999999e-004      [m]      Median sediment diameter (D50)
+   CDryB            =  1.6000000e+003      [kg/m3]  Dry bed density
+   IniSedThick      =  5.0000000e+000      [m]      Initial sediment layer thickness at bed (uniform value or filename)
+   FacDSS           =  1.0000000e+000      [-]      FacDss * SedDia = Initial suspended sediment diameter. Range [0.6 - 1.0]

@@ -1,12 +1,20 @@
-1     10.e+5          LSED     : (No. of sediment); CSOIL
-mud                   SEDTYP(L): type of sediment
-2650.0                RHOSOL(L): density sediment
-0.0000                SEDDIA
-0.0000                SALMAX
-0.000                WS0
-0.000                WSM
-0.1                   TCRSED   : critical stress for sedimentation
-0.1                   TCRERO   : critical stress for erosion
-0                     EROPAR   : Erosion parameter (kg/m2/s)
-1200.0                CDRYB    : dry bed density
-0.0                   SEDBUNI  : Uniform value for init. sed. conc. at bed
+[SedimentFileInformation]
+   FileCreatedBy    = Delft3D FLOW-GUI, Version: 3.59.01.48550         
+   FileCreationDate = Tue Jun 20 2017, 14:20:34         
+   FileVersion      = 02.00                        
+[SedimentOverall]
+   Cref             =  1.0000000e+006      [kg/m3]  CSoil Reference density for hindered settling calculations
+   IopSus           = 0                             If Iopsus = 1: susp. sediment size depends on local flow and wave conditions
+[Sediment]
+   Name             = #Sediment 1#                  Name of sediment fraction
+   SedTyp           = mud                           Must be "sand", "mud" or "bedload"
+   RhoSol           =  2.6500000e+003      [kg/m3]  Specific density
+   SalMax           =  0.0000000e+000      [ppt]    Salinity for saline settling velocity
+   WS0              =  0.0000000e+000      [m/s]    Settling velocity fresh water
+   WSM              =  0.0000000e+000      [m/s]    Settling velocity saline water
+   TcrSed           =  1.0000000e-001      [N/m2]   Critical bed shear stress for sedimentation (uniform value or filename)
+   TcrEro           =  1.0000000e-001      [N/m2]   Critical bed shear stress for erosion       (uniform value or filename)
+   EroPar           =  0.0000000e+000      [kg/m2/s] Erosion parameter                           (uniform value or filename)
+   CDryB            =  1.2000000e+003      [kg/m3]  Dry bed density
+   IniSedThick      =  0.0000000e+000      [m]      Initial sediment layer thickness at bed (uniform value or filename)
+   FacDSS           =  1.0000000e+000      [-]      FacDss * SedDia = Initial suspended sediment diameter. Range [0.6 - 1.0]

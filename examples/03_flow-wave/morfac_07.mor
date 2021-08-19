@@ -1,19 +1,27 @@
- 7.0000000e+002     [-]       :MORFAC, morphological scale factor
- 6.0000000e+001     [min]     :MORSTT, spin-up interval before morphological changes
- 5.0000001e-002     [m]       :THRESH, threshold sediment thickness
-.true.                        :MORUPD, update bathymetry during FLOW simulation
-.true.                        :EQMBC,  equilibrium sediment concentration profile at open boundary
-.false.                       :DENSIN, include effect of sediment on water density
- 1.0000000e+000     [-]       :AKSFAC, van Rijn's reference height factor
- 2.0000000e+000     [-]       :RWAVE,  estimated ripple height factor
-.false.                       :ROUSE,  set equilibrium sediment conc. to Rouse profiles
- 1.0000000e+000     [-]       :ALFABS, long. bed gradient factor for bed load transport
- 1.5000000e+000     [-]       :ALFABN, tran. bed gradient factor for bed load transport
- 1.0000000e+000     [-]       :SUS,    current-related reference concentration factor
- 1.0000000e+000     [-]       :BED,    current-related transport vector magnitude factor
- 1.0000000e+000     [-]       :SUSW,   wave-related suspended transport factor
- 1.0000000e+000     [-]       :BEDW,   wave-related bed-load transport factor
- 1.0000000e-001     [m]       :SEDTHR, minimum depth for sediment calculation
- 0.0000000e+000     [-]       :THETSD, global / maximum dry cell erosion factor
- 1.5000000e+000     [m]       :HMAXTH, maximum depth for variable THETSD
- 1.0000000e+000     [-]       :FWFAC,  tuning parameter for wave streaming
+[MorphologyFileInformation]
+   FileCreatedBy    = Delft3D FLOW-GUI, Version: 3.59.01.48550         
+   FileCreationDate = Tue Jun 20 2017, 14:18:26         
+   FileVersion      = 02.00                        
+[Morphology]
+   EpsPar           = false                         Vertical mixing distribution according to van Rijn (overrules k-epsilon model)
+   IopKCW           = 1                             Flag for determining Rc and Rw
+   RDC              = 0.01                 [m]      Current related roughness height (only used if IopKCW <> 1)
+   RDW              = 0.02                 [m]      Wave related roughness height (only used if IopKCW <> 1)
+   MorFac           =  7.0000000e+002      [-]      Morphological scale factor
+   MorStt           =  6.0000000e+001      [min]    Spin-up interval from TStart till start of morphological changes
+   Thresh           =  5.0000001e-002      [m]      Threshold sediment thickness for transport and erosion reduction
+   MorUpd           = true                          Update bathymetry during FLOW simulation
+   EqmBc            = true                          Equilibrium sand concentration profile at inflow boundaries
+   DensIn           = false                         Include effect of sediment concentration on fluid density
+   AksFac           =  1.0000000e+000      [-]      van Rijn's reference height = AKSFAC * KS
+   RWave            =  2.0000000e+000      [-]      Wave related roughness = RWAVE * estimated ripple height. Van Rijn Recommends range 1-3
+   AlfaBs           =  1.0000000e+000      [-]      Streamwise bed gradient factor for bed load transport
+   AlfaBn           =  1.5000000e+000      [-]      Transverse bed gradient factor for bed load transport
+   Sus              =  1.0000000e+000      [-]      Multiplication factor for suspended sediment reference concentration
+   Bed              =  1.0000000e+000      [-]      Multiplication factor for bed-load transport vector magnitude
+   SusW             =  1.0000000e+000      [-]      Wave-related suspended sed. transport factor
+   BedW             =  1.0000000e+000      [-]      Wave-related bed-load sed. transport factor
+   SedThr           =  1.0000000e-001      [m]      Minimum water depth for sediment computations
+   ThetSD           =  0.0000000e+000      [-]      Factor for erosion of adjacent dry cells
+   HMaxTH           =  1.5000000e+000      [m]      Max depth for variable THETSD. Set < SEDTHR to use global value only
+   FWFac            =  1.0000000e+000      [-]      Vertical mixing distribution according to van Rijn (overrules k-epsilon model)
