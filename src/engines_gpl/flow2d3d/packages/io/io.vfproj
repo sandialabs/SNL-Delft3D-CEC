@@ -268,6 +268,7 @@
 		<File RelativePath="src\output\wrthisdad.f90"/>
 		<File RelativePath="src\output\wrthisdis.f90"/>
 		<File RelativePath="src\output\wrtmap.f90"/>
+		<File RelativePath=".\src\output\wrturbine.f90"/>
 		<File RelativePath="src\output\wrwaqapnt.f90"/>
 		<File RelativePath="src\output\wrwaqbal.f90"/>
 		<File RelativePath="src\output\wrwaqcco.F90">

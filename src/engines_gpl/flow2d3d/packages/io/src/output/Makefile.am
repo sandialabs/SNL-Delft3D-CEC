@@ -40,6 +40,7 @@ FMODULES += \
 #Sources
 libIOOutput_la_SOURCES = \
          wrtarray.f90 \
+         wrturbine.f90 \
          calbed.f90 \
          dirint.f90 \
          dp999.f90 \
