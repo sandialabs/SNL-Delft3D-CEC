@@ -38,6 +38,7 @@ subroutine initsafe(gdp)
     use sp_buffer
     use message_module
     use bedcomposition_module
+    use turbine_module, only: init_turbines
     use morphology_data_module
     !
     use globaldata
@@ -102,6 +103,7 @@ subroutine initsafe(gdp)
     call initwrline    (gdp)
     call initz_initcg  (gdp)
     call initzmodel    (gdp)
+    call init_turbines (gdp%turbines)
     call initsdu       (gdp)
     !
     call sbuff_init

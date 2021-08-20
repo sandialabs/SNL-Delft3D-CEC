@@ -56,6 +56,7 @@ subroutine wrihis(lundia    ,error     ,filename  ,selhis    ,simdat    , &
     use netcdf, only: nf90_unlimited
     use dfparall, only: inode, master, parll
     use wrtarray, only: wrtvar, wrtarray_n, station, transec
+    use m_wrturbine, only: addturbine_cnst, wrturbine_cnst
     !
     implicit none
     !
@@ -331,6 +332,7 @@ subroutine wrihis(lundia    ,error     ,filename  ,selhis    ,simdat    , &
        if (nsluv > 0 .and. flwoutput%hisbar) then
           call addelm(gdp, lundia, FILOUT_HIS, grnam2, 'NAMBAR', ' ', 20       , 1, dimids=(/iddim_nsluv/), longname='Barrier names') !CHARACTER
        endif
+       call addturbine_cnst(gdp, lundia, grnam2)
        !
     case (REQUESTTYPE_WRITE)
        !
@@ -724,6 +726,10 @@ subroutine wrihis(lundia    ,error     ,filename  ,selhis    ,simdat    , &
                  & gdp, ierror, lundia, nambar, 'NAMBAR')
           if (ierror/=0) goto 9999
        endif
+       !
+       ierror = wrturbine_cnst(gdp, lundia, grnam2, fds, filename)
+       if (ierror/=0) goto 9999
+       !
     end select
     deallocate(shlay_restr)
     !

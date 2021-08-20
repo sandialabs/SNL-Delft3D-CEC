@@ -57,6 +57,7 @@ subroutine wrthis(lundia    ,error     ,filename  ,selhis    ,ithisc    , &
     use dffunctionals
     use netcdf
     use wrtarray, only: wrtvar, wrtarray_n, station, transec
+    use m_wrturbine, only: addturbine_time, wrturbine_time
     !
     implicit none
     !
@@ -367,6 +368,8 @@ subroutine wrthis(lundia    ,error     ,filename  ,selhis    ,ithisc    , &
        if (nsluv > 0 .and. flwoutput%hisbar) then
           call addelm(gdp, lundia, FILOUT_HIS, grnam3, 'ZBAR', ' ', io_prec        , 1, dimids=(/iddim_nsluv/), longname='Barrier height', unit='m', attribs=(/idatt_bar/))
        endif
+       !
+       call addturbine_time(gdp, lundia, grnam3)
        !
        group1%grp_dim = iddim_time
        group3%grp_dim = iddim_time
@@ -705,6 +708,9 @@ subroutine wrthis(lundia    ,error     ,filename  ,selhis    ,ithisc    , &
           deallocate(rbuff1, stat=istat)
           if (ierror/=0) goto 9999
        endif
+       !
+       ierror = wrturbine_time(gdp, lundia, grnam3, fds, filename, celidt)
+       if (ierror/=0) goto 9999
        !
     end select
     deallocate(shlay_restr)
